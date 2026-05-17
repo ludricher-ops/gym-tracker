@@ -65,34 +65,47 @@ export function MyExercisesScreen() {
           </div>
         </Card>
 
-        <input
-          className="gt-input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un exercice…"
-          aria-label="Rechercher"
-        />
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          background: 'var(--bg)',
+          zIndex: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          paddingTop: 4,
+          paddingBottom: 4,
+          marginTop: -4,
+        }}>
+          <input
+            className="gt-input"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher un exercice…"
+            aria-label="Rechercher"
+          />
 
-        <Segmented
-          value={scope}
-          onChange={setScope}
-          options={[
-            { value: 'all', label: 'Tous' },
-            { value: 'custom', label: 'Perso' },
-          ]}
-        />
+          <Segmented
+            value={scope}
+            onChange={setScope}
+            options={[
+              { value: 'all', label: 'Tous' },
+              { value: 'custom', label: 'Perso' },
+            ]}
+          />
 
-        <div className="gt-chips gt-chips--scroll" role="group" aria-label="Filtrer par groupe musculaire" style={{ marginTop: 4 }}>
-          {regionChips.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              className={`gt-chip ${region === c.key ? 'gt-chip--active' : ''}`}
-              onClick={() => setRegion(c.key)}
-            >
-              {c.label}
-            </button>
-          ))}
+          <div className="gt-chips gt-chips--scroll" role="group" aria-label="Filtrer par groupe musculaire">
+            {regionChips.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                className={`gt-chip ${region === c.key ? 'gt-chip--active' : ''}`}
+                onClick={() => setRegion(c.key)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {visible.length === 0 ? (
