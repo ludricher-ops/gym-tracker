@@ -3,10 +3,11 @@ import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
 import { buildSessionRecap } from '../../utils/sessionRecap'
-import { startSessionFromTemplate } from '../../utils/sessionOps'
+import { deleteSession, startSessionFromTemplate } from '../../utils/sessionOps'
+import { localDayKey } from '../../utils/dates'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
-import { Button, Card, EmptyState, Icon, StatTile } from '../ui'
+import { Button, Card, EmptyState, Icon, Sheet, StatTile } from '../ui'
 
 export function SessionRecapScreen({ params }: ScreenProps) {
   const store = useStore()
@@ -18,6 +19,11 @@ export function SessionRecapScreen({ params }: ScreenProps) {
     [sessionId, store],
   )
   const [notes, setNotes] = useState(recap?.session.notes ?? '')
+  const [editOpen, setEditOpen] = useState(false)
+  const [editName, setEditName] = useState(recap?.session.name ?? '')
+  const [editDate, setEditDate] = useState(
+    recap ? localDayKey(recap.session.startedAt) : '',
+  )
 
   if (!recap) {
     return (
@@ -52,6 +58,33 @@ export function SessionRecapScreen({ params }: ScreenProps) {
     }
   }
 
+  const saveEdit = async () => {
+    const [y, m, d] = editDate.split('-').map(Number)
+    let startedAt = session.startedAt
+    let endedAt = session.endedAt
+    if (y && m && d) {
+      const orig = new Date(session.startedAt)
+      startedAt = new Date(
+        y, m - 1, d, orig.getHours(), orig.getMinutes(), orig.getSeconds(),
+      ).getTime()
+      const delta = startedAt - session.startedAt
+      if (endedAt != null) endedAt += delta
+    }
+    await store.session.save({
+      ...session,
+      name: editName.trim() || session.name,
+      startedAt,
+      endedAt,
+    })
+    setEditOpen(false)
+  }
+
+  const del = async () => {
+    if (!confirm(`Supprimer définitivement la séance « ${session.name} » ?`)) return
+    await deleteSession(session, store)
+    nav.back()
+  }
+
   const share = () => {
     const lines = [
       `${session.name} — ${start.toLocaleDateString('fr-FR')}`,
@@ -73,6 +106,9 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           <div className="gt-topbar__title">{start.toLocaleDateString('fr-FR')}</div>
           <div className="t-caption">{timeRange}</div>
         </div>
+        <button className="gt-iconbtn" onClick={() => setEditOpen(true)} aria-label="Modifier">
+          <Icon name="edit" size={20} />
+        </button>
         <button className="gt-iconbtn" onClick={share} aria-label="Partager">
           <Icon name="copy" size={20} />
         </button>
@@ -216,6 +252,42 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           Terminé
         </Button>
       </div>
+
+      {editOpen && (
+        <Sheet title="Modifier la séance" onClose={() => setEditOpen(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="gt-field">
+              <label className="gt-field__label" htmlFor="edit-name">
+                Nom de la séance
+              </label>
+              <input
+                id="edit-name"
+                className="gt-input"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            <div className="gt-field">
+              <label className="gt-field__label" htmlFor="edit-date">
+                Date
+              </label>
+              <input
+                id="edit-date"
+                type="date"
+                className="gt-input"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <Button icon="check" onClick={saveEdit}>
+              Enregistrer
+            </Button>
+            <Button variant="ghost" icon="trash" onClick={del}>
+              Supprimer la séance
+            </Button>
+          </div>
+        </Sheet>
+      )}
     </div>
   )
 }

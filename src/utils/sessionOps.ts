@@ -208,6 +208,25 @@ export async function finalizeSession(session: Session, store: StoreApi): Promis
   })
 }
 
+/**
+ * Supprime une séance et tout ce qui lui est rattaché : exercices de séance,
+ * séries, et records personnels établis sur ces séries.
+ */
+export async function deleteSession(session: Session, store: StoreApi): Promise<void> {
+  const seIds = new Set(
+    store.sessionExercises.filter((se) => se.sessionId === session.id).map((se) => se.id),
+  )
+  const sessionSets = store.sets.filter((s) => seIds.has(s.sessionExerciseId))
+  const setIds = new Set(sessionSets.map((s) => s.id))
+
+  for (const pr of store.personalRecords) {
+    if (setIds.has(pr.setId)) await store.personalRecord.remove(pr.id)
+  }
+  for (const s of sessionSets) await store.set.remove(s.id)
+  for (const seId of seIds) await store.sessionExercise.remove(seId)
+  await store.session.remove(session.id)
+}
+
 /** Séance ouverte (non terminée) éligible à une reprise, le cas échéant. */
 export function recoverableSession(store: StoreApi): Session | null {
   const open = store.sessions
