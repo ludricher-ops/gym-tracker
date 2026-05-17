@@ -38,6 +38,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   restSoundEnabled: true,
   hapticsEnabled: true,
   autoBarbellWeight: false,
+  autoWarmup: false,
   theme: 'dark',
   accentColor: DEFAULT_ACCENT,
   language: 'fr',

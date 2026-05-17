@@ -12,6 +12,7 @@ import { nextTargetWeight } from './progression'
 import { detectPRs, isAnyPR } from './pr'
 import type { PRResult } from './pr'
 import { daysBetween } from './dates'
+import { generateWarmup } from './warmup'
 
 const BARBELL_WEIGHT = 20
 /** Reprise proposée si la séance ouverte date de moins de 12 h (cahier 7). */
@@ -89,11 +90,33 @@ export async function startSessionFromTemplate(
       supersetGroup: wet.supersetGroup,
     })
     const target = prefill(wet, exercise, store)
+
+    const warmupSets =
+      store.settings.preferences.autoWarmup &&
+      exercise?.trackingType === 'weight_reps' &&
+      exercise?.equipment === 'barbell'
+        ? generateWarmup(target.weightKg)
+        : []
+
+    let idx = 0
+    for (const ws of warmupSets) {
+      await store.set.save({
+        id: uuid(),
+        sessionExerciseId: seId,
+        index: idx++,
+        weightKg: ws.weightKg,
+        reps: ws.reps,
+        isWarmup: true,
+        isFailure: false,
+        isPersonalRecord: false,
+      })
+      totalSets++
+    }
     for (let i = 0; i < wet.targetSets; i++) {
       await store.set.save({
         id: uuid(),
         sessionExerciseId: seId,
-        index: i,
+        index: idx++,
         weightKg: target.weightKg,
         reps: target.reps,
         isWarmup: false,

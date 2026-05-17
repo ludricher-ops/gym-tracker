@@ -126,6 +126,17 @@ export function PreferencesScreen() {
               />
             }
           />
+          <ToggleRow
+            label="Échauffement automatique"
+            sub="Ajoute barre à vide ×12, 50 % ×8, 70 % ×5 avant les séries de travail (exercices barre)"
+            control={
+              <Switch
+                checked={p.autoWarmup}
+                onChange={(autoWarmup) => updatePreferences({ autoWarmup })}
+                label="Échauffement automatique"
+              />
+            }
+          />
         </Section>
 
         <Section title="Apparence">

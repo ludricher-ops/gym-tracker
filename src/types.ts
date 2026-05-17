@@ -58,6 +58,7 @@ export interface UserPreferences {
   restSoundEnabled: boolean
   hapticsEnabled: boolean
   autoBarbellWeight: boolean
+  autoWarmup: boolean
   theme: ThemeMode
   accentColor: string
   language: Language
