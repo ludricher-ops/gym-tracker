@@ -15,6 +15,7 @@ export type ScreenName =
   | 'profile'
   | 'account'
   | 'preferences'
+  | 'body'
   | 'goalsPrograms'
   | 'programsLibrary'
   | 'programDetail'

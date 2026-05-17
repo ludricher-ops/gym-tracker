@@ -6,28 +6,87 @@
 
 ## 1. Vue d'ensemble
 
-**Gym Track** est une app mobile de suivi de séances de sport (musculation, hypertrophie, force). L'utilisateur crée des programmes, exécute des séances avec un suivi série-par-série en temps réel, et consulte sa progression sur le long terme.
+**Gym Track** est une **application web mobile-first** (Progressive Web App) de suivi de séances de sport (musculation, hypertrophie, force). L'utilisateur crée des programmes, exécute des séances avec un suivi série-par-série en temps réel, et consulte sa progression sur le long terme.
 
-**Plateformes cibles** : iOS (priorité 1), Android (priorité 2)
+**Plateforme cible** : web mobile (iPhone/Android via Safari/Chrome), install able en PWA sur l'écran d'accueil. Desktop fonctionnel mais design centré sur la viewport mobile (402px de large — le canvas n'est pas réactif au-delà, l'écran est centré sur fond neutre sur grand écran).
 **Public** : pratiquants intermédiaires à avancés en salle de sport, francophones d'abord
-**Mode hors-ligne** : obligatoire — l'app doit être totalement utilisable sans réseau pendant une séance
+**Mode hors-ligne** : obligatoire pendant une séance — Service Worker + IndexedDB. L'app doit pouvoir lancer, exécuter et terminer une séance complète sans réseau.
+**Installable** : manifest PWA + icônes → ajout à l'écran d'accueil iOS / Android, lancement en mode standalone (sans barre URL).
 
 ---
 
 ## 2. Stack technique recommandée
 
-Au choix (à valider) :
-- **React Native + Expo** — recommandé pour iOS+Android avec une codebase
-- **SwiftUI** — si iOS-only, meilleure intégration HealthKit
-- **Flutter** — alternative cross-platform
+**Framework** : **Next.js 15 (App Router)** ou **Vite + React 18**
+- Next.js si tu veux SSR/SSG des pages publiques (landing, blog) un jour
+- Vite si tu veux purement une SPA mobile sans backend (recommandé pour le MVP local-first)
 
-**Persistance locale** : SQLite (via Drizzle / Watermelon DB / GRDB) — toutes les données utilisateur sont locales en source de vérité
-**Sync optionnelle** : backend Supabase ou Firebase (phase 2)
-**État UI** : Zustand ou Redux Toolkit
-**Navigation** : React Navigation (stack + bottom tabs)
-**Charts** : Victory Native / react-native-svg-charts
-**Notifications** : Expo Notifications
-**Health** : react-native-health (HealthKit) / Health Connect (Android)
+**Langage** : TypeScript strict
+
+**UI**
+- React 18
+- **Tailwind CSS** pour les utilities + CSS custom properties pour les tokens (le thème change à chaud sans rebuild)
+- **Radix UI primitives** pour les composants accessibles (Dialog, Select, Switch, Slider, Toast)
+- **framer-motion** pour les transitions et célébrations PR
+- **clsx** + **tailwind-merge** pour la composition de classes
+
+**Routing**
+- Next.js App Router OU `react-router-dom` v7
+- Transitions de page mobile-like (slide horizontal) via `framer-motion`
+
+**État**
+- **Zustand** pour l'état global UI
+- **TanStack Query** (alias React Query) pour la couche data (même en local : invalidation cache, optimistic updates)
+
+**Persistance locale (source de vérité)**
+- **IndexedDB via Dexie.js** — ORM-like, requêtes async, hooks `useLiveQuery` pour le data binding réactif
+- Schéma versionné avec migrations Dexie
+- Backups manuels en JSON (équivalent du "export complet" du cahier)
+
+**Charts**
+- **Recharts** (simple, suffisant pour 1RM lines + volume bars + heatmap custom en SVG)
+- Alternative : SVG "à la main" (comme dans les mockups) si tu veux 100% de contrôle
+
+**Notifications**
+- **Web Notifications API** + **Service Worker** pour les notifications locales (rappel séance, fin de repos)
+- Sur iOS Safari : ne fonctionne qu'en mode PWA installée (iOS 16.4+)
+- Fallback son + vibration `navigator.vibrate()` pendant la séance active
+
+**Service Worker**
+- **Workbox** via `vite-plugin-pwa` ou `next-pwa`
+- Stratégie : `NetworkFirst` pour l'app shell, `CacheFirst` pour les assets, IndexedDB pour les données
+
+**Media (création d'exercice perso avec image/GIF)**
+- `<input type="file" accept="image/*,video/*">` pour le picker (utilise le picker système natif sur mobile)
+- **react-image-crop** pour le cadrage
+- **gifshot** ou **ffmpeg.wasm** pour conversion vidéo → GIF (lourd, ~25 MB ; à lazy-load uniquement quand nécessaire)
+- Stockage : Blob dans IndexedDB (pas de filesystem en web)
+
+**Auth (phase 1 MVP)**
+- 100% local, pas d'auth. L'utilisateur ouvre l'app, ses données vivent dans son navigateur.
+- Warning sticky discret : "Tes données sont stockées localement. Pense à exporter régulièrement."
+
+**Auth (phase 4 cloud, optionnelle)**
+- **Clerk** ou **Supabase Auth** (sign in with Apple/Google + email)
+
+**Backend cloud (phase 4, optionnel)**
+- **Supabase** (Postgres + Auth + Storage pour les médias)
+- Sync IndexedDB ↔ Postgres via une couche custom (le modèle de données est déjà compatible)
+
+**Fonts**
+- Auto-hébergées (Space Grotesk + JetBrains Mono via `@fontsource/...`)
+- Pas de fetch Google Fonts (mauvais offline)
+
+**Tooling**
+- **pnpm** comme package manager
+- **Vitest** pour les tests unitaires
+- **Playwright** pour les tests E2E sur 1-2 flows critiques (création programme, exécution séance)
+- **Biome** ou **ESLint + Prettier** pour le linting
+- **TypeScript strict** + `tsc --noEmit` en CI
+
+**Déploiement**
+- **Vercel** (Next.js natif) ou **Cloudflare Pages** (Vite, plus simple, gratuit généreux)
+- Domaine custom recommandé dès le début pour "l'effet PWA" propre
 
 ---
 
@@ -86,8 +145,8 @@ Exercise {
 
 ExerciseMedia {
   type: 'photo' | 'gif' | 'video'
-  filePath: string                    // chemin local interne (Documents/exercise-media/<uuid>.gif)
-  thumbnailPath?: string              // première frame pour les listes
+  blobId: string                      // clé vers IndexedDB table 'blobs' (le Blob lui-même)
+  thumbnailBlobId?: string            // première frame pour les listes
   originalSizeBytes: number
   compressedSizeBytes: number
   durationMs?: number                 // gif/video
@@ -825,35 +884,30 @@ Contenu :
 Affichée au tap sur le slot média.
 
 Options :
-1. **Photothèque** (recommandé, badge "RECO" en accent) — accès au gestionnaire photos natif (PHPicker iOS / PhotoPicker Android)
-2. **GIFs** — filtre direct sur les .gif du device
-3. **Vidéos** — vidéos max 30s, converties en GIF côté app
-4. **Prendre maintenant** — caméra → photo OU enregistrement vidéo
-5. **Fichiers** — file picker pour stockage interne (Documents, iCloud Drive local cache, etc.)
+1. **Photothèque** (recommandé, badge "RECO" en accent) — déclenche `<input type="file" accept="image/*,video/*">` qui ouvre le picker système natif sur mobile (PHPicker iOS / Photo Picker Android). Pas de permission à gérer côté app, le navigateur s'en charge.
+2. **GIFs** — `<input type="file" accept="image/gif">` pour filtrer
+3. **Vidéos** — `<input type="file" accept="video/*">`, max 30 s, converties en GIF côté client
+4. **Prendre maintenant** — `<input type="file" accept="image/*,video/*" capture="environment">` ouvre la caméra directement sur mobile
+5. **Fichiers** — `<input type="file">` sans filtre (accès aux fichiers locaux)
 
-**Note privacy** en bas : "🔒 Les médias restent sur ton téléphone. Aucun upload, aucune synchronisation cloud par défaut."
+**Note privacy** en bas : "🔒 Les médias restent dans ton navigateur (IndexedDB local). Aucun upload, aucune synchronisation cloud par défaut."
 
 Bouton "Annuler" en bas.
 
-**Permissions** :
-- iOS : `NSPhotoLibraryUsageDescription` pour Photothèque · `NSCameraUsageDescription` + `NSMicrophoneUsageDescription` pour Caméra
-- Android : Photo Picker API (pas de permission requise) sur Android 13+ ; sinon `READ_EXTERNAL_STORAGE` / `READ_MEDIA_IMAGES`
+**Permissions web** : aucun manifest spécial requis. Pour la caméra (option 4) avec `capture="environment"`, le navigateur demande l'autorisation au premier usage. Sur iOS Safari < 14, fallback : galerie uniquement.
 
 #### Galerie interne (picker)
 
-Si l'utilisateur choisit Photothèque/GIFs/Vidéos en mode "ne pas utiliser le picker système", afficher un picker custom (utile pour permettre multi-sélection ou tri custom) :
+**Note** : sur web, on délègue toujours au picker système natif via `<input type="file">`. Le picker custom décrit ci-dessous est réservé à une **réutilisation interne** : si l'utilisateur a déjà importé des médias dans Gym Track (pour d'autres exercices), on lui permet de les réutiliser via cet écran sans repasser par le file input.
 
-- Top bar : ✕ · "X sélectionné" · Album dropdown (Toutes / Albums)
-- Segmented filtre type : Tout (247) / Photos (189) / GIFs (34) / Vidéos (24) — chiffres = compteurs réels
-- Sections par date (Aujourd'hui · Hier · cette semaine · etc.)
+- Top bar : ✕ · "X sélectionné" · Album dropdown (Tous médias / Par exercice)
+- Segmented filtre type : Tout (24) / Photos (15) / GIFs (8) / Vidéos (1) — chiffres = médias déjà dans IndexedDB
+- Sections par date d'import
 - Grid 3 colonnes carrées
-- Badges sur les vignettes :
-  - "GIF" coin haut gauche (+ durée en bas gauche)
-  - "▶ 0:14" pour vidéos
 - Sélection : cercle vide → cercle accent avec ✓
-- CTA bas sticky "Suivant" (avec compteur de sélection)
+- CTA bas sticky "Suivant"
 
-**Sur le picker système iOS/Android** : on délègue à `PHPicker` / Photo Picker natif. Le picker custom décrit ci-dessus est une alternative phase 2.
+**Phase 1 MVP** : skip cet écran, on va directement du file input au cropper. Cet écran arrive en phase 2 quand l'utilisateur commence à avoir une bibliothèque média.
 
 #### Éditeur (crop + trim)
 
@@ -874,13 +928,17 @@ Affiché après sélection d'un média.
 - Footer info fichier : "IMG_2734.GIF · 4.2 MB → 1.4 MB" (taille originale → finale)
 
 **À la validation** :
-1. Appliquer crop + trim côté natif (ffmpeg-kit ou react-native-image-crop-picker)
-2. Si vidéo → convertir en GIF (résolution max 480p, durée max 5s, framerate ≤24)
+1. Appliquer crop côté client via **react-image-crop** ou Canvas API
+2. Si vidéo → convertir en GIF via **ffmpeg.wasm** (lazy-load uniquement quand vidéo détectée ; ~25 MB de wasm)
+   - Paramètres : résolution max 480p, durée max 5s, framerate ≤24
+   - Alternative légère : **gifshot.js** pour conversion basique sans wasm
 3. Si > 30s vidéo source → erreur "Vidéo trop longue (max 30 s)"
-4. Sauvegarder dans `Documents/exercise-media/<uuid>.{gif|jpg|mp4}`
-5. Générer thumbnail (première frame, 200×200)
+4. Sauvegarder le Blob final dans IndexedDB (table `exerciseMedia` + table `blobs`)
+5. Générer thumbnail (première frame en JPG 200×200) via Canvas
 6. Hydrater `ExerciseMedia` et naviguer back vers le form
-7. Slot média affiche maintenant la preview + bouton "Modifier" / "Remplacer"
+7. Slot média affiche maintenant la preview via `URL.createObjectURL(blob)` + bouton "Modifier" / "Remplacer"
+
+**Important** : `URL.revokeObjectURL()` au unmount des composants pour éviter les fuites mémoire.
 
 **Quotas** :
 - Taille max par média : 5 MB après compression (sinon avertir)
@@ -932,28 +990,30 @@ Toutes respectent les **horaires silencieux**.
 
 ## 9. Intégrations
 
-**Apple Health (priorité 1 iOS)**
-- Read : Body Mass, Height, Body Fat %
-- Write : Workout (avec type "Functional Strength Training"), Energy Burned (estimée)
+**Apple Health / Google Fit**
+- En web : pas d'accès direct. Phase 3 optionnelle : export manuel d'une séance vers Apple Health via un raccourci Shortcuts iOS (l'app expose un endpoint d'export que l'utilisateur peut router vers Health). Hors scope MVP.
 
-**Health Connect (Android, phase 2)**
-- Idem
+**Import** : CSV format Strong / Hevy (drag-and-drop dans la page Réglages → Données). Parser côté client.
 
-**Import** : CSV format Strong / Hevy (mapping exercices, sessions, sets)
+**Export** : JSON complet (download d'un blob) + CSV "à plat" des sessions/sets.
 
-**Export** : JSON complet + CSV "à plat" des sessions/sets
+**Média exercices (photo/gif/vidéo)** : import via `<input type="file" accept="image/*,video/*">` qui déclenche le picker système natif sur mobile (PHPicker iOS / Photo Picker Android). Pas de permission à gérer en web (le navigateur la demande lui-même). Les médias sont stockés comme **Blobs dans IndexedDB** (compressés avant stockage : GIF max 480p / 5 s / 5 MB). Affichage via `URL.createObjectURL(blob)`. Inclus dans l'export JSON en base64 (option "avec médias" car ça peut être gros).
 
-**Média exercices (photo/gif/vidéo)** : accès lecture seule à la photothèque via PHPicker (iOS) / Photo Picker API (Android 13+). Accès caméra optionnel pour la capture directe. Tous les médias sont copiés dans `Documents/exercise-media/` (sandbox app) et compressés (GIF max 480p / 5 s / 5 MB). Aucun upload cloud. Inclus dans l'export JSON sous forme de chemins relatifs + blob optionnel.
+**Notifications push** : pas dans le MVP. Phase 3 : Web Push API + backend cloud (nécessite Supabase ou équivalent).
+
+**Partage du récap (T3/T4)** : `navigator.share()` Web Share API (fonctionne sur mobile, fallback copier-coller sur desktop). Phase 2 : génération d'une image 1080×1080 via Canvas API pour partage Instagram.
 
 ---
 
 ## 10. Accessibilité
 
-- Contrast AA min partout
-- Tous les boutons : `accessibilityLabel` explicite (ne pas se reposer sur l'icône)
-- Police scalable : respecter Dynamic Type iOS jusqu'à xxLarge
-- Réduction de mouvement : désactiver les animations de PR si `prefers-reduced-motion`
-- VoiceOver : ordre logique de lecture sur Session active (timer → KG → REPS → bouton)
+- Contrast AA min partout (WCAG 2.1 AA)
+- Tous les boutons : `aria-label` explicite (ne pas se reposer sur l'icône)
+- Police scalable : utiliser `rem` partout pour la typo principale
+- Animations : désactiver via `@media (prefers-reduced-motion: reduce)` les confettis PR et transitions de page
+- Navigation clavier : focus visible, ordre logique de tabulation
+- Mode sombre auto via `prefers-color-scheme` (overridable dans Préférences)
+- Lecteurs d'écran : structurer les sections avec héadings, `role` et `aria-label`. Sur Session active : `aria-live="polite"` sur le timer et le compteur de séries.
 
 ---
 
@@ -961,43 +1021,50 @@ Toutes respectent les **horaires silencieux**.
 
 - **Session active** : DOIT rester fluide même avec 100+ sets dans l'historique de l'exercice. Pas de requête bloquante au validate.
 - **Charts** : virtualiser au-delà de 100 points ; agréger par semaine pour vues > 6 mois.
-- **Démarrage à froid** : < 2s jusqu'à Dashboard interactif.
-- **DB** : indexer `Session(startedAt DESC)`, `Set(sessionExerciseId)`, `PersonalRecord(exerciseId, achievedAt DESC)`.
+- **Première visite (cold start)** : Lighthouse Performance > 90, FCP < 1.5s sur 4G simulée.
+- **Visites suivantes (PWA installée)** : démarrage < 500ms grâce au Service Worker.
+- **Bundle JS initial** : < 150 KB gzipped pour le chemin critique (Dashboard). Lazy-load les workflows (création programme, stats avancées, éditeur média).
+- **Service Worker** : pré-cache l'app shell + fonts ; cache les médias d'exercices avec stratégie cache-first.
+- **DB (IndexedDB)** : indexer `sessions.startedAt`, `sets.sessionExerciseId`, `personalRecords.exerciseId+achievedAt`. Requêtes async via `useLiveQuery` de Dexie pour le data-binding réactif sans re-renders inutiles.
 
 ---
 
 ## 12. Phases de livraison
 
-**Phase 1 — MVP (4-6 sem)**
-- Auth locale (pas de cloud)
-- CRUD exercices custom (sans média)
+**Phase 1 — MVP web (3-4 sem)**
+- Scaffold Vite/Next.js + Tailwind + Dexie + Service Worker basique
+- Système de design complet (tokens, primitives)
+- Schéma IndexedDB + migrations + seed ~150 exercices
+- CRUD exercices custom (sans média encore)
 - Workflow création programme complet
 - Session active avec timer + vue d'ensemble in-session
 - Séance terminée + récap détaillé
 - Historique + détail séance
 - Stats basiques (PR + tonnage)
 - Profil + Préférences
+- Manifest PWA + icônes → installable sur iPhone/Android
 
-**Phase 2 — Progression (2-3 sem)**
-- Stats avancées (graphs 1RM, volumes par muscle)
+**Phase 2 — Progression (2 sem)**
+- Stats avancées (graphs 1RM Recharts, volumes par muscle)
 - Goals & tracking
-- Corps & mesures + photos
-- Notifications
-- Célébration PR (overlay in-session)
+- Corps & mesures + photos (Blob IndexedDB)
+- Notifications locales (Web Notifications API + Service Worker)
+- Célébration PR (overlay in-session avec framer-motion)
 - Détail programme + workflow activation
 
-**Phase 3 — Écosystème (2-3 sem)**
-- Apple Health
-- Import Strong/Hevy
-- Export CSV/JSON
+**Phase 3 — Écosystème (2 sem)**
+- Import Strong/Hevy (parser CSV client-side)
+- Export CSV/JSON (download Blob)
 - Templates programmes built-in (5)
-- **Média exercices** : import photo/GIF/vidéo + crop + trim + affichage in-session
+- **Média exercices** : import via file input + crop (react-image-crop) + trim/conversion GIF (ffmpeg.wasm lazy)
 - Briefing pré-séance optionnel (échauffement généré)
+- Partage récap (Web Share API + Canvas pour image)
 
-**Phase 4 — Cloud (optionnel)**
-- Backend Supabase
-- Sync multi-appareil (médias optionnellement syncés, avec quotas)
-- Partage de programmes / social
+**Phase 4 — Cloud (optionnelle, 3-4 sem)**
+- Backend Supabase (auth + Postgres + Storage)
+- Sync IndexedDB ↔ Postgres (last-write-wins simple)
+- Multi-device
+- Partage de programmes / templates communautaires
 
 ---
 
@@ -1053,11 +1120,13 @@ Tous les écrans utilisent les mêmes tokens et composants — référence d'imp
 
 ## 14. Livrables attendus
 
-- Application iOS (et Android si applicable) buildée et installable via TestFlight
-- Code source dans un repo Git avec README, instructions de build, scripts de seed pour les exercices
-- Base de données seed avec ~150 exercices de musculation classiques
-- Tests : unitaires sur la logique métier (1RM, PR detection, streak), tests d'intégration sur les flows critiques (création programme, séance complète)
-- Documentation : architecture, schéma DB, conventions de code
+- Application web déployée (Vercel / Cloudflare Pages) sur un sous-domaine ou domaine custom
+- PWA installable : manifest + icônes (192, 512, maskable) + Service Worker pré-cache de l'app shell
+- Code source dans un repo Git avec README, instructions de développement local (`pnpm install && pnpm dev`), scripts de seed pour les exercices
+- Base de données seed : ~150 exercices de musculation classiques (JSON embarqué, chargé dans IndexedDB au premier lancement)
+- Tests : Vitest sur la logique métier (1RM, PR detection, streak), Playwright sur 1-2 flows critiques (création programme, séance complète de bout en bout)
+- Documentation : architecture, schéma IndexedDB, conventions de code, comment déployer
+- Score Lighthouse > 90 sur Performance, PWA, Accessibility, Best Practices (testé sur le Dashboard et la Session active)
 
 ---
 

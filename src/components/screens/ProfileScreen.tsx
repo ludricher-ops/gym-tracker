@@ -97,6 +97,12 @@ export function ProfileScreen() {
           chevron
           onClick={() => nav.navigate('myExercises')}
         />
+        <Row
+          icon="scale"
+          label="Corps & mesures"
+          chevron
+          onClick={() => nav.navigate('body')}
+        />
 
         <p className="t-eyebrow" style={{ marginTop: 6 }}>
           Application

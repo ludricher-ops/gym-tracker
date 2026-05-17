@@ -47,7 +47,14 @@ export function currentGoalValue(goal: Goal, store: StoreApi): number {
       return Math.max(...sets.map((s) => estimate1RM(s.weightKg, s.reps, formula)))
     }
 
-    case 'bodyweight':
+    case 'bodyweight': {
+      // Dernière pesée enregistrée dans Corps & mesures, sinon valeur saisie.
+      const latest = store.bodyMeasurements
+        .filter((m) => m.weightKg != null)
+        .sort((a, b) => b.takenAt - a.takenAt)[0]
+      return latest?.weightKg ?? goal.manualValue ?? 0
+    }
+
     case 'custom':
     default:
       return goal.manualValue ?? 0

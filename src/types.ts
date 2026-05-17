@@ -199,6 +199,18 @@ export interface Goal extends Syncable {
   createdAt: number
 }
 
+export interface BodyMeasurement extends Syncable {
+  takenAt: number
+  weightKg?: number
+  chestCm?: number
+  waistCm?: number
+  hipsCm?: number
+  bicepCm?: number
+  thighCm?: number
+  calfCm?: number
+  bodyFatPct?: number
+}
+
 export type PRType = '1rm' | 'reps_at_weight' | 'volume_set' | 'volume_session'
 
 export interface PersonalRecord extends Syncable {
@@ -223,4 +235,4 @@ export interface OutboxEntry {
 export type SyncStoreName =
   | 'settings' | 'exercises' | 'programs' | 'workoutTemplates'
   | 'workoutExerciseTemplates' | 'sessions' | 'sessionExercises'
-  | 'sets' | 'personalRecords' | 'goals'
+  | 'sets' | 'personalRecords' | 'goals' | 'bodyMeasurements'
