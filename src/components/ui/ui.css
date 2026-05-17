@@ -186,9 +186,11 @@ button.gt-row:active {
 }
 .gt-progress__fill {
   height: 100%;
+  width: 100%;
   background: var(--accent);
   border-radius: var(--radius-pill);
-  transition: width 0.25s ease;
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 
 /* ── PrimaryBar ───────────────────────────────────────────────────── */

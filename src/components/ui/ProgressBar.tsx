@@ -13,7 +13,7 @@ export function ProgressBar({ value }: ProgressBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="gt-progress__fill" style={{ width: `${pct}%` }} />
+      <div className="gt-progress__fill" style={{ transform: `scaleX(${pct / 100})` }} />
     </div>
   )
 }
