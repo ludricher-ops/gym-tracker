@@ -2,9 +2,11 @@
 // validation d'une série avec détection de PR, reprise après crash.
 
 import type {
-  Exercise, Session, SetRecord, WorkoutExerciseTemplate, WorkoutTemplate,
+  Exercise, Session, SessionExercise, SetRecord, WorkoutExerciseTemplate,
+  WorkoutTemplate,
 } from '../types'
 import type { StoreApi } from '../hooks/useStore'
+import { idbGetAll } from '../db/idb'
 import { uuid } from './uuid'
 import { nextTargetWeight } from './progression'
 import { detectPRs, isAnyPR } from './pr'
@@ -225,6 +227,36 @@ export async function deleteSession(session: Session, store: StoreApi): Promise<
   for (const s of sessionSets) await store.set.remove(s.id)
   for (const seId of seIds) await store.sessionExercise.remove(seId)
   await store.session.remove(session.id)
+}
+
+/**
+ * Recalcule volume et compteurs d'une séance depuis IndexedDB (source de
+ * vérité fraîche) — à appeler après l'édition des séries d'une séance passée.
+ */
+export async function recomputeSessionTotals(
+  session: Session,
+  store: StoreApi,
+): Promise<void> {
+  const [allSE, allSets] = await Promise.all([
+    idbGetAll<SessionExercise>('sessionExercises'),
+    idbGetAll<SetRecord>('sets'),
+  ])
+  const seIds = new Set(
+    allSE.filter((se) => !se.deleted && se.sessionId === session.id).map((se) => se.id),
+  )
+  const completed = allSets.filter(
+    (s) => !s.deleted && seIds.has(s.sessionExerciseId) && s.completedAt != null,
+  )
+  const totalVolumeKg = completed
+    .filter((s) => !s.isWarmup)
+    .reduce((sum, s) => sum + s.weightKg * s.reps, 0)
+
+  await store.session.save({
+    ...session,
+    totalVolumeKg,
+    totalSets: completed.length,
+    completedSets: completed.length,
+  })
 }
 
 /** Séance ouverte (non terminée) éligible à une reprise, le cas échéant. */

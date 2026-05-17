@@ -3,7 +3,7 @@ import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { addWeeks, localDayKey, weekRange } from '../../utils/dates'
 import { statsForWeek } from '../../utils/stats'
-import { formatVolume } from '../../utils/format'
+import { formatDuration, formatVolume } from '../../utils/format'
 import { EmptyState, Heatmap, Icon, Row, type HeatmapCell } from '../ui'
 
 const DAY_MS = 86_400_000
@@ -142,7 +142,7 @@ export function HistoryScreen() {
                   day: 'numeric',
                   month: 'short',
                 })}
-                value={`${formatVolume(s.totalVolumeKg ?? 0)} kg`}
+                value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
                 chevron
                 onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
               />

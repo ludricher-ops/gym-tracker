@@ -199,7 +199,7 @@ export function DashboardScreen() {
                     day: 'numeric',
                     month: 'short',
                   })}
-                  value={`${formatVolume(s.totalVolumeKg ?? 0)} kg`}
+                  value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
                   chevron
                   onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
                 />

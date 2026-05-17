@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react'
+import type { SetRecord } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
-import { buildSessionRecap } from '../../utils/sessionRecap'
-import { deleteSession, startSessionFromTemplate } from '../../utils/sessionOps'
+import { buildSessionRecap, type RecapExercise } from '../../utils/sessionRecap'
+import {
+  deleteSession, recomputeSessionTotals, startSessionFromTemplate,
+} from '../../utils/sessionOps'
 import { localDayKey } from '../../utils/dates'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
+import { uuid } from '../../utils/uuid'
 import { Button, Card, EmptyState, Icon, Sheet, StatTile } from '../ui'
+import { SetEditSheet } from './SetEditSheet'
 
 export function SessionRecapScreen({ params }: ScreenProps) {
   const store = useStore()
@@ -24,6 +29,10 @@ export function SessionRecapScreen({ params }: ScreenProps) {
   const [editDate, setEditDate] = useState(
     recap ? localDayKey(recap.session.startedAt) : '',
   )
+  const [editDuration, setEditDuration] = useState(
+    recap ? Math.round((recap.session.durationSec ?? 0) / 60) : 0,
+  )
+  const [editSet, setEditSet] = useState<SetRecord | null>(null)
 
   if (!recap) {
     return (
@@ -61,20 +70,19 @@ export function SessionRecapScreen({ params }: ScreenProps) {
   const saveEdit = async () => {
     const [y, m, d] = editDate.split('-').map(Number)
     let startedAt = session.startedAt
-    let endedAt = session.endedAt
     if (y && m && d) {
       const orig = new Date(session.startedAt)
       startedAt = new Date(
         y, m - 1, d, orig.getHours(), orig.getMinutes(), orig.getSeconds(),
       ).getTime()
-      const delta = startedAt - session.startedAt
-      if (endedAt != null) endedAt += delta
     }
+    const durationSec = Math.max(0, Math.round(editDuration * 60))
     await store.session.save({
       ...session,
       name: editName.trim() || session.name,
       startedAt,
-      endedAt,
+      endedAt: startedAt + durationSec * 1000,
+      durationSec,
     })
     setEditOpen(false)
   }
@@ -83,6 +91,34 @@ export function SessionRecapScreen({ params }: ScreenProps) {
     if (!confirm(`Supprimer définitivement la séance « ${session.name} » ?`)) return
     await deleteSession(session, store)
     nav.back()
+  }
+
+  // Édition des séries d'une séance passée (recalcule les totaux ensuite).
+  const saveSet = async (updated: SetRecord) => {
+    await store.set.save(updated)
+    await recomputeSessionTotals(session, store)
+    setEditSet(null)
+  }
+  const deleteSet = async (s: SetRecord) => {
+    await store.set.remove(s.id)
+    await recomputeSessionTotals(session, store)
+    setEditSet(null)
+  }
+  const addSet = async (ex: RecapExercise) => {
+    const last = ex.sets[ex.sets.length - 1]
+    const created = await store.set.save({
+      id: uuid(),
+      sessionExerciseId: ex.sessionExerciseId,
+      index: (last?.index ?? -1) + 1,
+      weightKg: last?.weightKg ?? 0,
+      reps: last?.reps ?? 8,
+      isWarmup: false,
+      isFailure: false,
+      isPersonalRecord: false,
+      completedAt: session.startedAt,
+    })
+    await recomputeSessionTotals(session, store)
+    setEditSet(created)
   }
 
   const share = () => {
@@ -209,15 +245,20 @@ export function SessionRecapScreen({ params }: ScreenProps) {
             </div>
             <div className="gt-chips" style={{ marginTop: 8 }}>
               {ex.sets.map((s) => (
-                <span
+                <button
                   key={s.id}
+                  type="button"
                   className={`gt-chip ${s.isPersonalRecord ? 'gt-chip--active' : ''}`}
+                  onClick={() => setEditSet(s)}
                 >
                   {s.isWarmup ? '🔥 ' : ''}
                   {formatWeight(s.weightKg, weightUnit)} × {s.reps}
                   {s.isPersonalRecord ? ' ★' : ''}
-                </span>
+                </button>
               ))}
+              <button type="button" className="gt-chip" onClick={() => addSet(ex)}>
+                + série
+              </button>
             </div>
           </Card>
         ))}
@@ -279,6 +320,18 @@ export function SessionRecapScreen({ params }: ScreenProps) {
                 onChange={(e) => setEditDate(e.target.value)}
               />
             </div>
+            <div className="gt-field">
+              <label className="gt-field__label" htmlFor="edit-duration">
+                Durée (minutes)
+              </label>
+              <input
+                id="edit-duration"
+                type="number"
+                className="gt-input"
+                value={editDuration || ''}
+                onChange={(e) => setEditDuration(Number(e.target.value))}
+              />
+            </div>
             <Button icon="check" onClick={saveEdit}>
               Enregistrer
             </Button>
@@ -287,6 +340,16 @@ export function SessionRecapScreen({ params }: ScreenProps) {
             </Button>
           </div>
         </Sheet>
+      )}
+
+      {editSet && (
+        <SetEditSheet
+          set={editSet}
+          weightUnit={weightUnit}
+          onSave={saveSet}
+          onDelete={deleteSet}
+          onClose={() => setEditSet(null)}
+        />
       )}
     </div>
   )

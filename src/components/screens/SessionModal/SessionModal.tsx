@@ -6,7 +6,7 @@ import { useSessionTimer } from '../../../hooks/useSessionTimer'
 import { useRestTimer } from '../../../hooks/useRestTimer'
 import { isAnyPR } from '../../../utils/pr'
 import {
-  finalizeSession, lastWorkingSet, validateSet,
+  deleteSession, finalizeSession, lastWorkingSet, validateSet,
 } from '../../../utils/sessionOps'
 import { formatDuration } from '../../../utils/format'
 import { formatWeight } from '../../../utils/units'
@@ -211,18 +211,17 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       for (const id of ids) {
         const seId = uuid()
         await store.sessionExercise.save({ id: seId, sessionId, exerciseId: id, order: order++ })
-        for (let i = 0; i < 3; i++) {
-          await store.set.save({
-            id: uuid(),
-            sessionExerciseId: seId,
-            index: i,
-            weightKg: 0,
-            reps: 8,
-            isWarmup: false,
-            isFailure: false,
-            isPersonalRecord: false,
-          })
-        }
+        // Une seule série par défaut — l'utilisateur en ajoute via le menu.
+        await store.set.save({
+          id: uuid(),
+          sessionExerciseId: seId,
+          index: 0,
+          weightKg: 0,
+          reps: 8,
+          isWarmup: false,
+          isFailure: false,
+          isPersonalRecord: false,
+        })
       }
     }
   }
@@ -236,6 +235,13 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const close = () => {
     if (doneCount > 0 && !confirm('Quitter la séance ? Tu pourras la reprendre plus tard.'))
       return
+    nav.closeModal()
+  }
+
+  const cancelSession = async () => {
+    if (!confirm('Annuler la séance ? Elle ne sera pas enregistrée et sera supprimée.'))
+      return
+    await deleteSession(session, store)
     nav.closeModal()
   }
 
@@ -443,6 +449,13 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               onClick={() => { setPicker('swap'); setMenu(false) }}
             >
               Échanger l&apos;exercice
+            </Button>
+            <Button
+              variant="danger"
+              icon="trash"
+              onClick={() => { setMenu(false); cancelSession() }}
+            >
+              Annuler la séance
             </Button>
           </div>
         </Sheet>
