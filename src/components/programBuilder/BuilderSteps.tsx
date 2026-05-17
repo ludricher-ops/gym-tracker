@@ -298,6 +298,9 @@ export function StepEditWorkout({
   const exName = (id: string) =>
     store.exercises.find((e) => e.id === id)?.name ?? 'Exercice supprimé'
 
+  const exTracking = (id: string) =>
+    store.exercises.find((e) => e.id === id)?.trackingType ?? 'weight_reps'
+
   const moveExercise = (index: number, dir: -1 | 1) => {
     const next = index + dir
     if (next < 0 || next >= workout.exercises.length) return
@@ -307,7 +310,12 @@ export function StepEditWorkout({
   }
 
   const addExercises = (ids: string[]) => {
-    onChange({ exercises: [...workout.exercises, ...ids.map((id) => defaultWE(id))] })
+    onChange({
+      exercises: [
+        ...workout.exercises,
+        ...ids.map((id) => defaultWE(id, exTracking(id))),
+      ],
+    })
   }
 
   const updateWE = (index: number, next: DraftWE) => {
@@ -365,11 +373,15 @@ export function StepEditWorkout({
                     {exName(we.exerciseId)}
                   </>
                 }
-                sub={`${we.targetSets} × ${
-                  we.repsMode === 'range'
-                    ? `${we.targetRepsMin}-${we.targetRepsMax}`
-                    : we.targetRepsMin
-                } · repos ${we.restSec}s`}
+                sub={
+                  exTracking(we.exerciseId) === 'time'
+                    ? `${we.targetSets} × ${we.targetDurationSec ?? 30}s · repos ${we.restSec}s`
+                    : `${we.targetSets} × ${
+                        we.repsMode === 'range'
+                          ? `${we.targetRepsMin}-${we.targetRepsMax}`
+                          : we.targetRepsMin
+                      } · repos ${we.restSec}s`
+                }
                 chevron
                 onClick={() => setConfigIndex(i)}
               />
@@ -436,6 +448,7 @@ export function StepEditWorkout({
         <ExerciseConfigSheet
           we={workout.exercises[configIndex]}
           exerciseName={exName(workout.exercises[configIndex].exerciseId)}
+          trackingType={exTracking(workout.exercises[configIndex].exerciseId)}
           onChange={(next) => updateWE(configIndex, next)}
           onRemove={() => removeWE(configIndex)}
           onClose={() => setConfigIndex(null)}

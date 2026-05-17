@@ -2,7 +2,7 @@
 // création en 4 étapes, persisté seulement à la validation finale.
 
 import type {
-  MuscleGroup, Program, ProgramGoal, ProgramLevel, RepsMode, Weekday,
+  MuscleGroup, Program, ProgramGoal, ProgramLevel, RepsMode, TrackingType, Weekday,
   WorkoutType,
 } from '../../types'
 import type { StoreApi } from '../../hooks/useStore'
@@ -16,6 +16,7 @@ export interface DraftWE {
   repsMode: RepsMode
   targetRepsMin: number
   targetRepsMax?: number
+  targetDurationSec?: number
   targetRPE?: number
   restSec: number
   autoProgress: boolean
@@ -55,7 +56,20 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
   friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
 }
 
-export function defaultWE(exerciseId: string): DraftWE {
+export function defaultWE(exerciseId: string, trackingType?: TrackingType): DraftWE {
+  if (trackingType === 'time') {
+    return {
+      localId: uuid(),
+      exerciseId,
+      targetSets: 3,
+      repsMode: 'fixed',
+      targetRepsMin: 1,
+      targetDurationSec: 30,
+      restSec: 60,
+      autoProgress: false,
+      progressStepKg: 0,
+    }
+  }
   return {
     localId: uuid(),
     exerciseId,
@@ -101,6 +115,7 @@ export function draftFromProgram(program: Program, store: StoreApi): DraftProgra
           repsMode: e.repsMode,
           targetRepsMin: e.targetRepsMin,
           targetRepsMax: e.targetRepsMax,
+          targetDurationSec: e.targetDurationSec,
           targetRPE: e.targetRPE,
           restSec: e.restSec,
           autoProgress: e.autoProgress,
@@ -154,7 +169,10 @@ export async function updateDraft(
   }
 
   const localToReal = new Map<string, string>()
-  for (const w of draft.workouts) {
+  const assignedIds = new Set(Object.values(draft.week).filter(Boolean) as string[])
+  const workoutsToSave = draft.workouts.filter((w) => assignedIds.has(w.localId))
+
+  for (const w of workoutsToSave) {
     const wtId = uuid()
     localToReal.set(w.localId, wtId)
     await store.workoutTemplate.save({
@@ -176,6 +194,7 @@ export async function updateDraft(
         repsMode: ex.repsMode,
         targetRepsMin: ex.targetRepsMin,
         targetRepsMax: ex.targetRepsMax,
+        targetDurationSec: ex.targetDurationSec,
         targetRPE: ex.targetRPE,
         restSec: ex.restSec,
         autoProgress: ex.autoProgress,
@@ -221,7 +240,10 @@ export async function commitDraft(draft: DraftProgram, store: StoreApi): Promise
   const programId = uuid()
   const localToReal = new Map<string, string>()
 
-  for (const w of draft.workouts) {
+  const assignedLocalIds = new Set(Object.values(draft.week).filter(Boolean) as string[])
+  const workoutsToSave = draft.workouts.filter((w) => assignedLocalIds.has(w.localId))
+
+  for (const w of workoutsToSave) {
     const wtId = uuid()
     localToReal.set(w.localId, wtId)
     await store.workoutTemplate.save({
@@ -243,6 +265,7 @@ export async function commitDraft(draft: DraftProgram, store: StoreApi): Promise
         repsMode: ex.repsMode,
         targetRepsMin: ex.targetRepsMin,
         targetRepsMax: ex.targetRepsMax,
+        targetDurationSec: ex.targetDurationSec,
         targetRPE: ex.targetRPE,
         restSec: ex.restSec,
         autoProgress: ex.autoProgress,

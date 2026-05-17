@@ -36,8 +36,9 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   }
 
   const summary = programSummary(program, store)
+  const assignedWtIds = new Set(Object.values(program.weekTemplate).filter(Boolean) as string[])
   const workouts = store.workoutTemplates
-    .filter((w) => w.programId === program.id)
+    .filter((w) => w.programId === program.id && assignedWtIds.has(w.id))
     .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 
   const del = async () => {

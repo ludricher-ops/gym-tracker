@@ -169,6 +169,7 @@ export interface WorkoutExerciseTemplate extends Syncable {
   repsMode: RepsMode
   targetRepsMin: number
   targetRepsMax?: number
+  targetDurationSec?: number
   targetRPE?: number
   restSec: number
   autoProgress: boolean
