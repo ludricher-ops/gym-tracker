@@ -38,6 +38,7 @@ const PATHS = {
   edit: 'M4 20h4l10-10-4-4L4 16v4zM14 6l4 4',
   trophy: 'M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 0-3 3M12 14v3M8 20h8M9.5 20l.6-3h3.8l.6 3',
   share: 'M12 3v13M8 7l4-4 4 4M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
+  play: 'M5 3l14 9-14 9V3z',
 } as const
 
 export type IconName = keyof typeof PATHS

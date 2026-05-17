@@ -128,6 +128,7 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
   }
 
   const saveEdit = async () => {
+    if (!fromId) return
     setSaving(true)
     try {
       await updateDraft(fromId, draft, store)

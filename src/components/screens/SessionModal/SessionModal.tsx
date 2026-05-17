@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SetRecord } from '../../../types'
 import { useStore } from '../../../hooks/useStore'
 import { useNavigation } from '../../../nav/useNavigation'
@@ -8,7 +8,7 @@ import { useActiveSession } from '../../../hooks/useActiveSession'
 import { isAnyPR } from '../../../utils/pr'
 import { isValidSet, repsLookSuspicious } from '../../../utils/setValidation'
 import { lastWorkingSet } from '../../../utils/sessionOps'
-import { formatDuration } from '../../../utils/format'
+import { formatClock, formatDuration } from '../../../utils/format'
 import { formatWeight } from '../../../utils/units'
 import { MUSCLE_LABEL } from '../../../utils/labels'
 import {
@@ -21,6 +21,7 @@ import { ExercisePicker } from '../../programBuilder/ExercisePicker'
 import { MediaImage } from '../../exercises/MediaImage'
 import { SetTable } from './SetTable'
 import { RestTimerBar } from './RestTimerBar'
+import { ExerciseTimerBar } from './ExerciseTimerBar'
 import { SessionOverviewSheet } from './SessionOverviewSheet'
 import { SessionCompleteView } from './SessionCompleteView'
 import { SetEditSheet } from '../SetEditSheet'
@@ -61,6 +62,24 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     if (prefs.notificationsEnabled) notify('Repos terminé', 'Place à la prochaine série.')
   })
 
+  const exerciseTimer = useRestTimer(() => {
+    if (prefs.restSoundEnabled) playBeep()
+    if (prefs.hapticsEnabled) vibrate()
+  })
+
+  const currentWET = useMemo(
+    () =>
+      session && currentSE
+        ? store.workoutExerciseTemplates.find(
+            (w) =>
+              w.workoutTemplateId === session.workoutTemplateId &&
+              w.exerciseId === currentSE.exerciseId,
+          )
+        : undefined,
+    [store.workoutExerciseTemplates, session?.workoutTemplateId, currentSE?.exerciseId], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+  const targetDurationSec = currentWET?.targetDurationSec ?? 30
+
   const editingSet = editingSetId
     ? currentSets.find((s) => s.id === editingSetId)
     : undefined
@@ -73,8 +92,11 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   useEffect(() => {
     if (activeSet) {
       setInputW(activeSet.weightKg)
-      setInputR(activeSet.reps)
+      setInputR(
+        activeSet.reps !== 0 ? activeSet.reps : trackingType === 'time' ? targetDurationSec : 0,
+      )
       setInputRpe(activeSet.rpe ?? null)
+      exerciseTimer.skip()
     }
   }, [activeSet?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -125,12 +147,15 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   const canValidate = isValidSet(showWeight ? inputW : 0, inputR)
 
-  const validate = async () => {
-    if (!activeSet || !currentSE || !canValidate) return
+  const validateImpl = async (repsOverride?: number) => {
+    if (!activeSet || !currentSE) return
+    const reps = repsOverride ?? inputR
+    if (!isValidSet(showWeight ? inputW : 0, reps)) return
+    exerciseTimer.skip()
     const updated: SetRecord = {
       ...activeSet,
       weightKg: showWeight ? inputW : 0,
-      reps: inputR,
+      reps,
       rpe: inputRpe ?? undefined,
     }
     const { pr, restSec } = await act.validateSet(updated)
@@ -157,6 +182,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     }
     setEditingSetId(null)
   }
+  const validate = () => void validateImpl()
 
   const onSelectSet = (id: string) => {
     const set = currentSets.find((s) => s.id === id)
@@ -319,61 +345,90 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         )}
       </div>
 
-      {/* Bas : timer de repos OU saisie */}
+      {/* Bas : timer exercice OU timer de repos OU saisie */}
       <div className="gt-primarybar">
-        {restTimer.active ? (
+        {exerciseTimer.active ? (
+          <ExerciseTimerBar
+            timer={exerciseTimer}
+            onValidate={() => void validateImpl(exerciseTimer.targetSec)}
+          />
+        ) : restTimer.active ? (
           <RestTimerBar timer={restTimer} />
         ) : (
           currentSE && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'space-around' }}>
-                {showWeight && (
+              {trackingType === 'time' ? (
+                <>
+                  <Button
+                    icon="play"
+                    onClick={() => {
+                      setInputR(targetDurationSec)
+                      exerciseTimer.start(targetDurationSec)
+                    }}
+                  >
+                    Démarrer · {formatClock(targetDurationSec)}
+                  </Button>
                   <div style={{ textAlign: 'center' }}>
-                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>
-                      Poids ({weightUnit})
-                    </div>
+                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>Durée (s)</div>
                     <Stepper
-                      value={inputW}
-                      onChange={setInputW}
-                      step={prefs.weightStep}
-                      min={0}
-                      decimals={inputW % 1 === 0 ? 0 : 1}
-                      ariaLabel="Poids"
+                      value={inputR}
+                      onChange={setInputR}
+                      step={5}
+                      min={5}
+                      ariaLabel="Durée en secondes"
                     />
                   </div>
-                )}
-                <div style={{ textAlign: 'center' }}>
-                  <div className="t-eyebrow" style={{ marginBottom: 4 }}>
-                    {trackingType === 'time' ? 'Secondes' : 'Reps'}
+                </>
+              ) : (
+                <div style={{ display: 'flex', gap: 16, justifyContent: 'space-around' }}>
+                  {showWeight && (
+                    <div style={{ textAlign: 'center' }}>
+                      <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+                        Poids ({weightUnit})
+                      </div>
+                      <Stepper
+                        value={inputW}
+                        onChange={setInputW}
+                        step={prefs.weightStep}
+                        min={0}
+                        decimals={inputW % 1 === 0 ? 0 : 1}
+                        ariaLabel="Poids"
+                      />
+                    </div>
+                  )}
+                  <div style={{ textAlign: 'center' }}>
+                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>Reps</div>
+                    <Stepper value={inputR} onChange={setInputR} min={0} ariaLabel="Répétitions" />
                   </div>
-                  <Stepper value={inputR} onChange={setInputR} min={0} ariaLabel="Répétitions" />
                 </div>
-              </div>
+              )}
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Switch
-                  checked={inputRpe != null}
-                  onChange={(on) => setInputRpe(on ? 8 : null)}
-                  label="RPE"
-                />
-                <span className="t-caption">RPE</span>
-                {inputRpe != null && (
-                  <Stepper
-                    value={inputRpe}
-                    onChange={setInputRpe}
-                    step={0.5}
-                    min={6}
-                    max={10}
-                    decimals={1}
-                    ariaLabel="RPE"
+              {trackingType !== 'time' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Switch
+                    checked={inputRpe != null}
+                    onChange={(on) => setInputRpe(on ? 8 : null)}
+                    label="RPE"
                   />
-                )}
-                {repsLookSuspicious(inputR) && (
-                  <span className="t-caption" style={{ color: 'var(--danger)' }}>
-                    {inputR} reps ?
-                  </span>
-                )}
-              </div>
+                  <span className="t-caption">RPE</span>
+                  {inputRpe != null && (
+                    <Stepper
+                      value={inputRpe}
+                      onChange={setInputRpe}
+                      step={0.5}
+                      min={6}
+                      max={10}
+                      decimals={1}
+                      ariaLabel="RPE"
+                    />
+                  )}
+                  {repsLookSuspicious(inputR) && (
+                    <span className="t-caption" style={{ color: 'var(--danger)' }}>
+                      {inputR} reps ?
+                    </span>
+                  )}
+                </div>
+              )}
 
               <Button onClick={validate} disabled={!canValidate} icon="check">
                 Valider la série
