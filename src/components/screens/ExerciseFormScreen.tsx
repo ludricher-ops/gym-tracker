@@ -7,7 +7,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
 import { putBlob, deleteBlob } from '../../db/idb'
 import { uuid } from '../../utils/uuid'
-import { processMediaFile } from '../../utils/media'
+import { processMediaFile, processMediaUrl } from '../../utils/media'
 import {
   CATEGORY_LABEL, EQUIPMENT_LABEL, MUSCLE_LABEL, TRACKING_LABEL,
 } from '../../utils/labels'
@@ -37,9 +37,15 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
   const [media, setMedia] = useState<ExerciseMedia | null>(editing?.media ?? null)
   const [mediaError, setMediaError] = useState<string | null>(null)
   const [mediaBusy, setMediaBusy] = useState(false)
+  const [mediaUrl, setMediaUrl] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const canSave = name.trim().length > 0 && primary != null
+
+  // Libère le blob local de l'ancien média s'il en avait un.
+  const releaseOldBlob = async () => {
+    if (media?.blobId) await deleteBlob(media.blobId)
+  }
 
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -51,7 +57,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       const processed = await processMediaFile(file)
       const blobId = uuid()
       await putBlob(blobId, processed.blob)
-      if (media) await deleteBlob(media.blobId) // remplacement
+      await releaseOldBlob()
       setMedia({
         type: processed.type,
         blobId,
@@ -67,8 +73,31 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
     }
   }
 
+  const onUrl = async () => {
+    if (!mediaUrl.trim()) return
+    setMediaError(null)
+    setMediaBusy(true)
+    try {
+      const processed = await processMediaUrl(mediaUrl)
+      await releaseOldBlob()
+      setMedia({
+        type: processed.type,
+        url: processed.url,
+        mime: '',
+        sizeBytes: 0,
+        aspectRatio: processed.aspectRatio,
+        importedAt: Date.now(),
+      })
+      setMediaUrl('')
+    } catch (err) {
+      setMediaError(err instanceof Error ? err.message : 'Lien invalide.')
+    } finally {
+      setMediaBusy(false)
+    }
+  }
+
   const removeMedia = async () => {
-    if (media) await deleteBlob(media.blobId)
+    await releaseOldBlob()
     setMedia(null)
   }
 
@@ -103,7 +132,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       ? ' Il est utilisé dans des programmes ou des séances passées.'
       : ''
     if (!confirm(`Supprimer « ${editing.name} » ?${warn}`)) return
-    if (media) await deleteBlob(media.blobId)
+    await releaseOldBlob()
     await store.exercise.remove(editing.id)
     nav.back()
   }
@@ -135,6 +164,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
             <>
               <MediaImage
                 blobId={media.blobId}
+                url={media.url}
                 alt="Démo de l'exercice"
                 aspectRatio={media.aspectRatio}
               />
@@ -171,9 +201,24 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
               <span style={{ color: 'var(--accent)' }}>
                 <Icon name="plus" size={28} />
               </span>
-              <span style={{ fontWeight: 600 }}>Ajouter une démo visuelle</span>
-              <span className="t-caption">Photo ou GIF — visible pendant tes séances</span>
+              <span style={{ fontWeight: 600 }}>Importer une photo ou un GIF</span>
+              <span className="t-caption">Visible pendant tes séances</span>
             </button>
+          )}
+          {!media && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <input
+                className="gt-input"
+                value={mediaUrl}
+                onChange={(e) => setMediaUrl(e.target.value)}
+                placeholder="…ou colle un lien d'image / GIF"
+                aria-label="URL d'une image ou d'un GIF"
+                inputMode="url"
+              />
+              <Button variant="secondary" onClick={onUrl} disabled={!mediaUrl.trim()}>
+                Lier
+              </Button>
+            </div>
           )}
           {mediaBusy && <p className="t-caption">Traitement du média…</p>}
           {mediaError && (

@@ -298,6 +298,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                 <div style={{ marginTop: 10 }}>
                   <MediaImage
                     blobId={currentExercise.media.blobId}
+                    url={currentExercise.media.url}
                     alt={`Démo : ${currentExercise.name}`}
                     aspectRatio={currentExercise.media.aspectRatio}
                   />

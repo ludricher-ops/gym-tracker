@@ -3,7 +3,10 @@ import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { Icon } from '../ui'
 
 interface MediaImageProps {
-  blobId: string | null | undefined
+  /** Média importé localement (store `blobs`). */
+  blobId?: string | null
+  /** Média référencé par URL distante. */
+  url?: string | null
   alt: string
   /** Hauteur fixe (px). Sinon le ratio remplit la largeur du conteneur. */
   height?: number
@@ -12,11 +15,14 @@ interface MediaImageProps {
 }
 
 /**
- * Affiche un média d'exercice depuis le store `blobs`. Sur un autre appareil
- * où le blob n'a pas été synchronisé, affiche un repli neutre.
+ * Affiche un média d'exercice — soit un blob local, soit une URL distante.
+ * Repli neutre si le média est absent (ex. blob non synchronisé).
  */
-export function MediaImage({ blobId, alt, height, aspectRatio, radius = 14 }: MediaImageProps) {
-  const url = useObjectUrl(blobId)
+export function MediaImage({
+  blobId, url, alt, height, aspectRatio, radius = 14,
+}: MediaImageProps) {
+  const objectUrl = useObjectUrl(blobId)
+  const src = url || objectUrl
 
   const box: CSSProperties = {
     width: '100%',
@@ -31,7 +37,7 @@ export function MediaImage({ blobId, alt, height, aspectRatio, radius = 14 }: Me
     flex: 'none',
   }
 
-  if (!url) {
+  if (!src) {
     return (
       <div style={box} aria-label={alt}>
         <span style={{ color: 'var(--dim)' }}>
@@ -43,7 +49,7 @@ export function MediaImage({ blobId, alt, height, aspectRatio, radius = 14 }: Me
   return (
     <div style={box}>
       <img
-        src={url}
+        src={src}
         alt={alt}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />

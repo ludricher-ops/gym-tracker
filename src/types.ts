@@ -98,8 +98,10 @@ export interface Settings extends Syncable {
  */
 export interface ExerciseMedia {
   type: 'photo' | 'gif'
-  /** clé dans le store `blobs`. */
-  blobId: string
+  /** clé dans le store `blobs` — média importé localement. */
+  blobId?: string
+  /** URL distante — média référencé par lien (alternative à blobId). */
+  url?: string
   mime: string
   sizeBytes: number
   /** largeur / hauteur — pour préserver le cadrage à l'affichage. */

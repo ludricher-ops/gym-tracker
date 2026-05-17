@@ -104,6 +104,7 @@ export function MyExercisesScreen() {
                     <div style={{ width: 46, flex: 'none' }}>
                       <MediaImage
                         blobId={ex.media.blobId}
+                        url={ex.media.url}
                         alt=""
                         height={46}
                         radius={10}

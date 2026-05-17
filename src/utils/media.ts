@@ -17,9 +17,29 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('Fichier image illisible.'))
+    img.onerror = () => reject(new Error('Image illisible.'))
     img.src = src
   })
+}
+
+export interface UrlMedia {
+  type: 'photo' | 'gif'
+  url: string
+  aspectRatio: number
+}
+
+/** Valide une URL d'image/GIF et en lit le ratio. Lève en cas d'échec. */
+export async function processMediaUrl(rawUrl: string): Promise<UrlMedia> {
+  const url = rawUrl.trim()
+  if (!/^https?:\/\//i.test(url)) {
+    throw new Error('URL invalide — elle doit commencer par http(s)://')
+  }
+  const img = await loadImage(url)
+  return {
+    type: /\.gif(\?|#|$)/i.test(url) ? 'gif' : 'photo',
+    url,
+    aspectRatio: img.naturalWidth / img.naturalHeight || 1,
+  }
 }
 
 /** Traite un fichier image/GIF en média prêt à stocker. Lève en cas d'erreur. */
