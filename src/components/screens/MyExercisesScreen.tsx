@@ -69,13 +69,11 @@ export function MyExercisesScreen() {
           position: 'sticky',
           top: 0,
           background: 'var(--bg)',
-          zIndex: 2,
+          zIndex: 1,
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          paddingTop: 4,
           paddingBottom: 4,
-          marginTop: -4,
         }}>
           <input
             className="gt-input"
