@@ -178,6 +178,27 @@ export interface SetRecord extends Syncable {
   isPersonalRecord: boolean
 }
 
+export type GoalType =
+  | 'exercise_1rm'
+  | 'exercise_reps'
+  | 'sessions_per_week'
+  | 'bodyweight'
+  | 'custom'
+
+export interface Goal extends Syncable {
+  type: GoalType
+  title: string
+  /** requis pour les types exercise_*. */
+  exerciseId?: string
+  targetValue: number
+  /** valeur courante — uniquement pour les types manuels (bodyweight, custom). */
+  manualValue?: number
+  unit: string
+  /** échéance optionnelle "YYYY-MM-DD". */
+  deadline?: string
+  createdAt: number
+}
+
 export type PRType = '1rm' | 'reps_at_weight' | 'volume_set' | 'volume_session'
 
 export interface PersonalRecord extends Syncable {
@@ -202,4 +223,4 @@ export interface OutboxEntry {
 export type SyncStoreName =
   | 'settings' | 'exercises' | 'programs' | 'workoutTemplates'
   | 'workoutExerciseTemplates' | 'sessions' | 'sessionExercises'
-  | 'sets' | 'personalRecords'
+  | 'sets' | 'personalRecords' | 'goals'

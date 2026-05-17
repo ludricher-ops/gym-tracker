@@ -4,7 +4,8 @@
 import type { SyncStoreName } from '../types'
 
 export const DB_NAME = 'gymtrack'
-export const DB_VERSION = 1
+// v2 : ajout du store `goals` (objectifs — Phase 2).
+export const DB_VERSION = 2
 
 export interface IndexDef {
   name: string
@@ -30,6 +31,7 @@ export const SYNC_STORES: SyncStoreName[] = [
   'sessionExercises',
   'sets',
   'personalRecords',
+  'goals',
 ]
 
 export const OUTBOX_STORE = 'outbox'
@@ -78,5 +80,6 @@ export const STORES: StoreDef[] = [
     keyPath: 'id',
     indexes: [{ name: 'exerciseId', keyPath: 'exerciseId' }],
   },
+  { name: 'goals', keyPath: 'id' },
   { name: OUTBOX_STORE, keyPath: null },
 ]

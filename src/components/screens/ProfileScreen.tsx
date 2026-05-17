@@ -80,6 +80,12 @@ export function ProfileScreen() {
           onClick={() => nav.navigate('account')}
         />
         <Row
+          icon="target"
+          label="Objectifs"
+          chevron
+          onClick={() => nav.navigate('goalsPrograms')}
+        />
+        <Row
           icon="list"
           label="Programmes"
           chevron

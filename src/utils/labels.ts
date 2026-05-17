@@ -1,8 +1,8 @@
 // Libellés français des énumérations du modèle de données.
 
 import type {
-  Equipment, ExerciseCategory, MuscleGroup, ProgramGoal, ProgramLevel,
-  RepsMode, TrackingType, WorkoutType,
+  Equipment, ExerciseCategory, GoalType, MuscleGroup, ProgramGoal,
+  ProgramLevel, RepsMode, TrackingType, WorkoutType,
 } from '../types'
 
 export const MUSCLE_LABEL: Record<MuscleGroup, string> = {
@@ -108,4 +108,12 @@ export const REPS_MODE_LABEL: Record<RepsMode, string> = {
   fixed: 'Fixe',
   range: 'Plage',
   amrap: 'AMRAP',
+}
+
+export const GOAL_TYPE_LABEL: Record<GoalType, string> = {
+  exercise_1rm: '1RM sur un exercice',
+  exercise_reps: 'Répétitions sur un exercice',
+  sessions_per_week: 'Séances par semaine',
+  bodyweight: 'Poids de corps',
+  custom: 'Personnalisé',
 }

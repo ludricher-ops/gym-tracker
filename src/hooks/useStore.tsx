@@ -6,11 +6,11 @@ import {
   createContext, useContext, useEffect, useMemo, useState, type ReactNode,
 } from 'react'
 import type {
-  Exercise, PersonalRecord, Program, Session, SessionExercise, Settings,
+  Exercise, Goal, PersonalRecord, Program, Session, SessionExercise, Settings,
   SetRecord, Syncable, WorkoutExerciseTemplate, WorkoutTemplate,
 } from '../types'
 import {
-  exerciseRepo, personalRecordRepo, programRepo, sessionExerciseRepo,
+  exerciseRepo, goalRepo, personalRecordRepo, programRepo, sessionExerciseRepo,
   sessionRepo, setRepo, settingsRepo, workoutExerciseTemplateRepo,
   workoutTemplateRepo, type NewRecord, type Repo,
 } from '../db/repo'
@@ -25,6 +25,7 @@ interface Collections {
   sessionExercises: SessionExercise[]
   sets: SetRecord[]
   personalRecords: PersonalRecord[]
+  goals: Goal[]
 }
 
 interface EntityActions<T extends Syncable> {
@@ -44,6 +45,7 @@ export interface StoreApi extends Collections {
   sessionExercise: EntityActions<SessionExercise>
   set: EntityActions<SetRecord>
   personalRecord: EntityActions<PersonalRecord>
+  goal: EntityActions<Goal>
   /** Recharge tout depuis IndexedDB (utilisé après une synchro pull). */
   reload: () => Promise<void>
 }
@@ -52,7 +54,7 @@ const StoreContext = createContext<StoreApi | null>(null)
 
 const EMPTY: Collections = {
   exercises: [], programs: [], workoutTemplates: [], workoutExerciseTemplates: [],
-  sessions: [], sessionExercises: [], sets: [], personalRecords: [],
+  sessions: [], sessionExercises: [], sets: [], personalRecords: [], goals: [],
 }
 
 function upsert<T extends Syncable>(list: T[], rec: T): T[] {
@@ -72,16 +74,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => async () => {
       const [
         exercises, programs, workoutTemplates, workoutExerciseTemplates,
-        sessions, sessionExercises, sets, personalRecords, settingsRow,
+        sessions, sessionExercises, sets, personalRecords, goals, settingsRow,
       ] = await Promise.all([
         exerciseRepo.all(), programRepo.all(), workoutTemplateRepo.all(),
         workoutExerciseTemplateRepo.all(), sessionRepo.all(),
         sessionExerciseRepo.all(), setRepo.all(), personalRecordRepo.all(),
-        settingsRepo.get('singleton'),
+        goalRepo.all(), settingsRepo.get('singleton'),
       ])
       setCols({
         exercises, programs, workoutTemplates, workoutExerciseTemplates,
-        sessions, sessionExercises, sets, personalRecords,
+        sessions, sessionExercises, sets, personalRecords, goals,
       })
       if (settingsRow) setSettings(settingsRow)
     },
@@ -131,6 +133,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       sessionExercise: make('sessionExercises', sessionExerciseRepo),
       set: make('sets', setRepo),
       personalRecord: make('personalRecords', personalRecordRepo),
+      goal: make('goals', goalRepo),
     }
   }, [])
 

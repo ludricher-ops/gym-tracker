@@ -6,7 +6,7 @@
 const ALLOWED_STORES = new Set([
   'settings', 'exercises', 'programs', 'workoutTemplates',
   'workoutExerciseTemplates', 'sessions', 'sessionExercises',
-  'sets', 'personalRecords',
+  'sets', 'personalRecords', 'goals',
 ])
 
 const PULL_LIMIT = 1000

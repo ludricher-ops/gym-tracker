@@ -12,6 +12,7 @@ import { SessionRecapScreen } from '../components/screens/SessionRecapScreen'
 import { AccountScreen } from '../components/screens/AccountScreen'
 import { PreferencesScreen } from '../components/screens/PreferencesScreen'
 import { ExerciseDetailScreen } from '../components/screens/ExerciseDetailScreen'
+import { GoalsScreen } from '../components/screens/GoalsScreen'
 
 /** Props reçues par tout composant d'écran. */
 export interface ScreenProps {
@@ -36,4 +37,5 @@ export const SCREENS: Partial<Record<ScreenName, ScreenComponent>> = {
   account: AccountScreen,
   preferences: PreferencesScreen,
   exerciseDetail: ExerciseDetailScreen,
+  goalsPrograms: GoalsScreen,
 }

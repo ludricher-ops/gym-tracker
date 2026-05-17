@@ -6,7 +6,7 @@
 import type {
   Syncable, Settings, Exercise, Program, WorkoutTemplate,
   WorkoutExerciseTemplate, Session, SessionExercise, SetRecord,
-  PersonalRecord, OutboxEntry, SyncStoreName,
+  PersonalRecord, Goal, OutboxEntry, SyncStoreName,
 } from '../types'
 import { idbGet, idbGetAll, idbGetAllByIndex, idbTx } from './idb'
 import { OUTBOX_STORE } from './schema'
@@ -90,3 +90,4 @@ export const sessionRepo = makeRepo<Session>('sessions')
 export const sessionExerciseRepo = makeRepo<SessionExercise>('sessionExercises')
 export const setRepo = makeRepo<SetRecord>('sets')
 export const personalRecordRepo = makeRepo<PersonalRecord>('personalRecords')
+export const goalRepo = makeRepo<Goal>('goals')
