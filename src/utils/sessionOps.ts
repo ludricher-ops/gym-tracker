@@ -35,6 +35,11 @@ function prefill(
   store: StoreApi,
 ): { weightKg: number; reps: number } {
   const last = lastWorkingSet(template.exerciseId, store)
+
+  if (exercise?.trackingType === 'time') {
+    return { weightKg: 0, reps: last?.reps ?? template.targetDurationSec ?? 30 }
+  }
+
   if (last) {
     return {
       weightKg: nextTargetWeight(last.weightKg, last.reps, template),
