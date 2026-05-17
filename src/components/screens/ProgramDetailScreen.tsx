@@ -36,10 +36,12 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   }
 
   const summary = programSummary(program, store)
-  const assignedWtIds = new Set(Object.values(program.weekTemplate).filter(Boolean) as string[])
-  const workouts = store.workoutTemplates
-    .filter((w) => w.programId === program.id && assignedWtIds.has(w.id))
-    .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  const workouts = useMemo(() => {
+    const assignedIds = new Set(Object.values(program.weekTemplate).filter(Boolean) as string[])
+    return store.workoutTemplates
+      .filter((w) => w.programId === program.id && assignedIds.has(w.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  }, [store.workoutTemplates, program.id, program.weekTemplate])
 
   const del = async () => {
     const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''

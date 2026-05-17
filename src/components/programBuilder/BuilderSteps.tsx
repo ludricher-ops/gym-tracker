@@ -1,7 +1,7 @@
 // Composants des 4 étapes du créateur de programme. L'orchestrateur
 // (ProgramBuilderScreen) détient le brouillon et passe ici les données.
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { MuscleGroup, ProgramGoal, WorkoutType } from '../../types'
 import type { StoreApi } from '../../hooks/useStore'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
@@ -295,11 +295,12 @@ export function StepEditWorkout({
   const [exercisePicker, setExercisePicker] = useState(false)
   const [configIndex, setConfigIndex] = useState<number | null>(null)
 
-  const exName = (id: string) =>
-    store.exercises.find((e) => e.id === id)?.name ?? 'Exercice supprimé'
-
-  const exTracking = (id: string) =>
-    store.exercises.find((e) => e.id === id)?.trackingType ?? 'weight_reps'
+  const exMap = useMemo(
+    () => new Map(store.exercises.map((e) => [e.id, e])),
+    [store.exercises],
+  )
+  const exName = (id: string) => exMap.get(id)?.name ?? 'Exercice supprimé'
+  const exTracking = (id: string) => exMap.get(id)?.trackingType ?? 'weight_reps'
 
   const moveExercise = (index: number, dir: -1 | 1) => {
     const next = index + dir

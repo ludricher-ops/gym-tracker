@@ -149,56 +149,27 @@ export function draftFromProgram(program: Program, store: StoreApi): DraftProgra
   }
 }
 
-/**
- * Met à jour un programme existant en place : supprime les anciennes séances
- * et exercices, recrée les nouveaux, met à jour l'enregistrement programme.
- */
-export async function updateDraft(
+/** Persiste les séances assignées du brouillon et retourne le weekTemplate réel. */
+async function saveWorkoutsFromDraft(
   programId: string,
   draft: DraftProgram,
   store: StoreApi,
-): Promise<Program> {
-  const existing = store.programs.find((p) => p.id === programId)
-  if (!existing) throw new Error(`Programme ${programId} introuvable`)
-
-  const oldWTs = store.workoutTemplates.filter((w) => w.programId === programId)
-  for (const wt of oldWTs) {
-    const wets = store.workoutExerciseTemplates.filter((e) => e.workoutTemplateId === wt.id)
-    for (const wet of wets) await store.workoutExerciseTemplate.remove(wet.id)
-    await store.workoutTemplate.remove(wt.id)
-  }
-
-  const localToReal = new Map<string, string>()
+): Promise<Program['weekTemplate']> {
   const assignedIds = new Set(Object.values(draft.week).filter(Boolean) as string[])
-  const workoutsToSave = draft.workouts.filter((w) => assignedIds.has(w.localId))
+  const localToReal = new Map<string, string>()
 
-  for (const w of workoutsToSave) {
+  for (const w of draft.workouts.filter((w) => assignedIds.has(w.localId))) {
     const wtId = uuid()
     localToReal.set(w.localId, wtId)
-    await store.workoutTemplate.save({
-      id: wtId,
-      programId,
-      name: w.name,
-      type: w.type,
-      muscleGroups: w.muscleGroups,
-    })
+    await store.workoutTemplate.save({ id: wtId, programId, name: w.name, type: w.type, muscleGroups: w.muscleGroups })
     for (let i = 0; i < w.exercises.length; i++) {
       const ex = w.exercises[i]
       await store.workoutExerciseTemplate.save({
-        id: uuid(),
-        workoutTemplateId: wtId,
-        exerciseId: ex.exerciseId,
-        order: i,
-        supersetGroup: ex.supersetGroup,
-        targetSets: ex.targetSets,
-        repsMode: ex.repsMode,
-        targetRepsMin: ex.targetRepsMin,
-        targetRepsMax: ex.targetRepsMax,
-        targetDurationSec: ex.targetDurationSec,
-        targetRPE: ex.targetRPE,
-        restSec: ex.restSec,
-        autoProgress: ex.autoProgress,
-        progressStepKg: ex.progressStepKg,
+        id: uuid(), workoutTemplateId: wtId, exerciseId: ex.exerciseId, order: i,
+        supersetGroup: ex.supersetGroup, targetSets: ex.targetSets,
+        repsMode: ex.repsMode, targetRepsMin: ex.targetRepsMin, targetRepsMax: ex.targetRepsMax,
+        targetDurationSec: ex.targetDurationSec, targetRPE: ex.targetRPE,
+        restSec: ex.restSec, autoProgress: ex.autoProgress, progressStepKg: ex.progressStepKg,
         notes: ex.notes,
       })
     }
@@ -209,16 +180,29 @@ export async function updateDraft(
     const real = localId ? localToReal.get(localId) : undefined
     if (real) weekTemplate[day as Weekday] = real
   }
+  return weekTemplate
+}
 
+export async function updateDraft(
+  programId: string,
+  draft: DraftProgram,
+  store: StoreApi,
+): Promise<Program> {
+  const existing = store.programs.find((p) => p.id === programId)
+  if (!existing) throw new Error(`Programme ${programId} introuvable`)
+
+  for (const wt of store.workoutTemplates.filter((w) => w.programId === programId)) {
+    for (const wet of store.workoutExerciseTemplates.filter((e) => e.workoutTemplateId === wt.id))
+      await store.workoutExerciseTemplate.remove(wet.id)
+    await store.workoutTemplate.remove(wt.id)
+  }
+
+  const weekTemplate = await saveWorkoutsFromDraft(programId, draft, store)
   return store.program.save({
     ...existing,
-    name: draft.name.trim(),
-    goal: draft.goal,
-    level: draft.level,
-    durationWeeks: draft.durationWeeks,
-    sessionsPerWeek: draft.sessionsPerWeek,
-    color: draft.color,
-    weekTemplate,
+    name: draft.name.trim(), goal: draft.goal, level: draft.level,
+    durationWeeks: draft.durationWeeks, sessionsPerWeek: draft.sessionsPerWeek,
+    color: draft.color, weekTemplate,
   })
 }
 
@@ -234,64 +218,14 @@ export function draftStats(draft: DraftProgram): DraftStats {
   return { trainingDays, restDays: 7 - trainingDays, totalExercises }
 }
 
-/** Persiste le brouillon : crée le programme, ses séances et ses exercices. */
 export async function commitDraft(draft: DraftProgram, store: StoreApi): Promise<Program> {
-  const now = Date.now()
   const programId = uuid()
-  const localToReal = new Map<string, string>()
-
-  const assignedLocalIds = new Set(Object.values(draft.week).filter(Boolean) as string[])
-  const workoutsToSave = draft.workouts.filter((w) => assignedLocalIds.has(w.localId))
-
-  for (const w of workoutsToSave) {
-    const wtId = uuid()
-    localToReal.set(w.localId, wtId)
-    await store.workoutTemplate.save({
-      id: wtId,
-      programId,
-      name: w.name,
-      type: w.type,
-      muscleGroups: w.muscleGroups,
-    })
-    for (let i = 0; i < w.exercises.length; i++) {
-      const ex = w.exercises[i]
-      await store.workoutExerciseTemplate.save({
-        id: uuid(),
-        workoutTemplateId: wtId,
-        exerciseId: ex.exerciseId,
-        order: i,
-        supersetGroup: ex.supersetGroup,
-        targetSets: ex.targetSets,
-        repsMode: ex.repsMode,
-        targetRepsMin: ex.targetRepsMin,
-        targetRepsMax: ex.targetRepsMax,
-        targetDurationSec: ex.targetDurationSec,
-        targetRPE: ex.targetRPE,
-        restSec: ex.restSec,
-        autoProgress: ex.autoProgress,
-        progressStepKg: ex.progressStepKg,
-        notes: ex.notes,
-      })
-    }
-  }
-
-  const weekTemplate: Program['weekTemplate'] = {}
-  for (const [day, localId] of Object.entries(draft.week)) {
-    const real = localId ? localToReal.get(localId) : undefined
-    if (real) weekTemplate[day as Weekday] = real
-  }
-
+  const weekTemplate = await saveWorkoutsFromDraft(programId, draft, store)
   return store.program.save({
     id: programId,
-    name: draft.name.trim(),
-    goal: draft.goal,
-    level: draft.level,
-    durationWeeks: draft.durationWeeks,
-    sessionsPerWeek: draft.sessionsPerWeek,
-    color: draft.color,
-    isTemplate: false,
-    isActive: false,
-    weekTemplate,
-    createdAt: now,
+    name: draft.name.trim(), goal: draft.goal, level: draft.level,
+    durationWeeks: draft.durationWeeks, sessionsPerWeek: draft.sessionsPerWeek,
+    color: draft.color, isTemplate: false, isActive: false,
+    weekTemplate, createdAt: Date.now(),
   })
 }
