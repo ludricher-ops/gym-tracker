@@ -53,6 +53,8 @@ export interface UserPreferences {
   distanceUnit: DistanceUnit
   measurementUnit: MeasurementUnit
   defaultRestSec: number
+  /** Incrément du stepper de poids pendant la séance (kg). */
+  weightStep: number
   restSoundEnabled: boolean
   hapticsEnabled: boolean
   autoBarbellWeight: boolean

@@ -30,6 +30,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   distanceUnit: 'km',
   measurementUnit: 'cm',
   defaultRestSec: 90,
+  weightStep: 2.5,
   restSoundEnabled: true,
   hapticsEnabled: true,
   autoBarbellWeight: false,

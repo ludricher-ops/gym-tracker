@@ -14,11 +14,16 @@ export function RestTimerBar({ timer }: RestTimerBarProps) {
 
   return (
     <Card variant="flat">
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+      <div
+        style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}
+        aria-live="polite"
+      >
         <span className="t-eyebrow">{done ? 'Repos terminé' : 'Repos'}</span>
         <span
           className="t-num"
           style={{ fontSize: 34, color: done ? 'var(--accent)' : 'var(--text)' }}
+          role="timer"
+          aria-label={`Repos : ${formatClock(timer.remainingSec)}`}
         >
           {formatClock(timer.remainingSec)}
         </span>

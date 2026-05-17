@@ -259,11 +259,16 @@ export async function recomputeSessionTotals(
   })
 }
 
+/** Une séance ouverte est-elle encore reprenable (< 12 h) ? */
+export function isResumable(startedAt: number, now: number = Date.now()): boolean {
+  return now - startedAt < RESUME_WINDOW_MS
+}
+
 /** Séance ouverte (non terminée) éligible à une reprise, le cas échéant. */
 export function recoverableSession(store: StoreApi): Session | null {
   const open = store.sessions
     .filter((s) => s.endedAt == null)
     .sort((a, b) => b.startedAt - a.startedAt)[0]
   if (!open) return null
-  return Date.now() - open.startedAt < RESUME_WINDOW_MS ? open : null
+  return isResumable(open.startedAt) ? open : null
 }

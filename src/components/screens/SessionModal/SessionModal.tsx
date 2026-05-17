@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { SetRecord } from '../../../types'
 import { useStore } from '../../../hooks/useStore'
 import { useNavigation } from '../../../nav/useNavigation'
 import { useSessionTimer } from '../../../hooks/useSessionTimer'
 import { useRestTimer } from '../../../hooks/useRestTimer'
+import { useActiveSession } from '../../../hooks/useActiveSession'
 import { isAnyPR } from '../../../utils/pr'
-import {
-  deleteSession, finalizeSession, lastWorkingSet, validateSet,
-} from '../../../utils/sessionOps'
+import { isValidSet, repsLookSuspicious } from '../../../utils/setValidation'
+import { lastWorkingSet } from '../../../utils/sessionOps'
 import { formatDuration } from '../../../utils/format'
 import { formatWeight } from '../../../utils/units'
 import { MUSCLE_LABEL } from '../../../utils/labels'
-import { playBeep, vibrate } from '../../../utils/feedback'
-import { uuid } from '../../../utils/uuid'
+import {
+  playBeep, vibrate, notify, requestNotificationPermission,
+} from '../../../utils/feedback'
 import {
   Button, Card, Icon, Modal, Pill, ProgressBar, Sheet, Stepper, Switch,
 } from '../../ui'
@@ -22,6 +23,7 @@ import { SetTable } from './SetTable'
 import { RestTimerBar } from './RestTimerBar'
 import { SessionOverviewSheet } from './SessionOverviewSheet'
 import { SessionCompleteView } from './SessionCompleteView'
+import { SetEditSheet } from '../SetEditSheet'
 import { PRCelebrationOverlay, type PRCelebration } from './PRCelebrationOverlay'
 
 interface SessionModalProps {
@@ -31,9 +33,11 @@ interface SessionModalProps {
 export function SessionModal({ sessionId }: SessionModalProps) {
   const store = useStore()
   const nav = useNavigation()
+  const act = useActiveSession(sessionId)
+  const prefs = store.settings.preferences
 
-  const [exIndex, setExIndex] = useState(0)
   const [editingSetId, setEditingSetId] = useState<string | null>(null)
+  const [editSetSheet, setEditSetSheet] = useState<SetRecord | null>(null)
   const [inputW, setInputW] = useState(0)
   const [inputR, setInputR] = useState(0)
   const [inputRpe, setInputRpe] = useState<number | null>(null)
@@ -44,40 +48,29 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const [celebration, setCelebration] = useState<PRCelebration | null>(null)
   const [finished, setFinished] = useState(false)
   const [mediaOpen, setMediaOpen] = useState(false)
-  // Exercices ayant déjà eu un overlay de célébration (1 max par exercice).
+  const [exitSheet, setExitSheet] = useState(false)
+  // Overlay de célébration : une fois par exercice et par séance.
   const celebrated = useRef<Set<string>>(new Set())
+  const notifAsked = useRef(false)
 
-  const session = store.sessions.find((s) => s.id === sessionId)
+  const { session, currentSE, currentExercise, currentSets, doneCount, totalCount } = act
   const elapsed = useSessionTimer(session?.startedAt ?? Date.now())
 
   const restTimer = useRestTimer(() => {
-    if (store.settings.preferences.restSoundEnabled) playBeep()
-    if (store.settings.preferences.hapticsEnabled) vibrate()
+    if (prefs.restSoundEnabled) playBeep()
+    if (prefs.hapticsEnabled) vibrate()
+    if (prefs.notificationsEnabled) notify('Repos terminé', 'Place à la prochaine série.')
   })
 
-  const sessionExercises = useMemo(
-    () =>
-      store.sessionExercises
-        .filter((se) => se.sessionId === sessionId)
-        .sort((a, b) => a.order - b.order),
-    [store.sessionExercises, sessionId],
-  )
+  const editingSet = editingSetId
+    ? currentSets.find((s) => s.id === editingSetId)
+    : undefined
+  const activeSet: SetRecord | null =
+    editingSet && editingSet.completedAt == null
+      ? editingSet
+      : currentSets.find((s) => s.completedAt == null) ?? null
 
-  const currentSE = sessionExercises[exIndex]
-  const currentExercise = store.exercises.find((e) => e.id === currentSE?.exerciseId)
-  const currentSets = useMemo(
-    () =>
-      store.sets
-        .filter((s) => s.sessionExerciseId === currentSE?.id)
-        .sort((a, b) => a.index - b.index),
-    [store.sets, currentSE?.id],
-  )
-
-  const activeSet: SetRecord | null = editingSetId
-    ? currentSets.find((s) => s.id === editingSetId) ?? null
-    : currentSets.find((s) => s.completedAt == null) ?? null
-
-  // Synchronise les champs de saisie avec la série active.
+  // Synchronise la saisie avec la série active.
   useEffect(() => {
     if (activeSet) {
       setInputW(activeSet.weightKg)
@@ -93,7 +86,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   }, [prFlash])
 
   // Replie la mini-vue média au changement d'exercice.
-  useEffect(() => setMediaOpen(false), [exIndex])
+  useEffect(() => setMediaOpen(false), [act.exIndex])
 
   if (!session) {
     return (
@@ -121,21 +114,11 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     )
   }
 
-  const allSets = store.sets.filter((s) =>
-    sessionExercises.some((se) => se.id === s.sessionExerciseId),
-  )
-  const doneCount = allSets.filter((s) => s.completedAt != null).length
-  const totalCount = allSets.length
   const trackingType = currentExercise?.trackingType ?? 'weight_reps'
   const showWeight = trackingType === 'weight_reps'
-  const weightUnit = store.settings.preferences.weightUnit
-
-  const restSec =
-    store.workoutExerciseTemplates.find(
-      (w) =>
-        w.workoutTemplateId === session.workoutTemplateId &&
-        w.exerciseId === currentSE?.exerciseId,
-    )?.restSec ?? store.settings.preferences.defaultRestSec
+  const weightUnit = prefs.weightUnit
+  const exerciseCount = act.exercises.length
+  const nextExercise = act.exercises[act.exIndex + 1]
 
   const prev = currentSE ? lastWorkingSet(currentSE.exerciseId, store) : null
   const exercisePR = currentSE
@@ -144,7 +127,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         .sort((a, b) => b.estimated1RM - a.estimated1RM)[0]
     : undefined
 
-  const canValidate = inputR > 0 && (!showWeight || inputW > 0)
+  const canValidate = isValidSet(showWeight ? inputW : 0, inputR)
 
   const validate = async () => {
     if (!activeSet || !currentSE || !canValidate) return
@@ -154,99 +137,67 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       reps: inputR,
       rpe: inputRpe ?? undefined,
     }
-    const wasPlanned = activeSet.completedAt == null
-    if (wasPlanned) {
-      const pr = await validateSet(updated, currentSE.exerciseId, store)
-      if (isAnyPR(pr)) {
-        const exId = currentSE.exerciseId
-        const name = currentExercise?.name ?? 'Exercice'
-        // Overlay festif : une fois par exercice et par séance ; sinon
-        // simple bandeau discret.
-        if (store.settings.preferences.prCelebrationEnabled && !celebrated.current.has(exId)) {
-          celebrated.current.add(exId)
-          setCelebration({
-            exerciseName: name,
-            weightKg: updated.weightKg,
-            reps: updated.reps,
-            estimated1RM: pr.estimated1RM,
-            previousBest1RM: pr.previousBest1RM,
-          })
-        } else {
-          setPrFlash(name)
-        }
+    const { pr, restSec } = await act.validateSet(updated)
+    if (isAnyPR(pr)) {
+      const exId = currentSE.exerciseId
+      const name = currentExercise?.name ?? 'Exercice'
+      if (prefs.prCelebrationEnabled && !celebrated.current.has(exId)) {
+        celebrated.current.add(exId)
+        setCelebration({
+          exerciseName: name,
+          weightKg: updated.weightKg,
+          reps: updated.reps,
+          estimated1RM: pr.estimated1RM,
+          previousBest1RM: pr.previousBest1RM,
+        })
+      } else {
+        setPrFlash(name)
       }
-      restTimer.start(restSec)
-      const remaining = currentSets.filter(
-        (s) => s.completedAt == null && s.id !== activeSet.id,
-      ).length
-      if (remaining === 0 && exIndex < sessionExercises.length - 1) {
-        setExIndex(exIndex + 1)
-      }
-    } else {
-      await store.set.save(updated)
+    }
+    restTimer.start(restSec)
+    if (prefs.notificationsEnabled && !notifAsked.current) {
+      notifAsked.current = true
+      requestNotificationPermission()
     }
     setEditingSetId(null)
   }
 
-  const addSet = async () => {
-    if (!currentSE) return
-    const last = currentSets[currentSets.length - 1]
-    await store.set.save({
-      id: uuid(),
-      sessionExerciseId: currentSE.id,
-      index: currentSets.length,
-      weightKg: last?.weightKg ?? inputW,
-      reps: last?.reps ?? inputR,
-      isWarmup: false,
-      isFailure: false,
-      isPersonalRecord: false,
-    })
-  }
-
-  const toggleFlag = async (flag: 'isWarmup' | 'isFailure') => {
-    if (!activeSet) return
-    await store.set.save({ ...activeSet, [flag]: !activeSet[flag] })
+  const onSelectSet = (id: string) => {
+    const set = currentSets.find((s) => s.id === id)
+    if (!set) return
+    if (set.completedAt != null) {
+      setEditSetSheet(set) // série faite → sheet d'édition
+    } else {
+      setEditingSetId(id === editingSetId ? null : id)
+    }
   }
 
   const onPicker = async (ids: string[]) => {
-    if (picker === 'swap' && currentSE && ids[0]) {
-      await store.sessionExercise.save({ ...currentSE, exerciseId: ids[0] })
-    } else if (picker === 'add') {
-      let order = sessionExercises.length
-      for (const id of ids) {
-        const seId = uuid()
-        await store.sessionExercise.save({ id: seId, sessionId, exerciseId: id, order: order++ })
-        // Une seule série par défaut — l'utilisateur en ajoute via le menu.
-        await store.set.save({
-          id: uuid(),
-          sessionExerciseId: seId,
-          index: 0,
-          weightKg: 0,
-          reps: 8,
-          isWarmup: false,
-          isFailure: false,
-          isPersonalRecord: false,
-        })
-      }
-    }
+    if (picker === 'swap' && ids[0]) await act.swapExercise(ids[0])
+    else if (picker === 'add') await act.addExercises(ids)
+  }
+
+  const goNext = () => {
+    if (!nextExercise) return
+    const unfinished = currentSets.some((s) => s.completedAt == null)
+    if (unfinished && !confirm("L'exercice courant n'est pas terminé. Passer au suivant ?"))
+      return
+    act.goToExercise(act.exIndex + 1)
   }
 
   const finish = async () => {
     if (doneCount === 0 && !confirm('Terminer une séance sans série validée ?')) return
-    await finalizeSession(session, store)
+    await act.finish()
     setFinished(true)
   }
 
   const close = () => {
-    if (doneCount > 0 && !confirm('Quitter la séance ? Tu pourras la reprendre plus tard.'))
-      return
-    nav.closeModal()
+    if (doneCount > 0) setExitSheet(true)
+    else nav.closeModal()
   }
 
-  const cancelSession = async () => {
-    if (!confirm('Annuler la séance ? Elle ne sera pas enregistrée et sera supprimée.'))
-      return
-    await deleteSession(session, store)
+  const abandon = async () => {
+    await act.cancel()
     nav.closeModal()
   }
 
@@ -316,19 +267,14 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
                 <Pill variant="surface2">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
                 <span className="t-eyebrow">
-                  Ex {exIndex + 1}/{sessionExercises.length}
+                  Ex {act.exIndex + 1}/{exerciseCount}
                 </span>
               </div>
               {currentExercise.media ? (
                 <button
                   type="button"
                   onClick={() => setMediaOpen((o) => !o)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    color: 'var(--text)',
-                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text)' }}
                   aria-expanded={mediaOpen}
                 >
                   <span className="t-title">{currentExercise.name}</span>
@@ -364,16 +310,28 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               activeSetId={activeSet?.id ?? null}
               trackingType={trackingType}
               weightUnit={weightUnit}
-              onSelect={(id) => setEditingSetId(id === editingSetId ? null : id)}
+              onSelect={onSelectSet}
             />
 
-            {exIndex < sessionExercises.length - 1 && (
-              <p className="t-caption">
-                Suivant :{' '}
-                {store.exercises.find(
-                  (e) => e.id === sessionExercises[exIndex + 1].exerciseId,
-                )?.name ?? '—'}
-              </p>
+            {nextExercise && (
+              <Card onClick={goNext}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span className="t-num" style={{ fontSize: 18, color: 'var(--muted)' }}>
+                    {act.exIndex + 2}
+                  </span>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div className="t-eyebrow">Suivant</div>
+                    <div style={{ fontWeight: 700 }}>
+                      {nextExercise.exercise?.name ?? 'Exercice'}
+                    </div>
+                    <div className="t-caption">
+                      {nextExercise.sets.length} série
+                      {nextExercise.sets.length > 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  <Icon name="chevron-right" size={18} />
+                </div>
+              </Card>
             )}
           </>
         )}
@@ -395,7 +353,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     <Stepper
                       value={inputW}
                       onChange={setInputW}
-                      step={2.5}
+                      step={prefs.weightStep}
                       min={0}
                       decimals={inputW % 1 === 0 ? 0 : 1}
                       ariaLabel="Poids"
@@ -428,7 +386,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     ariaLabel="RPE"
                   />
                 )}
-                {inputR > 30 && (
+                {repsLookSuspicious(inputR) && (
                   <span className="t-caption" style={{ color: 'var(--danger)' }}>
                     {inputR} reps ?
                   </span>
@@ -436,7 +394,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               </div>
 
               <Button onClick={validate} disabled={!canValidate} icon="check">
-                {activeSet?.completedAt != null ? 'Mettre à jour' : 'Valider la série'}
+                Valider la série
               </Button>
             </div>
           )
@@ -447,8 +405,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         <SessionOverviewSheet
           session={session}
           store={store}
-          currentExIndex={exIndex}
-          onJump={setExIndex}
+          currentExIndex={act.exIndex}
+          onJump={act.goToExercise}
+          onReorder={act.reorderExercise}
           onAddExercise={() => setPicker('add')}
           onFinish={finish}
           onClose={() => setOverview(false)}
@@ -458,30 +417,33 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       {menu && (
         <Sheet title="Actions" onClose={() => setMenu(false)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Button variant="secondary" icon="plus" onClick={() => { addSet(); setMenu(false) }}>
+            <Button variant="secondary" icon="plus" onClick={() => { act.addSet(); setMenu(false) }}>
               Ajouter une série
             </Button>
             <Button
               variant="secondary"
               icon="flame"
-              onClick={() => { toggleFlag('isWarmup'); setMenu(false) }}
+              onClick={() => {
+                if (activeSet) act.toggleSetFlag(activeSet, 'isWarmup')
+                setMenu(false)
+              }}
             >
               {activeSet?.isWarmup ? 'Retirer l’échauffement' : 'Marquer échauffement'}
             </Button>
             <Button
               variant="secondary"
               icon="bolt"
-              onClick={() => { toggleFlag('isFailure'); setMenu(false) }}
+              onClick={() => {
+                if (activeSet) act.toggleSetFlag(activeSet, 'isFailure')
+                setMenu(false)
+              }}
             >
               {activeSet?.isFailure ? 'Retirer l’échec' : 'Marquer comme échec'}
             </Button>
             <Button
               variant="secondary"
               icon="skip"
-              onClick={() => {
-                if (exIndex < sessionExercises.length - 1) setExIndex(exIndex + 1)
-                setMenu(false)
-              }}
+              onClick={() => { act.skipExercise(); setMenu(false) }}
             >
               Passer l&apos;exercice
             </Button>
@@ -492,12 +454,24 @@ export function SessionModal({ sessionId }: SessionModalProps) {
             >
               Échanger l&apos;exercice
             </Button>
-            <Button
-              variant="danger"
-              icon="trash"
-              onClick={() => { setMenu(false); cancelSession() }}
-            >
-              Annuler la séance
+          </div>
+        </Sheet>
+      )}
+
+      {exitSheet && (
+        <Sheet title="Quitter la séance ?" onClose={() => setExitSheet(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Button icon="arrow" onClick={() => setExitSheet(false)}>
+              Reprendre la séance
+            </Button>
+            <Button variant="secondary" icon="clock" onClick={() => nav.closeModal()}>
+              Sauver le brouillon
+            </Button>
+            <p className="t-caption">
+              Le brouillon reste accessible depuis l&apos;accueil pendant 12 h.
+            </p>
+            <Button variant="danger" icon="trash" onClick={abandon}>
+              Abandonner la séance
             </Button>
           </div>
         </Sheet>
@@ -507,7 +481,26 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         <ExercisePicker
           onConfirm={onPicker}
           onClose={() => setPicker(null)}
-          alreadyAdded={picker === 'add' ? sessionExercises.map((se) => se.exerciseId) : []}
+          alreadyAdded={
+            picker === 'add' ? act.exercises.map((e) => e.se.exerciseId) : []
+          }
+        />
+      )}
+
+      {editSetSheet && (
+        <SetEditSheet
+          set={editSetSheet}
+          weightUnit={weightUnit}
+          weightStep={prefs.weightStep}
+          onSave={(updated) => {
+            act.updateSet(updated)
+            setEditSetSheet(null)
+          }}
+          onDelete={(s) => {
+            act.removeSet(s.id)
+            setEditSetSheet(null)
+          }}
+          onClose={() => setEditSetSheet(null)}
         />
       )}
 

@@ -83,6 +83,18 @@ export function PreferencesScreen() {
               ariaLabel="Repos par défaut"
             />
           </Field>
+          <Field label="Incrément de poids">
+            <Stepper
+              value={p.weightStep}
+              onChange={(weightStep) => updatePreferences({ weightStep })}
+              step={0.5}
+              min={0.5}
+              max={10}
+              decimals={1}
+              unit="kg"
+              ariaLabel="Incrément de poids"
+            />
+          </Field>
           <ToggleRow
             label="Son de fin de repos"
             control={

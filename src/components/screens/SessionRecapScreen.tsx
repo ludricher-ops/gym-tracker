@@ -347,6 +347,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
         <SetEditSheet
           set={editSet}
           weightUnit={weightUnit}
+          weightStep={store.settings.preferences.weightStep}
           onSave={saveSet}
           onDelete={deleteSet}
           onClose={() => setEditSet(null)}

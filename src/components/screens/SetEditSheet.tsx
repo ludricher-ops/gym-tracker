@@ -5,13 +5,17 @@ import { Sheet, Button, Stepper, Switch } from '../ui'
 interface SetEditSheetProps {
   set: SetRecord
   weightUnit: WeightUnit
+  /** Incrément du stepper de poids (kg). */
+  weightStep?: number
   onSave: (updated: SetRecord) => void
   onDelete: (set: SetRecord) => void
   onClose: () => void
 }
 
-/** Édition d'une série d'une séance passée (poids / reps / RPE / échauffement). */
-export function SetEditSheet({ set, weightUnit, onSave, onDelete, onClose }: SetEditSheetProps) {
+/** Édition d'une série (poids / reps / RPE / échauffement). */
+export function SetEditSheet({
+  set, weightUnit, weightStep = 2.5, onSave, onDelete, onClose,
+}: SetEditSheetProps) {
   const [weightKg, setWeightKg] = useState(set.weightKg)
   const [reps, setReps] = useState(set.reps)
   const [rpe, setRpe] = useState<number | null>(set.rpe ?? null)
@@ -28,7 +32,7 @@ export function SetEditSheet({ set, weightUnit, onSave, onDelete, onClose }: Set
             <Stepper
               value={weightKg}
               onChange={setWeightKg}
-              step={2.5}
+              step={weightStep}
               min={0}
               decimals={weightKg % 1 === 0 ? 0 : 1}
               ariaLabel="Poids"

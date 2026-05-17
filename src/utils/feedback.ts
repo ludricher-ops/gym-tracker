@@ -31,6 +31,28 @@ export function vibrate(ms = 180): void {
   }
 }
 
+/** Demande (une fois) l'autorisation des notifications, si pas déjà décidée. */
+export function requestNotificationPermission(): void {
+  try {
+    if ('Notification' in window && Notification.permission === 'default') {
+      void Notification.requestPermission()
+    }
+  } catch {
+    /* notifications indisponibles — ignoré */
+  }
+}
+
+/** Affiche une notification locale si l'autorisation a été accordée. */
+export function notify(title: string, body?: string): void {
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body })
+    }
+  } catch {
+    /* notifications indisponibles — ignoré */
+  }
+}
+
 /**
  * Partage via la feuille de partage native (Web Share API) ; repli sur la
  * copie dans le presse-papiers si indisponible (desktop).

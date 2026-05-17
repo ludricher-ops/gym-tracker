@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Session } from '../../../types'
 import type { StoreApi } from '../../../hooks/useStore'
 import { useSessionTimer } from '../../../hooks/useSessionTimer'
@@ -10,15 +10,17 @@ interface SessionOverviewSheetProps {
   store: StoreApi
   currentExIndex: number
   onJump: (index: number) => void
+  onReorder: (fromIndex: number, toIndex: number) => void
   onAddExercise: () => void
   onFinish: () => void
   onClose: () => void
 }
 
 export function SessionOverviewSheet({
-  session, store, currentExIndex, onJump, onAddExercise, onFinish, onClose,
+  session, store, currentExIndex, onJump, onReorder, onAddExercise, onFinish, onClose,
 }: SessionOverviewSheetProps) {
   const elapsed = useSessionTimer(session.startedAt)
+  const [notes, setNotes] = useState(session.notes ?? '')
 
   const rows = useMemo(() => {
     const ses = store.sessionExercises
@@ -40,9 +42,17 @@ export function SessionOverviewSheet({
   const totalSets = rows.reduce((s, r) => s + r.total, 0)
   const doneSets = rows.reduce((s, r) => s + r.done, 0)
   const volume = rows.reduce((sum, r) => {
-    const sets = store.sets.filter((s) => s.sessionExerciseId === r.se.id && s.completedAt != null && !s.isWarmup)
+    const sets = store.sets.filter(
+      (s) => s.sessionExerciseId === r.se.id && s.completedAt != null && !s.isWarmup,
+    )
     return sum + sets.reduce((v, s) => v + s.weightKg * s.reps, 0)
   }, 0)
+
+  const saveNotes = () => {
+    if (notes !== (session.notes ?? '')) {
+      store.session.save({ ...session, notes: notes.trim() || undefined })
+    }
+  }
 
   return (
     <Sheet title="Vue d'ensemble" onClose={onClose}>
@@ -55,39 +65,91 @@ export function SessionOverviewSheet({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {rows.map((r, i) => (
-            <button
-              key={r.se.id}
-              type="button"
-              className={`gt-set ${i === currentExIndex ? 'gt-set--active' : ''}`}
-              onClick={() => {
-                onJump(i)
-                onClose()
-              }}
-            >
-              <span className="gt-set__perf" style={{ fontFamily: 'var(--font-ui)' }}>
-                {r.se.supersetGroup && (
-                  <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
-                    {r.se.supersetGroup} ·{' '}
+            <div key={r.se.id} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button
+                type="button"
+                className={`gt-set ${i === currentExIndex ? 'gt-set--active' : ''}`}
+                style={{ flex: 1 }}
+                onClick={() => {
+                  onJump(i)
+                  onClose()
+                }}
+              >
+                <span className="gt-set__perf" style={{ fontFamily: 'var(--font-ui)' }}>
+                  {r.se.supersetGroup && (
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                      {r.se.supersetGroup} ·{' '}
+                    </span>
+                  )}
+                  {r.name}
+                </span>
+                {r.hasPR && (
+                  <span style={{ color: 'var(--accent)' }}>
+                    <Icon name="bolt" size={16} />
                   </span>
                 )}
-                {r.name}
-              </span>
-              {r.hasPR && (
-                <span style={{ color: 'var(--accent)' }}>
-                  <Icon name="bolt" size={16} />
+                <span className="gt-set__idx" style={{ width: 'auto', textAlign: 'right' }}>
+                  {r.done}/{r.total}
                 </span>
-              )}
-              <span className="gt-set__idx" style={{ width: 'auto', textAlign: 'right' }}>
-                {r.done}/{r.total}
-              </span>
-            </button>
+              </button>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <button
+                  className="gt-iconbtn"
+                  style={{ height: 26 }}
+                  aria-label="Monter l'exercice"
+                  disabled={i === 0}
+                  onClick={() => onReorder(i, i - 1)}
+                >
+                  <Icon name="chevron-right" size={16} className="gt-rot-up" />
+                </button>
+                <button
+                  className="gt-iconbtn"
+                  style={{ height: 26 }}
+                  aria-label="Descendre l'exercice"
+                  disabled={i === rows.length - 1}
+                  onClick={() => onReorder(i, i + 1)}
+                >
+                  <Icon name="chevron-right" size={16} className="gt-rot-down" />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
 
-        <Button variant="secondary" icon="plus" onClick={() => { onAddExercise(); onClose() }}>
+        <div className="gt-field">
+          <label className="gt-field__label" htmlFor="session-notes">
+            Notes de séance
+          </label>
+          <textarea
+            id="session-notes"
+            className="gt-textarea"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            onBlur={saveNotes}
+            placeholder="Sensations, douleurs, points à retenir…"
+          />
+        </div>
+
+        <Button
+          variant="secondary"
+          icon="plus"
+          onClick={() => {
+            saveNotes()
+            onAddExercise()
+            onClose()
+          }}
+        >
           Ajouter un exercice
         </Button>
-        <Button variant="danger" icon="check" onClick={() => { onClose(); onFinish() }}>
+        <Button
+          variant="danger"
+          icon="check"
+          onClick={() => {
+            saveNotes()
+            onClose()
+            onFinish()
+          }}
+        >
           Terminer la séance
         </Button>
       </div>
