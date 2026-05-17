@@ -32,6 +32,18 @@ export function ExerciseTimerBar({ timer, onValidate }: ExerciseTimerBarProps) {
       <div style={{ margin: '10px 0' }}>
         <ProgressBar value={progress} />
       </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div style={{ flex: 1 }}>
+          <Button variant="secondary" onClick={() => timer.addTime(-5)}>
+            −5 s
+          </Button>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Button variant="secondary" onClick={() => timer.addTime(5)}>
+            +5 s
+          </Button>
+        </div>
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1 }}>
           <Button variant="secondary" onClick={timer.skip}>

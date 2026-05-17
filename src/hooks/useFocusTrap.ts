@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
@@ -8,6 +8,9 @@ const FOCUSABLE =
  * `onEscape` à la touche Échap. Restaure le focus précédent au démontage.
  */
 export function useFocusTrap(ref: RefObject<HTMLElement | null>, onEscape?: () => void) {
+  const onEscapeRef = useRef(onEscape)
+  onEscapeRef.current = onEscape
+
   useEffect(() => {
     const node = ref.current
     if (!node) return
@@ -18,7 +21,7 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, onEscape?: () =
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onEscape?.()
+        onEscapeRef.current?.()
         return
       }
       if (e.key !== 'Tab') return
@@ -40,5 +43,5 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, onEscape?: () =
       node.removeEventListener('keydown', onKeyDown)
       previous?.focus?.()
     }
-  }, [ref, onEscape])
+  }, [ref]) // onEscape via ref — pas de re-déclenchement à chaque re-render
 }
