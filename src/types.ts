@@ -69,6 +69,8 @@ export interface UserPreferences {
   skipDayPreview: boolean
   /** sauter le briefing pré-séance. */
   skipBriefing: boolean
+  /** overlay de célébration à la validation d'un record pendant la séance. */
+  prCelebrationEnabled: boolean
 }
 
 /**

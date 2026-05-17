@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SetRecord } from '../../../types'
 import { useStore } from '../../../hooks/useStore'
 import { useNavigation } from '../../../nav/useNavigation'
@@ -21,6 +21,7 @@ import { SetTable } from './SetTable'
 import { RestTimerBar } from './RestTimerBar'
 import { SessionOverviewSheet } from './SessionOverviewSheet'
 import { SessionCompleteView } from './SessionCompleteView'
+import { PRCelebrationOverlay, type PRCelebration } from './PRCelebrationOverlay'
 
 interface SessionModalProps {
   sessionId: string
@@ -39,7 +40,10 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const [menu, setMenu] = useState(false)
   const [picker, setPicker] = useState<'add' | 'swap' | null>(null)
   const [prFlash, setPrFlash] = useState<string | null>(null)
+  const [celebration, setCelebration] = useState<PRCelebration | null>(null)
   const [finished, setFinished] = useState(false)
+  // Exercices ayant déjà eu un overlay de célébration (1 max par exercice).
+  const celebrated = useRef<Set<string>>(new Set())
 
   const session = store.sessions.find((s) => s.id === sessionId)
   const elapsed = useSessionTimer(session?.startedAt ?? Date.now())
@@ -148,7 +152,24 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     const wasPlanned = activeSet.completedAt == null
     if (wasPlanned) {
       const pr = await validateSet(updated, currentSE.exerciseId, store)
-      if (isAnyPR(pr)) setPrFlash(currentExercise?.name ?? 'Exercice')
+      if (isAnyPR(pr)) {
+        const exId = currentSE.exerciseId
+        const name = currentExercise?.name ?? 'Exercice'
+        // Overlay festif : une fois par exercice et par séance ; sinon
+        // simple bandeau discret.
+        if (store.settings.preferences.prCelebrationEnabled && !celebrated.current.has(exId)) {
+          celebrated.current.add(exId)
+          setCelebration({
+            exerciseName: name,
+            weightKg: updated.weightKg,
+            reps: updated.reps,
+            estimated1RM: pr.estimated1RM,
+            previousBest1RM: pr.previousBest1RM,
+          })
+        } else {
+          setPrFlash(name)
+        }
+      }
       restTimer.start(restSec)
       const remaining = currentSets.filter(
         (s) => s.completedAt == null && s.id !== activeSet.id,
@@ -432,6 +453,14 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           onConfirm={onPicker}
           onClose={() => setPicker(null)}
           alreadyAdded={picker === 'add' ? sessionExercises.map((se) => se.exerciseId) : []}
+        />
+      )}
+
+      {celebration && (
+        <PRCelebrationOverlay
+          pr={celebration}
+          weightUnit={weightUnit}
+          onContinue={() => setCelebration(null)}
         />
       )}
     </Modal>

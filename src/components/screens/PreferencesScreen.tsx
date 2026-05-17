@@ -204,6 +204,17 @@ export function PreferencesScreen() {
               />
             }
           />
+          <ToggleRow
+            label="Célébration des records"
+            sub="Overlay festif quand tu bats un record pendant la séance"
+            control={
+              <Switch
+                checked={p.prCelebrationEnabled}
+                onChange={(prCelebrationEnabled) => updatePreferences({ prCelebrationEnabled })}
+                label="Célébration des records"
+              />
+            }
+          />
         </Section>
       </div>
     </div>

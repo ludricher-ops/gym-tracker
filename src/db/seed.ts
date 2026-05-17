@@ -42,6 +42,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   notificationsEnabled: false,
   skipDayPreview: false,
   skipBriefing: false,
+  prCelebrationEnabled: true,
 }
 
 export async function ensureSeed(): Promise<void> {

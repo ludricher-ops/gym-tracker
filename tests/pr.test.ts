@@ -40,4 +40,11 @@ describe('detectPRs', () => {
     const r = detectPRs({ weightKg: 0, reps: 0 }, [])
     expect(isAnyPR(r)).toBe(false)
   })
+
+  it('expose le meilleur 1RM précédent', () => {
+    const history: PerformedSet[] = [{ weightKg: 100, reps: 5 }]
+    const r = detectPRs({ weightKg: 110, reps: 5 }, history)
+    expect(r.previousBest1RM).toBeCloseTo(116.667, 2)
+    expect(r.estimated1RM).toBeGreaterThan(r.previousBest1RM)
+  })
 })

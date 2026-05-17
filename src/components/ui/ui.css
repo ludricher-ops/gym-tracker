@@ -521,6 +521,46 @@ button.gt-row:active {
 .gt-iconbtn:disabled {
   opacity: 0.3;
 }
+/* ── Overlay de célébration PR ────────────────────────────────────── */
+.gt-pr-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px var(--pad-screen);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.74);
+  overflow: hidden;
+}
+.gt-pr-halo {
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 70px -8px var(--accent);
+}
+.gt-confetti {
+  position: absolute;
+  top: -16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: gt-confetti-fall linear infinite;
+}
+@keyframes gt-confetti-fall {
+  to {
+    transform: translateY(120vh) rotate(540deg);
+  }
+}
+
 .gt-rot-up {
   transform: rotate(-90deg);
 }

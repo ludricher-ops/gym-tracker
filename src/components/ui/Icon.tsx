@@ -36,6 +36,8 @@ const PATHS = {
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13M10 11v6M14 11v6',
   link: 'M9 15l6-6M10 6l1-1a4 4 0 0 1 6 6l-1 1M14 18l-1 1a4 4 0 0 1-6-6l1-1',
   edit: 'M4 20h4l10-10-4-4L4 16v4zM14 6l4 4',
+  trophy: 'M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 0-3 3M12 14v3M8 20h8M9.5 20l.6-3h3.8l.6 3',
+  share: 'M12 3v13M8 7l4-4 4 4M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
 } as const
 
 export type IconName = keyof typeof PATHS

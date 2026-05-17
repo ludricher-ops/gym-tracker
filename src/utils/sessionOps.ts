@@ -7,7 +7,8 @@ import type {
 import type { StoreApi } from '../hooks/useStore'
 import { uuid } from './uuid'
 import { nextTargetWeight } from './progression'
-import { detectPRs, isAnyPR, type PRResult } from './pr'
+import { detectPRs, isAnyPR } from './pr'
+import type { PRResult } from './pr'
 import { daysBetween } from './dates'
 
 const BARBELL_WEIGHT = 20
@@ -143,8 +144,14 @@ export async function validateSet(
     )
     .map((s) => ({ weightKg: s.weightKg, reps: s.reps }))
 
-  const pr = set.isWarmup
-    ? { estimated1RM: 0, is1RM: false, isVolumeSet: false, isRepsAtWeight: false }
+  const pr: PRResult = set.isWarmup
+    ? {
+        estimated1RM: 0,
+        previousBest1RM: 0,
+        is1RM: false,
+        isVolumeSet: false,
+        isRepsAtWeight: false,
+      }
     : detectPRs({ weightKg: set.weightKg, reps: set.reps }, history, formula)
 
   await store.set.save({ ...set, completedAt: now, isPersonalRecord: isAnyPR(pr) })

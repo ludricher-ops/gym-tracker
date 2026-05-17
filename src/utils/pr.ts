@@ -11,6 +11,8 @@ export interface PerformedSet {
 
 export interface PRResult {
   estimated1RM: number
+  /** Meilleur 1RM estimé AVANT cette série (0 si aucun historique). */
+  previousBest1RM: number
   /** 1RM estimé supérieur au meilleur précédent. */
   is1RM: boolean
   /** Volume de la série (poids × reps) supérieur au meilleur précédent. */
@@ -36,10 +38,22 @@ export function detectPRs(
   const estimated1RM = estimate1RM(current.weightKg, current.reps, formula)
 
   if (current.weightKg <= 0 || current.reps <= 0) {
-    return { estimated1RM, is1RM: false, isVolumeSet: false, isRepsAtWeight: false }
+    return {
+      estimated1RM,
+      previousBest1RM: 0,
+      is1RM: false,
+      isVolumeSet: false,
+      isRepsAtWeight: false,
+    }
   }
   if (history.length === 0) {
-    return { estimated1RM, is1RM: true, isVolumeSet: true, isRepsAtWeight: true }
+    return {
+      estimated1RM,
+      previousBest1RM: 0,
+      is1RM: true,
+      isVolumeSet: true,
+      isRepsAtWeight: true,
+    }
   }
 
   const bestE1RM = Math.max(...history.map((h) => estimate1RM(h.weightKg, h.reps, formula)))
@@ -49,6 +63,7 @@ export function detectPRs(
 
   return {
     estimated1RM,
+    previousBest1RM: bestE1RM,
     is1RM: estimated1RM > bestE1RM,
     isVolumeSet: currentVolume > bestVolume,
     isRepsAtWeight:
