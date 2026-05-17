@@ -74,7 +74,7 @@ export function ProgramsLibraryScreen() {
           aria-label="Rechercher"
         />
 
-        <div className="gt-chips gt-chips--scroll">
+        <div className="gt-chips">
           <button
             type="button"
             className={`gt-chip ${goal === 'all' ? 'gt-chip--active' : ''}`}

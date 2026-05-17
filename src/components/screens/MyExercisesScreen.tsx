@@ -92,7 +92,7 @@ export function MyExercisesScreen() {
             ]}
           />
 
-          <div className="gt-chips gt-chips--scroll" role="group" aria-label="Filtrer par groupe musculaire">
+          <div className="gt-chips" role="group" aria-label="Filtrer par groupe musculaire">
             {regionChips.map((c) => (
               <button
                 key={c.key}
