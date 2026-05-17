@@ -1,0 +1,564 @@
+// Composants des 4 étapes du créateur de programme. L'orchestrateur
+// (ProgramBuilderScreen) détient le brouillon et passe ici les données.
+
+import { useState } from 'react'
+import type { MuscleGroup, ProgramGoal, WorkoutType } from '../../types'
+import type { StoreApi } from '../../hooks/useStore'
+import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
+import {
+  Button, Card, Icon, PrimaryBar, Row, Segmented, Sheet,
+} from '../ui'
+import { MusclePicker } from '../exercises/MusclePicker'
+import { ExercisePicker } from './ExercisePicker'
+import { ExerciseConfigSheet } from './ExerciseConfigSheet'
+import {
+  WEEKDAYS, WEEKDAY_LABEL, PROGRAM_COLORS, defaultWE, draftStats,
+  type DraftProgram, type DraftWorkout, type DraftWE,
+} from './programDraft'
+
+const WORKOUT_TYPES: WorkoutType[] = [
+  'push', 'pull', 'legs', 'upper', 'lower', 'fullbody', 'custom',
+]
+
+// ── Étape 1 — Méta ──────────────────────────────────────────────────
+
+interface StepMetaProps {
+  draft: DraftProgram
+  update: (p: Partial<DraftProgram>) => void
+  onNext: () => void
+}
+
+export function StepMeta({ draft, update, onNext }: StepMetaProps) {
+  return (
+    <>
+      <div className="gt-screen__scroll">
+        <div className="gt-field">
+          <label className="gt-field__label" htmlFor="prog-name">
+            Nom du programme
+          </label>
+          <input
+            id="prog-name"
+            className="gt-input"
+            value={draft.name}
+            onChange={(e) => update({ name: e.target.value })}
+            placeholder="Ex. Ma prise de masse"
+            autoFocus
+          />
+        </div>
+
+        <div className="gt-field">
+          <span className="gt-field__label">Objectif</span>
+          <div className="gt-chips">
+            {(Object.keys(GOAL_LABEL) as ProgramGoal[]).map((g) => (
+              <button
+                key={g}
+                type="button"
+                className={`gt-chip ${draft.goal === g ? 'gt-chip--active' : ''}`}
+                onClick={() => update({ goal: g })}
+              >
+                {GOAL_LABEL[g]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="gt-field">
+          <span className="gt-field__label">Niveau</span>
+          <Segmented
+            value={draft.level}
+            onChange={(level) => update({ level })}
+            options={[
+              { value: 'beginner', label: LEVEL_LABEL.beginner },
+              { value: 'intermediate', label: LEVEL_LABEL.intermediate },
+              { value: 'advanced', label: LEVEL_LABEL.advanced },
+            ]}
+          />
+        </div>
+
+        <div className="gt-field">
+          <span className="gt-field__label">Durée : {draft.durationWeeks} semaines</span>
+          <input
+            type="range"
+            min={4}
+            max={52}
+            value={draft.durationWeeks}
+            onChange={(e) => update({ durationWeeks: Number(e.target.value) })}
+            aria-label="Durée en semaines"
+          />
+        </div>
+
+        <div className="gt-field">
+          <span className="gt-field__label">Séances par semaine (objectif)</span>
+          <div className="gt-chips">
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`gt-chip ${draft.sessionsPerWeek === n ? 'gt-chip--active' : ''}`}
+                onClick={() => update({ sessionsPerWeek: n })}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="gt-field">
+          <span className="gt-field__label">Couleur</span>
+          <div className="gt-chips">
+            {PROGRAM_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Couleur ${c}`}
+                onClick={() => update({ color: c })}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: c,
+                  border: draft.color === c ? '3px solid var(--text)' : '3px solid transparent',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <PrimaryBar>
+        <Button onClick={onNext} disabled={!draft.name.trim()} icon="arrow">
+          Continuer
+        </Button>
+      </PrimaryBar>
+    </>
+  )
+}
+
+// ── Étape 2 — Structure de la semaine ───────────────────────────────
+
+interface StepWeekProps {
+  draft: DraftProgram
+  addWorkout: (type: WorkoutType) => string
+  assignDay: (day: (typeof WEEKDAYS)[number], localId: string | null) => void
+  onEditWorkout: (localId: string) => void
+  onNext: () => void
+}
+
+export function StepWeek({ draft, addWorkout, assignDay, onEditWorkout, onNext }: StepWeekProps) {
+  const [addingDay, setAddingDay] = useState<(typeof WEEKDAYS)[number] | null>(null)
+  const stats = draftStats(draft)
+
+  const workoutById = (id: string) => draft.workouts.find((w) => w.localId === id)
+
+  return (
+    <>
+      <div className="gt-screen__scroll">
+        <div className="gt-statrow">
+          <MiniStat value={stats.trainingDays} label="Séances" />
+          <MiniStat value={stats.restDays} label="Repos" />
+          <MiniStat value={stats.totalExercises} label="Exercices" />
+        </div>
+
+        {WEEKDAYS.map((day) => {
+          const localId = draft.week[day]
+          const workout = localId ? workoutById(localId) : undefined
+          if (workout) {
+            return (
+              <div key={day} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ width: 38, fontWeight: 700, color: 'var(--muted)' }}>
+                  {WEEKDAY_LABEL[day]}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <Row
+                    label={workout.name}
+                    sub={`${workout.exercises.length} exercice${workout.exercises.length > 1 ? 's' : ''}`}
+                    chevron
+                    onClick={() => onEditWorkout(workout.localId)}
+                  />
+                </div>
+                <button
+                  className="gt-iconbtn"
+                  aria-label="Retirer cette séance du jour"
+                  onClick={() => assignDay(day, null)}
+                >
+                  <Icon name="close" size={18} />
+                </button>
+              </div>
+            )
+          }
+          return (
+            <div key={day} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ width: 38, fontWeight: 700, color: 'var(--dim)' }}>
+                {WEEKDAY_LABEL[day]}
+              </span>
+              <button
+                className="gt-row"
+                style={{ flex: 1, color: 'var(--muted)' }}
+                onClick={() => setAddingDay(day)}
+              >
+                <span className="gt-row__icon">
+                  <Icon name="plus" size={18} />
+                </span>
+                <span className="gt-row__body">
+                  <span className="gt-row__label" style={{ color: 'var(--muted)' }}>
+                    Repos — ajouter une séance
+                  </span>
+                </span>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+
+      <PrimaryBar>
+        <Button onClick={onNext} disabled={stats.trainingDays === 0} icon="arrow">
+          Revue du programme
+        </Button>
+      </PrimaryBar>
+
+      {addingDay && (
+        <Sheet title="Ajouter une séance" onClose={() => setAddingDay(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {draft.workouts.length > 0 && (
+              <div>
+                <p className="t-eyebrow" style={{ marginBottom: 8 }}>
+                  Séances existantes
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {draft.workouts.map((w) => (
+                    <Row
+                      key={w.localId}
+                      label={w.name}
+                      sub={`${w.exercises.length} exercice(s)`}
+                      onClick={() => {
+                        assignDay(addingDay, w.localId)
+                        setAddingDay(null)
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="t-eyebrow" style={{ marginBottom: 8 }}>
+                Nouvelle séance
+              </p>
+              <div className="gt-chips">
+                {WORKOUT_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="gt-chip"
+                    onClick={() => {
+                      const id = addWorkout(t)
+                      assignDay(addingDay, id)
+                      setAddingDay(null)
+                      onEditWorkout(id)
+                    }}
+                  >
+                    {WORKOUT_TYPE_LABEL[t]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Sheet>
+      )}
+    </>
+  )
+}
+
+function MiniStat({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="gt-stat">
+      <div className="gt-stat__value">{value}</div>
+      <div className="gt-stat__label">{label}</div>
+    </div>
+  )
+}
+
+// ── Étape 3 — Éditer une séance ─────────────────────────────────────
+
+interface StepEditWorkoutProps {
+  workout: DraftWorkout
+  store: StoreApi
+  onChange: (patch: Partial<DraftWorkout>) => void
+  onRemove: () => void
+  onDuplicate: () => void
+  onBack: () => void
+}
+
+export function StepEditWorkout({
+  workout, store, onChange, onRemove, onDuplicate, onBack,
+}: StepEditWorkoutProps) {
+  const [musclePicker, setMusclePicker] = useState(false)
+  const [exercisePicker, setExercisePicker] = useState(false)
+  const [configIndex, setConfigIndex] = useState<number | null>(null)
+
+  const exName = (id: string) =>
+    store.exercises.find((e) => e.id === id)?.name ?? 'Exercice supprimé'
+
+  const moveExercise = (index: number, dir: -1 | 1) => {
+    const next = index + dir
+    if (next < 0 || next >= workout.exercises.length) return
+    const list = workout.exercises.slice()
+    ;[list[index], list[next]] = [list[next], list[index]]
+    onChange({ exercises: list })
+  }
+
+  const addExercises = (ids: string[]) => {
+    onChange({ exercises: [...workout.exercises, ...ids.map((id) => defaultWE(id))] })
+  }
+
+  const updateWE = (index: number, next: DraftWE) => {
+    const list = workout.exercises.slice()
+    list[index] = next
+    onChange({ exercises: list })
+  }
+
+  const removeWE = (index: number) => {
+    onChange({ exercises: workout.exercises.filter((_, i) => i !== index) })
+  }
+
+  return (
+    <>
+      <div className="gt-screen__scroll">
+        <div className="gt-field">
+          <label className="gt-field__label" htmlFor="wk-name">
+            Nom de la séance
+          </label>
+          <input
+            id="wk-name"
+            className="gt-input"
+            value={workout.name}
+            onChange={(e) => onChange({ name: e.target.value })}
+          />
+        </div>
+
+        <Row
+          icon="target"
+          label="Groupes musculaires"
+          value={
+            workout.muscleGroups.length
+              ? `${workout.muscleGroups.length} sélectionné(s)`
+              : 'Aucun'
+          }
+          chevron
+          onClick={() => setMusclePicker(true)}
+        />
+
+        <p className="t-eyebrow" style={{ marginTop: 6 }}>
+          Exercices ({workout.exercises.length})
+        </p>
+
+        {workout.exercises.map((we, i) => (
+          <div key={we.localId} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <Row
+                label={
+                  <>
+                    {we.supersetGroup && (
+                      <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                        {we.supersetGroup} ·{' '}
+                      </span>
+                    )}
+                    {exName(we.exerciseId)}
+                  </>
+                }
+                sub={`${we.targetSets} × ${
+                  we.repsMode === 'range'
+                    ? `${we.targetRepsMin}-${we.targetRepsMax}`
+                    : we.targetRepsMin
+                } · repos ${we.restSec}s`}
+                chevron
+                onClick={() => setConfigIndex(i)}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button
+                className="gt-iconbtn"
+                style={{ height: 26 }}
+                aria-label="Monter"
+                disabled={i === 0}
+                onClick={() => moveExercise(i, -1)}
+              >
+                <Icon name="chevron-right" size={16} className="gt-rot-up" />
+              </button>
+              <button
+                className="gt-iconbtn"
+                style={{ height: 26 }}
+                aria-label="Descendre"
+                disabled={i === workout.exercises.length - 1}
+                onClick={() => moveExercise(i, 1)}
+              >
+                <Icon name="chevron-right" size={16} className="gt-rot-down" />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <Button variant="secondary" icon="plus" onClick={() => setExercisePicker(true)}>
+          Ajouter un exercice
+        </Button>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="ghost" icon="copy" onClick={onDuplicate}>
+            Dupliquer
+          </Button>
+          <Button variant="ghost" icon="trash" onClick={onRemove}>
+            Supprimer
+          </Button>
+        </div>
+      </div>
+
+      <PrimaryBar>
+        <Button onClick={onBack} icon="check">
+          Terminer la séance
+        </Button>
+      </PrimaryBar>
+
+      {musclePicker && (
+        <MusclePicker
+          mode="multi"
+          value={workout.muscleGroups}
+          onConfirm={(groups: MuscleGroup[]) => onChange({ muscleGroups: groups })}
+          onClose={() => setMusclePicker(false)}
+        />
+      )}
+      {exercisePicker && (
+        <ExercisePicker
+          alreadyAdded={workout.exercises.map((e) => e.exerciseId)}
+          onConfirm={addExercises}
+          onClose={() => setExercisePicker(false)}
+        />
+      )}
+      {configIndex != null && workout.exercises[configIndex] && (
+        <ExerciseConfigSheet
+          we={workout.exercises[configIndex]}
+          exerciseName={exName(workout.exercises[configIndex].exerciseId)}
+          onChange={(next) => updateWE(configIndex, next)}
+          onRemove={() => removeWE(configIndex)}
+          onClose={() => setConfigIndex(null)}
+        />
+      )}
+    </>
+  )
+}
+
+// ── Étape 4 — Revue ─────────────────────────────────────────────────
+
+interface StepReviewProps {
+  draft: DraftProgram
+  startDate: string
+  setStartDate: (v: string) => void
+  hasActiveProgram: string | null
+  saving: boolean
+  onActivate: () => void
+}
+
+export function StepReview({
+  draft, startDate, setStartDate, hasActiveProgram, saving, onActivate,
+}: StepReviewProps) {
+  const stats = draftStats(draft)
+  return (
+    <>
+      <div className="gt-screen__scroll">
+        <Card variant="accent">
+          <p className="t-eyebrow" style={{ color: 'var(--accent-ink)', opacity: 0.7 }}>
+            {GOAL_LABEL[draft.goal]}
+          </p>
+          <p style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>
+            {draft.name || 'Sans nom'}
+          </p>
+          <div style={{ display: 'flex', gap: 18, marginTop: 12 }}>
+            <ReviewMetric value={draft.durationWeeks} label="semaines" />
+            <ReviewMetric value={stats.trainingDays} label="jours/sem" />
+            <ReviewMetric value={stats.totalExercises} label="exercices" />
+          </div>
+        </Card>
+
+        <div>
+          <p className="t-eyebrow" style={{ marginBottom: 8 }}>
+            Rythme hebdomadaire
+          </p>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {WEEKDAYS.map((day) => {
+              const filled = !!draft.week[day]
+              return (
+                <div
+                  key={day}
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    padding: '8px 0',
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    background: filled ? 'var(--accent)' : 'var(--surface2)',
+                    color: filled ? 'var(--accent-ink)' : 'var(--dim)',
+                  }}
+                >
+                  {WEEKDAY_LABEL[day][0]}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="t-eyebrow" style={{ marginBottom: 8 }}>
+            Séances
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {draft.workouts.map((w) => (
+              <Row
+                key={w.localId}
+                label={w.name}
+                sub={`${w.exercises.length} exercice(s)`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="gt-field">
+          <label className="gt-field__label" htmlFor="prog-start">
+            Date de démarrage
+          </label>
+          <input
+            id="prog-start"
+            type="date"
+            className="gt-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+
+        {hasActiveProgram && (
+          <Card variant="flat">
+            <p className="t-caption">
+              ⚠️ Remplace ton programme actuel «&nbsp;{hasActiveProgram}&nbsp;». Il sera
+              archivé — l&apos;historique reste accessible.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      <PrimaryBar>
+        <Button onClick={onActivate} disabled={saving} icon="check">
+          {saving ? 'Activation…' : 'Activer le programme'}
+        </Button>
+      </PrimaryBar>
+    </>
+  )
+}
+
+function ReviewMetric({ value, label }: { value: number; label: string }) {
+  return (
+    <div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 22 }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.75 }}>{label}</div>
+    </div>
+  )
+}

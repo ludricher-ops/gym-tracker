@@ -1,0 +1,15 @@
+{
+  "name": "Gym Track",
+  "short_name": "Gym Track",
+  "description": "Suivi de séances de musculation — local-first, hors-ligne.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1916",
+  "theme_color": "#1b1916",
+  "lang": "fr",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
