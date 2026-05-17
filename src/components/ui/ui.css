@@ -576,6 +576,33 @@ h2.gt-topbar__title {
   transform: rotate(90deg);
 }
 
+/* ── États hover (souris) ────────────────────────────────────────── */
+@media (hover: hover) {
+  button.gt-row:hover {
+    background: var(--surface2);
+  }
+  .gt-chip:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+  .gt-btn--primary:hover:not(:disabled) {
+    filter: brightness(1.07);
+  }
+  .gt-btn--secondary:hover:not(:disabled),
+  .gt-btn--ghost:hover:not(:disabled) {
+    background: var(--surface2);
+  }
+  .gt-iconbtn:hover {
+    background: var(--surface2);
+  }
+  .gt-set:hover {
+    background: var(--surface2);
+  }
+  .gt-segmented__opt:hover:not(.gt-segmented__opt--active) {
+    color: var(--text);
+  }
+}
+
 /* ── Focus visible (navigation clavier) ──────────────────────────── */
 .gt-btn:focus-visible,
 .gt-iconbtn:focus-visible,
