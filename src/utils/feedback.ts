@@ -30,3 +30,23 @@ export function vibrate(ms = 180): void {
     /* vibration indisponible — ignoré */
   }
 }
+
+/**
+ * Partage via la feuille de partage native (Web Share API) ; repli sur la
+ * copie dans le presse-papiers si indisponible (desktop).
+ */
+export async function shareOrCopy(text: string): Promise<void> {
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ text })
+      return
+    } catch {
+      // Partage annulé ou échoué — on retombe sur le presse-papiers.
+    }
+  }
+  try {
+    await navigator.clipboard?.writeText(text)
+  } catch {
+    /* presse-papiers indisponible — ignoré */
+  }
+}

@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type {
-  Equipment, ExerciseCategory, MuscleGroup, TrackingType,
+  Equipment, ExerciseCategory, ExerciseMedia, MuscleGroup, TrackingType,
 } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
+import { putBlob, deleteBlob } from '../../db/idb'
 import { uuid } from '../../utils/uuid'
+import { processMediaFile } from '../../utils/media'
 import {
   CATEGORY_LABEL, EQUIPMENT_LABEL, MUSCLE_LABEL, TRACKING_LABEL,
 } from '../../utils/labels'
@@ -13,6 +15,7 @@ import {
   Button, Icon, PrimaryBar, Row, Segmented,
 } from '../ui'
 import { MusclePicker } from '../exercises/MusclePicker'
+import { MediaImage } from '../exercises/MediaImage'
 
 export function ExerciseFormScreen({ params }: ScreenProps) {
   const store = useStore()
@@ -31,8 +34,43 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
   const [tracking, setTracking] = useState<TrackingType>(editing?.trackingType ?? 'weight_reps')
   const [instructions, setInstructions] = useState(editing?.instructions ?? '')
   const [picker, setPicker] = useState<'primary' | 'secondary' | null>(null)
+  const [media, setMedia] = useState<ExerciseMedia | null>(editing?.media ?? null)
+  const [mediaError, setMediaError] = useState<string | null>(null)
+  const [mediaBusy, setMediaBusy] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const canSave = name.trim().length > 0 && primary != null
+
+  const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setMediaError(null)
+    setMediaBusy(true)
+    try {
+      const processed = await processMediaFile(file)
+      const blobId = uuid()
+      await putBlob(blobId, processed.blob)
+      if (media) await deleteBlob(media.blobId) // remplacement
+      setMedia({
+        type: processed.type,
+        blobId,
+        mime: processed.mime,
+        sizeBytes: processed.sizeBytes,
+        aspectRatio: processed.aspectRatio,
+        importedAt: Date.now(),
+      })
+    } catch (err) {
+      setMediaError(err instanceof Error ? err.message : 'Échec de l’import.')
+    } finally {
+      setMediaBusy(false)
+    }
+  }
+
+  const removeMedia = async () => {
+    if (media) await deleteBlob(media.blobId)
+    setMedia(null)
+  }
 
   const save = async () => {
     if (!canSave || !primary) return
@@ -45,6 +83,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       category,
       trackingType: tracking,
       instructions: instructions.trim() || undefined,
+      media: media ?? undefined,
       // On préserve le statut d'origine : éditer un exercice par défaut ne le
       // transforme pas en exercice perso.
       isCustom: editing ? editing.isCustom : true,
@@ -64,6 +103,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       ? ' Il est utilisé dans des programmes ou des séances passées.'
       : ''
     if (!confirm(`Supprimer « ${editing.name} » ?${warn}`)) return
+    if (media) await deleteBlob(media.blobId)
     await store.exercise.remove(editing.id)
     nav.back()
   }
@@ -89,6 +129,67 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       </div>
 
       <div className="gt-screen__scroll">
+        <div className="gt-field">
+          <span className="gt-field__label">Démo visuelle</span>
+          {media ? (
+            <>
+              <MediaImage
+                blobId={media.blobId}
+                alt="Démo de l'exercice"
+                aspectRatio={media.aspectRatio}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <Button
+                  variant="secondary"
+                  icon="camera"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  Remplacer
+                </Button>
+                <Button variant="ghost" icon="trash" onClick={removeMedia}>
+                  Retirer
+                </Button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              style={{
+                width: '100%',
+                aspectRatio: '4 / 3',
+                border: '2px dashed var(--accent)',
+                borderRadius: 'var(--radius-card)',
+                background: 'var(--surface)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <span style={{ color: 'var(--accent)' }}>
+                <Icon name="plus" size={28} />
+              </span>
+              <span style={{ fontWeight: 600 }}>Ajouter une démo visuelle</span>
+              <span className="t-caption">Photo ou GIF — visible pendant tes séances</span>
+            </button>
+          )}
+          {mediaBusy && <p className="t-caption">Traitement du média…</p>}
+          {mediaError && (
+            <p className="t-caption" style={{ color: 'var(--danger)' }}>
+              {mediaError}
+            </p>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={onFile}
+          />
+        </div>
+
         <div className="gt-field">
           <label className="gt-field__label" htmlFor="ex-name">
             Nom de l&apos;exercice

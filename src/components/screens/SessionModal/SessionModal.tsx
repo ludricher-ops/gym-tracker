@@ -17,6 +17,7 @@ import {
   Button, Card, Icon, Modal, Pill, ProgressBar, Sheet, Stepper, Switch,
 } from '../../ui'
 import { ExercisePicker } from '../../programBuilder/ExercisePicker'
+import { MediaImage } from '../../exercises/MediaImage'
 import { SetTable } from './SetTable'
 import { RestTimerBar } from './RestTimerBar'
 import { SessionOverviewSheet } from './SessionOverviewSheet'
@@ -42,6 +43,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const [prFlash, setPrFlash] = useState<string | null>(null)
   const [celebration, setCelebration] = useState<PRCelebration | null>(null)
   const [finished, setFinished] = useState(false)
+  const [mediaOpen, setMediaOpen] = useState(false)
   // Exercices ayant déjà eu un overlay de célébration (1 max par exercice).
   const celebrated = useRef<Set<string>>(new Set())
 
@@ -89,6 +91,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     const id = setTimeout(() => setPrFlash(null), 4000)
     return () => clearTimeout(id)
   }, [prFlash])
+
+  // Replie la mini-vue média au changement d'exercice.
+  useEffect(() => setMediaOpen(false), [exIndex])
 
   if (!session) {
     return (
@@ -252,11 +257,20 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         <button className="gt-iconbtn" onClick={close} aria-label="Fermer la séance">
           <Icon name="close" size={22} />
         </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <div className="t-num" style={{ fontSize: 20 }}>
+        <div style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
+          <div
+            className="t-num"
+            style={{ fontSize: 20 }}
+            role="timer"
+            aria-label={`Durée de la séance : ${formatDuration(elapsed)}`}
+          >
             {formatDuration(elapsed)}
           </div>
-          <div className="t-caption" style={{ fontSize: 11 }}>
+          <div
+            className="t-caption"
+            style={{ fontSize: 11 }}
+            aria-label={`${doneCount} séries validées sur ${totalCount}`}
+          >
             {doneCount}/{totalCount} séries
           </div>
         </div>
@@ -305,7 +319,26 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   Ex {exIndex + 1}/{sessionExercises.length}
                 </span>
               </div>
-              <p className="t-title">{currentExercise.name}</p>
+              {currentExercise.media ? (
+                <button
+                  type="button"
+                  onClick={() => setMediaOpen((o) => !o)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    color: 'var(--text)',
+                  }}
+                  aria-expanded={mediaOpen}
+                >
+                  <span className="t-title">{currentExercise.name}</span>
+                  <span style={{ color: 'var(--accent)' }}>
+                    <Icon name="camera" size={18} />
+                  </span>
+                </button>
+              ) : (
+                <p className="t-title">{currentExercise.name}</p>
+              )}
               <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                 <span className="t-caption">
                   Précédent :{' '}
@@ -315,6 +348,15 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   PR : {exercisePR ? `${exercisePR.estimated1RM.toFixed(1)} kg` : '—'}
                 </span>
               </div>
+              {currentExercise.media && mediaOpen && (
+                <div style={{ marginTop: 10 }}>
+                  <MediaImage
+                    blobId={currentExercise.media.blobId}
+                    alt={`Démo : ${currentExercise.name}`}
+                    aspectRatio={currentExercise.media.aspectRatio}
+                  />
+                </div>
+              )}
             </div>
 
             <SetTable

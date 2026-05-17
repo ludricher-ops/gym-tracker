@@ -4,8 +4,8 @@
 import type { SyncStoreName } from '../types'
 
 export const DB_NAME = 'gymtrack'
-// v2 : store `goals` ; v3 : store `bodyMeasurements` (Phase 2).
-export const DB_VERSION = 3
+// v2 : `goals` ; v3 : `bodyMeasurements` ; v4 : `blobs` (médias, Phase 2).
+export const DB_VERSION = 4
 
 export interface IndexDef {
   name: string
@@ -87,5 +87,8 @@ export const STORES: StoreDef[] = [
     keyPath: 'id',
     indexes: [{ name: 'takenAt', keyPath: 'takenAt' }],
   },
+  // `blobs` : binaires des médias d'exercices. Local pur — PAS dans
+  // SYNC_STORES (les médias ne sont pas synchronisés au serveur).
+  { name: 'blobs', keyPath: 'id' },
   { name: OUTBOX_STORE, keyPath: null },
 ]

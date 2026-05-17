@@ -3,6 +3,8 @@ import { Icon, type IconName } from './Icon'
 
 interface RowProps {
   icon?: IconName
+  /** Élément de tête personnalisé (vignette média…) — remplace l'icône. */
+  leading?: ReactNode
   label: ReactNode
   sub?: ReactNode
   value?: ReactNode
@@ -14,14 +16,16 @@ interface RowProps {
   danger?: boolean
 }
 
-export function Row({ icon, label, sub, value, chevron, onClick, trailing, danger }: RowProps) {
+export function Row({
+  icon, leading, label, sub, value, chevron, onClick, trailing, danger,
+}: RowProps) {
   const content = (
     <>
-      {icon && (
+      {leading ?? (icon && (
         <span className="gt-row__icon">
           <Icon name={icon} size={20} />
         </span>
-      )}
+      ))}
       <span className="gt-row__body">
         <span
           className="gt-row__label"

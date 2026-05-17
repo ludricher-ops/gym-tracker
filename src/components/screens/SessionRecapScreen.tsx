@@ -8,6 +8,7 @@ import {
   deleteSession, recomputeSessionTotals, startSessionFromTemplate,
 } from '../../utils/sessionOps'
 import { localDayKey } from '../../utils/dates'
+import { shareOrCopy } from '../../utils/feedback'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
 import { uuid } from '../../utils/uuid'
@@ -129,7 +130,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
         (ex) => `${ex.name} : ${ex.sets.map((s) => `${s.weightKg}×${s.reps}`).join(', ')}`,
       ),
     ]
-    navigator.clipboard?.writeText(lines.join('\n')).catch(() => {})
+    shareOrCopy(lines.join('\n'))
   }
 
   return (

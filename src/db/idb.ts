@@ -122,6 +122,21 @@ export async function idbDelete(store: string, key: IDBValidKey): Promise<void> 
   })
 }
 
+// ── Blobs (médias d'exercices) — store local non synchronisé ──────────
+
+export async function putBlob(id: string, blob: Blob): Promise<void> {
+  await idbPut('blobs', { id, blob })
+}
+
+export async function getBlob(id: string): Promise<Blob | undefined> {
+  const row = await idbGet<{ id: string; blob: Blob }>('blobs', id)
+  return row?.blob
+}
+
+export async function deleteBlob(id: string): Promise<void> {
+  await idbDelete('blobs', id)
+}
+
 /** Vide tous les object stores (utilisé par "effacer toutes les données"). */
 export async function idbClearAll(): Promise<void> {
   const names = STORES.map((s) => s.name)

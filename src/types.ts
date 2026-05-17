@@ -89,6 +89,22 @@ export interface Settings extends Syncable {
   preferences: UserPreferences
 }
 
+/**
+ * Média de démonstration d'un exercice (photo ou GIF). Le binaire est stocké
+ * dans le store local `blobs` (non synchronisé) ; seules ces métadonnées
+ * voyagent avec l'Exercise.
+ */
+export interface ExerciseMedia {
+  type: 'photo' | 'gif'
+  /** clé dans le store `blobs`. */
+  blobId: string
+  mime: string
+  sizeBytes: number
+  /** largeur / hauteur — pour préserver le cadrage à l'affichage. */
+  aspectRatio: number
+  importedAt: number
+}
+
 export interface Exercise extends Syncable {
   name: string
   primaryMuscle: MuscleGroup
@@ -97,6 +113,7 @@ export interface Exercise extends Syncable {
   category: ExerciseCategory
   trackingType: TrackingType
   instructions?: string
+  media?: ExerciseMedia
   isCustom: boolean
   popularity?: number
   usageCount?: number

@@ -4,6 +4,7 @@ import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { EQUIPMENT_LABEL, MUSCLE_LABEL, MUSCLE_REGIONS } from '../../utils/labels'
 import { Card, EmptyState, Icon, Row, StatTile } from '../ui'
+import { MediaImage } from '../exercises/MediaImage'
 
 type Filter = 'all' | 'custom' | string
 
@@ -98,6 +99,18 @@ export function MyExercisesScreen() {
               <Row
                 key={ex.id}
                 icon="dumbbell"
+                leading={
+                  ex.media ? (
+                    <div style={{ width: 46, flex: 'none' }}>
+                      <MediaImage
+                        blobId={ex.media.blobId}
+                        alt=""
+                        height={46}
+                        radius={10}
+                      />
+                    </div>
+                  ) : undefined
+                }
                 label={ex.name}
                 sub={`${MUSCLE_LABEL[ex.primaryMuscle]} · ${EQUIPMENT_LABEL[ex.equipment]}`}
                 value={ex.isCustom ? 'Perso' : undefined}

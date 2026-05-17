@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { WeightUnit } from '../../../types'
 import { formatWeight } from '../../../utils/units'
+import { shareOrCopy } from '../../../utils/feedback'
 import { ACCENTS } from '../../../theme/accents'
 import { Button, Icon } from '../../ui'
 
@@ -42,7 +43,7 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
       pr.weightKg,
       weightUnit,
     )} × ${pr.reps} (1RM estimé ${pr.estimated1RM.toFixed(1)} kg) 💪`
-    navigator.clipboard?.writeText(text).catch(() => {})
+    shareOrCopy(text)
   }
 
   return (
