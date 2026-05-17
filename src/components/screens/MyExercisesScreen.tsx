@@ -47,6 +47,43 @@ export function MyExercisesScreen() {
         <span className="gt-topbar__title">Mes exercices</span>
       </div>
 
+      {/* Zone de filtre fixe — toujours visible, hors flux de scroll */}
+      <div style={{
+        padding: '4px var(--pad-screen) 10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        flex: 'none',
+      }}>
+        <input
+          className="gt-input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher un exercice…"
+          aria-label="Rechercher"
+        />
+        <Segmented
+          value={scope}
+          onChange={setScope}
+          options={[
+            { value: 'all', label: 'Tous' },
+            { value: 'custom', label: 'Perso' },
+          ]}
+        />
+        <div className="gt-chips" role="group" aria-label="Filtrer par groupe musculaire">
+          {regionChips.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={`gt-chip ${region === c.key ? 'gt-chip--active' : ''}`}
+              onClick={() => setRegion(c.key)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="gt-screen__scroll">
         <div className="gt-statrow">
           <StatTile label="Exercices perso" value={String(customCount)} />
@@ -64,47 +101,6 @@ export function MyExercisesScreen() {
             </div>
           </div>
         </Card>
-
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          background: 'var(--bg)',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          paddingBottom: 4,
-        }}>
-          <input
-            className="gt-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un exercice…"
-            aria-label="Rechercher"
-          />
-
-          <Segmented
-            value={scope}
-            onChange={setScope}
-            options={[
-              { value: 'all', label: 'Tous' },
-              { value: 'custom', label: 'Perso' },
-            ]}
-          />
-
-          <div className="gt-chips" role="group" aria-label="Filtrer par groupe musculaire">
-            {regionChips.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                className={`gt-chip ${region === c.key ? 'gt-chip--active' : ''}`}
-                onClick={() => setRegion(c.key)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {visible.length === 0 ? (
           <EmptyState
