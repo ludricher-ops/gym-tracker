@@ -46,9 +46,11 @@ function prefill(
       reps: template.targetRepsMin,
     }
   }
-  const useBar =
-    store.settings.preferences.autoBarbellWeight && exercise?.equipment === 'barbell'
-  return { weightKg: useBar ? BARBELL_WEIGHT : 0, reps: template.targetRepsMin }
+  const levelWeights: Record<string, number> = { beginner: 10, intermediate: 15, advanced: 20 }
+  const activeProgram = store.programs.find((p) => p.isActive)
+  const levelWeight = levelWeights[activeProgram?.level ?? 'intermediate']
+  const useBar = store.settings.preferences.autoBarbellWeight && exercise?.equipment === 'barbell'
+  return { weightKg: useBar ? BARBELL_WEIGHT : levelWeight, reps: template.targetRepsMin }
 }
 
 /** Semaine en cours du programme actif (1-indexée, bornée par la durée). */
