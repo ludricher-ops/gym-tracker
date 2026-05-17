@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { SetRecord } from '../../types'
+import type { SetRecord, TrackingType } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
@@ -9,7 +9,7 @@ import {
 } from '../../utils/sessionOps'
 import { localDayKey } from '../../utils/dates'
 import { shareOrCopy } from '../../utils/feedback'
-import { formatDuration, formatVolume } from '../../utils/format'
+import { formatClock, formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
 import { uuid } from '../../utils/uuid'
 import { Button, Card, EmptyState, Icon, Sheet, StatTile } from '../ui'
@@ -122,12 +122,18 @@ export function SessionRecapScreen({ params }: ScreenProps) {
     setEditSet(created)
   }
 
+  const fmtSet = (s: SetRecord, trackingType: TrackingType) => {
+    if (trackingType === 'time') return formatClock(s.reps)
+    if (trackingType === 'reps_only') return `${s.reps} reps`
+    return `${s.weightKg}×${s.reps}`
+  }
+
   const share = () => {
     const lines = [
       `${session.name} — ${start.toLocaleDateString('fr-FR')}`,
       `Durée ${formatDuration(recap.durationSec)} · Volume ${formatVolume(recap.totalVolumeKg)} kg · ${recap.completedSets} séries`,
       ...recap.exercises.map(
-        (ex) => `${ex.name} : ${ex.sets.map((s) => `${s.weightKg}×${s.reps}`).join(', ')}`,
+        (ex) => `${ex.name} : ${ex.sets.map((s) => fmtSet(s, ex.trackingType)).join(', ')}`,
       ),
     ]
     shareOrCopy(lines.join('\n'))
@@ -253,7 +259,11 @@ export function SessionRecapScreen({ params }: ScreenProps) {
                   onClick={() => setEditSet(s)}
                 >
                   {s.isWarmup ? '🔥 ' : ''}
-                  {formatWeight(s.weightKg, weightUnit)} × {s.reps}
+                  {ex.trackingType === 'weight_reps'
+                    ? `${formatWeight(s.weightKg, weightUnit)} × ${s.reps}`
+                    : ex.trackingType === 'time'
+                      ? formatClock(s.reps)
+                      : `${s.reps} reps`}
                   {s.isPersonalRecord ? ' ★' : ''}
                 </button>
               ))}

@@ -1,7 +1,7 @@
 // Construction des données de récap d'une séance terminée — consommées par
 // l'écran de célébration et le récap détaillé.
 
-import type { Session, SetRecord } from '../types'
+import type { Session, SetRecord, TrackingType } from '../types'
 import type { StoreApi } from '../hooks/useStore'
 import { regionLabel } from './labels'
 import { tonnage } from './stats'
@@ -13,6 +13,7 @@ export interface RecapExercise {
   supersetGroup?: string
   tonnageKg: number
   sets: SetRecord[]
+  trackingType: TrackingType
 }
 
 export interface MuscleSlice {
@@ -57,13 +58,15 @@ export function buildSessionRecap(sessionId: string, store: StoreApi): SessionRe
       .sort((a, b) => a.index - b.index)
     if (sets.length === 0) continue
     allSets.push(...sets)
+    const exercise = store.exercises.find((e) => e.id === se.exerciseId)
     exercises.push({
       sessionExerciseId: se.id,
       exerciseId: se.exerciseId,
-      name: store.exercises.find((e) => e.id === se.exerciseId)?.name ?? 'Exercice',
+      name: exercise?.name ?? 'Exercice',
       supersetGroup: se.supersetGroup,
       tonnageKg: tonnage(sets),
       sets,
+      trackingType: exercise?.trackingType ?? 'weight_reps',
     })
   }
 
