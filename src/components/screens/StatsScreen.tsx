@@ -4,7 +4,8 @@ import { useNavigation } from '../../nav/useNavigation'
 import { buildExerciseStats, exercisesWithHistory } from '../../utils/exerciseStats'
 import { formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
-import { Button, Card, EmptyState, Row, StatTile } from '../ui'
+import { Button, Card, EmptyState, LineChart, Row, Segmented, StatTile } from '../ui'
+import type { ChartPoint } from '../ui'
 
 export function StatsScreen() {
   const store = useStore()
@@ -28,6 +29,19 @@ export function StatsScreen() {
     () => (currentId ? buildExerciseStats(currentId, store) : null),
     [currentId, store],
   )
+
+  const [period, setPeriod] = useState<'1m' | '3m' | '6m' | '1y' | 'all'>('3m')
+  const chartPoints = useMemo<ChartPoint[]>(() => {
+    if (!stats) return []
+    const days =
+      period === '1m' ? 30 : period === '3m' ? 90 : period === '6m' ? 180
+        : period === '1y' ? 365 : Infinity
+    const cutoff = Date.now() - days * 86_400_000
+    return [...stats.performances]
+      .filter((p) => p.date >= cutoff)
+      .sort((a, b) => a.date - b.date)
+      .map((p) => ({ x: p.date, y: p.best1RM }))
+  }, [stats, period])
 
   if (exercises.length === 0) {
     return (
@@ -86,6 +100,26 @@ export function StatsScreen() {
                 <p className="t-caption">Aucun record enregistré sur cet exercice.</p>
               </Card>
             )}
+
+            <Card>
+              <p className="t-eyebrow" style={{ marginBottom: 10 }}>
+                1RM estimé
+              </p>
+              <Segmented
+                value={period}
+                onChange={setPeriod}
+                options={[
+                  { value: '1m', label: '1M' },
+                  { value: '3m', label: '3M' },
+                  { value: '6m', label: '6M' },
+                  { value: '1y', label: '1A' },
+                  { value: 'all', label: 'Tout' },
+                ]}
+              />
+              <div style={{ marginTop: 12 }}>
+                <LineChart points={chartPoints} />
+              </div>
+            </Card>
 
             <div className="gt-statrow">
               <StatTile label="Tonnage total" value={`${formatVolume(stats.totalTonnage)} kg`} />
