@@ -9,6 +9,8 @@ interface SetTableProps {
   trackingType: 'weight_reps' | 'reps_only' | 'time'
   weightUnit: WeightUnit
   onSelect: (id: string) => void
+  /** Valide la série active directement depuis la case à cocher. */
+  onValidate?: () => void
 }
 
 function perfLabel(set: SetRecord, type: SetTableProps['trackingType'], unit: WeightUnit): string {
@@ -17,7 +19,7 @@ function perfLabel(set: SetRecord, type: SetTableProps['trackingType'], unit: We
   return `${formatWeight(set.weightKg, unit)} × ${set.reps}`
 }
 
-export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect }: SetTableProps) {
+export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect, onValidate }: SetTableProps) {
   // Numérotation des séries de travail (l'échauffement ne compte pas).
   let work = 0
   const labels = sets.map((s) => (s.isWarmup ? 'Échauff.' : `Série ${++work}`))
@@ -59,11 +61,35 @@ export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect
                 </span>
               ) : (
                 <span
+                  role={active && onValidate ? 'button' : undefined}
+                  aria-label={active && onValidate ? 'Valider la série' : undefined}
+                  tabIndex={active && onValidate ? 0 : undefined}
+                  onClick={
+                    active && onValidate
+                      ? (e) => { e.stopPropagation(); onValidate() }
+                      : undefined
+                  }
+                  onKeyDown={
+                    active && onValidate
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            onValidate()
+                          }
+                        }
+                      : undefined
+                  }
                   style={{
-                    width: 10,
-                    height: 10,
+                    width: 22,
+                    height: 22,
                     borderRadius: '50%',
-                    border: '2px solid var(--dim)',
+                    border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    cursor: active && onValidate ? 'pointer' : 'default',
                   }}
                 />
               )}

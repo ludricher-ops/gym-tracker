@@ -315,6 +315,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               trackingType={trackingType}
               weightUnit={weightUnit}
               onSelect={onSelectSet}
+              onValidate={validate}
             />
 
             {currentExercise.media && (
