@@ -23,6 +23,8 @@ export interface ValidateOutcome {
   restSec: number
   /** L'exercice courant est-il terminé après cette validation ? */
   exerciseDone: boolean
+  /** Tous les exercices de la séance sont terminés. */
+  sessionDone: boolean
 }
 
 export interface ActiveSessionApi {
@@ -113,10 +115,11 @@ export function useActiveSession(sessionId: string): ActiveSessionApi {
     const seSets = store.sets.filter((s) => s.sessionExerciseId === set.sessionExerciseId)
     const exerciseDone =
       seSets.filter((s) => s.completedAt == null && s.id !== set.id).length === 0
-    if (exerciseDone && exIndex < sessionExercises.length - 1) {
+    const sessionDone = exerciseDone && exIndex === sessionExercises.length - 1
+    if (exerciseDone && !sessionDone) {
       setExIndex(exIndex + 1)
     }
-    return { pr, restSec: restSecFor(se), exerciseDone }
+    return { pr, restSec: restSecFor(se), exerciseDone, sessionDone }
   }
 
   const updateSet = async (set: SetRecord): Promise<void> => {

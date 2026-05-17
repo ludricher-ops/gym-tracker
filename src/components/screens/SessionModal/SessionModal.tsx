@@ -158,7 +158,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       reps,
       rpe: inputRpe ?? undefined,
     }
-    const { pr, restSec } = await act.validateSet(updated)
+    const { pr, restSec, sessionDone } = await act.validateSet(updated)
     if (isAnyPR(pr)) {
       const exId = currentSE.exerciseId
       const name = currentExercise?.name ?? 'Exercice'
@@ -174,6 +174,11 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       } else {
         setPrFlash(name)
       }
+    }
+    if (sessionDone) {
+      await act.finish()
+      setFinished(true)
+      return
     }
     restTimer.start(restSec)
     if (prefs.notificationsEnabled && !notifAsked.current) {
