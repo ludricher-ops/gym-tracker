@@ -33,7 +33,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
   const [editDuration, setEditDuration] = useState(
     recap ? Math.round((recap.session.durationSec ?? 0) / 60) : 0,
   )
-  const [editSet, setEditSet] = useState<SetRecord | null>(null)
+  const [editSet, setEditSet] = useState<{ set: SetRecord; trackingType: TrackingType } | null>(null)
 
   if (!recap) {
     return (
@@ -119,7 +119,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
       completedAt: session.startedAt,
     })
     await recomputeSessionTotals(session, store)
-    setEditSet(created)
+    setEditSet({ set: created, trackingType: ex.trackingType })
   }
 
   const fmtSet = (s: SetRecord, trackingType: TrackingType) => {
@@ -256,7 +256,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
                   key={s.id}
                   type="button"
                   className={`gt-chip ${s.isPersonalRecord ? 'gt-chip--active' : ''}`}
-                  onClick={() => setEditSet(s)}
+                  onClick={() => setEditSet({ set: s, trackingType: ex.trackingType })}
                 >
                   {s.isWarmup ? '🔥 ' : ''}
                   {ex.trackingType === 'weight_reps'
@@ -355,7 +355,8 @@ export function SessionRecapScreen({ params }: ScreenProps) {
 
       {editSet && (
         <SetEditSheet
-          set={editSet}
+          set={editSet.set}
+          trackingType={editSet.trackingType}
           weightUnit={weightUnit}
           weightStep={store.settings.preferences.weightStep}
           onSave={saveSet}

@@ -532,6 +532,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       {editSetSheet && (
         <SetEditSheet
           set={editSetSheet}
+          trackingType={trackingType}
           weightUnit={weightUnit}
           weightStep={prefs.weightStep}
           onSave={(updated) => {
