@@ -101,12 +101,8 @@ export function MyExercisesScreen() {
                 label={ex.name}
                 sub={`${MUSCLE_LABEL[ex.primaryMuscle]} · ${EQUIPMENT_LABEL[ex.equipment]}`}
                 value={ex.isCustom ? 'Perso' : undefined}
-                chevron={ex.isCustom}
-                onClick={
-                  ex.isCustom
-                    ? () => nav.navigate('exerciseForm', { id: ex.id })
-                    : undefined
-                }
+                chevron
+                onClick={() => nav.navigate('exerciseForm', { id: ex.id })}
               />
             ))}
           </div>

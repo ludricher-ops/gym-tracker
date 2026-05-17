@@ -36,6 +36,18 @@ export function DashboardScreen() {
     return wtId ? store.workoutTemplates.find((w) => w.id === wtId) : undefined
   }, [activeProgram, todayKey, store.workoutTemplates])
 
+  // Prochaine séance planifiée du programme (jours suivants, sur 7 jours).
+  const nextWorkout = useMemo(() => {
+    if (!activeProgram) return undefined
+    const todayIdx = (new Date().getDay() + 6) % 7
+    for (let off = 1; off <= 7; off++) {
+      const wtId = activeProgram.weekTemplate[WEEKDAYS[(todayIdx + off) % 7]]
+      const wt = wtId ? store.workoutTemplates.find((w) => w.id === wtId) : undefined
+      if (wt) return wt
+    }
+    return undefined
+  }, [activeProgram, store.workoutTemplates])
+
   const resumable = useMemo(() => recoverableSession(store), [store])
 
   const endedSessions = useMemo(
@@ -57,9 +69,8 @@ export function DashboardScreen() {
   const recent = endedSessions.slice(0, 3)
 
   const openSession = (id: string) => nav.openModal('session', { sessionId: id })
-  const startTemplate = async () => {
-    if (!todayWorkout) return
-    openSession((await startSessionFromTemplate(todayWorkout, store)).id)
+  const startWorkout = async (wt: NonNullable<typeof todayWorkout>) => {
+    openSession((await startSessionFromTemplate(wt, store)).id)
   }
   const startFree = async () => {
     openSession((await startFreestyleSession(store)).id)
@@ -112,7 +123,7 @@ export function DashboardScreen() {
               {activeProgram?.name}
             </p>
             <div style={{ marginTop: 12 }}>
-              <Button icon="bolt" onClick={startTemplate}>
+              <Button icon="bolt" onClick={() => startWorkout(todayWorkout)}>
                 Commencer la séance
               </Button>
             </div>
@@ -126,9 +137,14 @@ export function DashboardScreen() {
               Récupération
             </p>
             <p className="t-caption" style={{ marginTop: 2 }}>
-              Aucune séance prévue aujourd&apos;hui.
+              Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
             </p>
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {nextWorkout && (
+                <Button icon="bolt" onClick={() => startWorkout(nextWorkout)}>
+                  Faire la séance suivante : {nextWorkout.name}
+                </Button>
+              )}
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>

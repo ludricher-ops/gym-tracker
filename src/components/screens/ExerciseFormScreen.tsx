@@ -45,7 +45,9 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
       category,
       trackingType: tracking,
       instructions: instructions.trim() || undefined,
-      isCustom: true,
+      // On préserve le statut d'origine : éditer un exercice par défaut ne le
+      // transforme pas en exercice perso.
+      isCustom: editing ? editing.isCustom : true,
       popularity: editing?.popularity,
       usageCount: editing?.usageCount ?? 0,
       createdAt: editing?.createdAt ?? Date.now(),
@@ -55,7 +57,13 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
 
   const del = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer « ${editing.name} » ?`)) return
+    const used =
+      store.workoutExerciseTemplates.some((w) => w.exerciseId === editing.id) ||
+      store.sessionExercises.some((se) => se.exerciseId === editing.id)
+    const warn = used
+      ? ' Il est utilisé dans des programmes ou des séances passées.'
+      : ''
+    if (!confirm(`Supprimer « ${editing.name} » ?${warn}`)) return
     await store.exercise.remove(editing.id)
     nav.back()
   }

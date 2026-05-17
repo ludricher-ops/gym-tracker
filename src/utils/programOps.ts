@@ -62,6 +62,20 @@ export async function cloneProgram(source: Program, store: StoreApi): Promise<Pr
 }
 
 /**
+ * Supprime un programme et, en cascade, ses séances et exercices de séance.
+ * Les séances déjà réalisées (historique) ne sont pas touchées.
+ */
+export async function deleteProgram(program: Program, store: StoreApi): Promise<void> {
+  const workoutTemplates = store.workoutTemplates.filter((w) => w.programId === program.id)
+  for (const wt of workoutTemplates) {
+    const wets = store.workoutExerciseTemplates.filter((e) => e.workoutTemplateId === wt.id)
+    for (const wet of wets) await store.workoutExerciseTemplate.remove(wet.id)
+    await store.workoutTemplate.remove(wt.id)
+  }
+  await store.program.remove(program.id)
+}
+
+/**
  * Active un programme : archive le programme actif précédent, clone la cible
  * si c'est un template, puis marque le programme comme actif à la date donnée.
  * Renvoie le programme désormais actif.

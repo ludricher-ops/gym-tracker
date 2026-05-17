@@ -5,6 +5,7 @@ import type { ScreenProps } from '../../nav/screenRegistry'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
 import { programSummary } from '../../utils/programInfo'
 import { Button, Card, EmptyState, Icon, Pill, PrimaryBar } from '../ui'
+import { deleteProgram } from '../../utils/programOps'
 import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 
@@ -38,6 +39,13 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   const workouts = store.workoutTemplates
     .filter((w) => w.programId === program.id)
     .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+
+  const del = async () => {
+    const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''
+    if (!confirm(`Supprimer le programme « ${program.name} » ?${warn}`)) return
+    await deleteProgram(program, store)
+    nav.back()
+  }
 
   const exerciseNames = (workoutTemplateId: string) =>
     store.workoutExerciseTemplates
@@ -112,6 +120,12 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             </Card>
           )
         })}
+
+        {!program.isTemplate && (
+          <Button variant="ghost" icon="trash" onClick={del}>
+            Supprimer le programme
+          </Button>
+        )}
       </div>
 
       <PrimaryBar>
