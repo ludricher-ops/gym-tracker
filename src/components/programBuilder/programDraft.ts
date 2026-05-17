@@ -82,7 +82,7 @@ export function emptyDraft(): DraftProgram {
   }
 }
 
-/** Reconstruit un brouillon à partir d'un programme existant (Personnaliser). */
+/** Reconstruit un brouillon à partir d'un programme existant (édition). */
 export function draftFromProgram(program: Program, store: StoreApi): DraftProgram {
   const wtIdToLocal = new Map<string, string>()
   const workouts: DraftWorkout[] = store.workoutTemplates
@@ -123,7 +123,7 @@ export function draftFromProgram(program: Program, store: StoreApi): DraftProgra
   }
 
   return {
-    name: `${program.name} (copie)`,
+    name: program.name,
     goal: program.goal,
     level: program.level,
     durationWeeks: program.durationWeeks,
@@ -132,6 +132,75 @@ export function draftFromProgram(program: Program, store: StoreApi): DraftProgra
     workouts,
     week,
   }
+}
+
+/**
+ * Met à jour un programme existant en place : supprime les anciennes séances
+ * et exercices, recrée les nouveaux, met à jour l'enregistrement programme.
+ */
+export async function updateDraft(
+  programId: string,
+  draft: DraftProgram,
+  store: StoreApi,
+): Promise<Program> {
+  const existing = store.programs.find((p) => p.id === programId)
+  if (!existing) throw new Error(`Programme ${programId} introuvable`)
+
+  const oldWTs = store.workoutTemplates.filter((w) => w.programId === programId)
+  for (const wt of oldWTs) {
+    const wets = store.workoutExerciseTemplates.filter((e) => e.workoutTemplateId === wt.id)
+    for (const wet of wets) await store.workoutExerciseTemplate.remove(wet.id)
+    await store.workoutTemplate.remove(wt.id)
+  }
+
+  const localToReal = new Map<string, string>()
+  for (const w of draft.workouts) {
+    const wtId = uuid()
+    localToReal.set(w.localId, wtId)
+    await store.workoutTemplate.save({
+      id: wtId,
+      programId,
+      name: w.name,
+      type: w.type,
+      muscleGroups: w.muscleGroups,
+    })
+    for (let i = 0; i < w.exercises.length; i++) {
+      const ex = w.exercises[i]
+      await store.workoutExerciseTemplate.save({
+        id: uuid(),
+        workoutTemplateId: wtId,
+        exerciseId: ex.exerciseId,
+        order: i,
+        supersetGroup: ex.supersetGroup,
+        targetSets: ex.targetSets,
+        repsMode: ex.repsMode,
+        targetRepsMin: ex.targetRepsMin,
+        targetRepsMax: ex.targetRepsMax,
+        targetRPE: ex.targetRPE,
+        restSec: ex.restSec,
+        autoProgress: ex.autoProgress,
+        progressStepKg: ex.progressStepKg,
+        notes: ex.notes,
+      })
+    }
+  }
+
+  const weekTemplate: Program['weekTemplate'] = {}
+  for (const [day, localId] of Object.entries(draft.week)) {
+    const real = localId ? localToReal.get(localId) : undefined
+    if (real) weekTemplate[day as Weekday] = real
+  }
+
+  return store.program.save({
+    ...existing,
+    name: draft.name.trim(),
+    goal: draft.goal,
+    level: draft.level,
+    durationWeeks: draft.durationWeeks,
+    sessionsPerWeek: draft.sessionsPerWeek,
+    color: draft.color,
+    weekTemplate,
+  })
 }
 
 export interface DraftStats {

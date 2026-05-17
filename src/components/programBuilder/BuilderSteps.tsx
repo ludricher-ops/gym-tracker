@@ -453,11 +453,13 @@ interface StepReviewProps {
   setStartDate: (v: string) => void
   hasActiveProgram: string | null
   saving: boolean
+  isEditing: boolean
   onActivate: () => void
+  onSave: () => void
 }
 
 export function StepReview({
-  draft, startDate, setStartDate, hasActiveProgram, saving, onActivate,
+  draft, startDate, setStartDate, hasActiveProgram, saving, isEditing, onActivate, onSave,
 }: StepReviewProps) {
   const stats = draftStats(draft)
   return (
@@ -520,20 +522,22 @@ export function StepReview({
           </div>
         </div>
 
-        <div className="gt-field">
-          <label className="gt-field__label" htmlFor="prog-start">
-            Date de démarrage
-          </label>
-          <input
-            id="prog-start"
-            type="date"
-            className="gt-input"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
+        {!isEditing && (
+          <div className="gt-field">
+            <label className="gt-field__label" htmlFor="prog-start">
+              Date de démarrage
+            </label>
+            <input
+              id="prog-start"
+              type="date"
+              className="gt-input"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+        )}
 
-        {hasActiveProgram && (
+        {!isEditing && hasActiveProgram && (
           <Card variant="flat">
             <p className="t-caption">
               ⚠️ Remplace ton programme actuel «&nbsp;{hasActiveProgram}&nbsp;». Il sera
@@ -544,9 +548,15 @@ export function StepReview({
       </div>
 
       <PrimaryBar>
-        <Button onClick={onActivate} disabled={saving} icon="check">
-          {saving ? 'Activation…' : 'Activer le programme'}
-        </Button>
+        {isEditing ? (
+          <Button onClick={onSave} disabled={saving} icon="check">
+            {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
+          </Button>
+        ) : (
+          <Button onClick={onActivate} disabled={saving} icon="check">
+            {saving ? 'Activation…' : 'Activer le programme'}
+          </Button>
+        )}
       </PrimaryBar>
     </>
   )

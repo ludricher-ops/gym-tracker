@@ -12,7 +12,7 @@ import {
   StepMeta, StepWeek, StepEditWorkout, StepReview,
 } from '../programBuilder/BuilderSteps'
 import {
-  commitDraft, draftFromProgram, emptyDraft,
+  commitDraft, updateDraft, draftFromProgram, emptyDraft,
   type DraftProgram, type DraftWorkout, type DraftWE,
 } from '../programBuilder/programDraft'
 
@@ -31,6 +31,8 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
   const nav = useNavigation()
   const fromId = params?.fromProgramId as string | undefined
 
+  const isEditing = !!fromId
+
   const [draft, setDraft] = useState<DraftProgram>(() => {
     if (fromId) {
       const p = store.programs.find((x) => x.id === fromId)
@@ -38,7 +40,7 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
     }
     return emptyDraft()
   })
-  const [view, setView] = useState<View>(fromId ? { step: 2 } : { step: 1 })
+  const [view, setView] = useState<View>({ step: 1 })
   const [startDate, setStartDate] = useState(localDayKey(Date.now()))
   const [saving, setSaving] = useState(false)
 
@@ -105,8 +107,11 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
   }
 
   const close = () => {
+    const msg = isEditing
+      ? 'Annuler les modifications ?'
+      : 'Abandonner la création du programme ?'
     if (draft.workouts.length > 0 || draft.name.trim()) {
-      if (!confirm('Abandonner la création du programme ?')) return
+      if (!confirm(msg)) return
     }
     nav.back()
   }
@@ -116,6 +121,17 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
     try {
       const created = await commitDraft(draft, store)
       await activateProgram(created, parseDateInput(startDate), store)
+      nav.back()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const saveEdit = async () => {
+    if (!fromId) return
+    setSaving(true)
+    try {
+      await updateDraft(fromId, draft, store)
       nav.back()
     } finally {
       setSaving(false)
@@ -174,7 +190,9 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
           setStartDate={setStartDate}
           hasActiveProgram={activeProgram?.name ?? null}
           saving={saving}
+          isEditing={isEditing}
           onActivate={activate}
+          onSave={saveEdit}
         />
       )}
     </div>
