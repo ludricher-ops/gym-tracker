@@ -47,7 +47,6 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const [prFlash, setPrFlash] = useState<string | null>(null)
   const [celebration, setCelebration] = useState<PRCelebration | null>(null)
   const [finished, setFinished] = useState(false)
-  const [mediaOpen, setMediaOpen] = useState(false)
   const [exitSheet, setExitSheet] = useState(false)
   // Overlay de célébration : une fois par exercice et par séance.
   const celebrated = useRef<Set<string>>(new Set())
@@ -84,9 +83,6 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     const id = setTimeout(() => setPrFlash(null), 4000)
     return () => clearTimeout(id)
   }, [prFlash])
-
-  // Replie la mini-vue média au changement d'exercice.
-  useEffect(() => setMediaOpen(false), [act.exIndex])
 
   if (!session) {
     return (
@@ -270,21 +266,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   Ex {act.exIndex + 1}/{exerciseCount}
                 </span>
               </div>
-              {currentExercise.media ? (
-                <button
-                  type="button"
-                  onClick={() => setMediaOpen((o) => !o)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text)' }}
-                  aria-expanded={mediaOpen}
-                >
-                  <span className="t-title">{currentExercise.name}</span>
-                  <span style={{ color: 'var(--accent)' }}>
-                    <Icon name="camera" size={18} />
-                  </span>
-                </button>
-              ) : (
-                <p className="t-title">{currentExercise.name}</p>
-              )}
+              <p className="t-title">{currentExercise.name}</p>
               <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                 <span className="t-caption">
                   Précédent :{' '}
@@ -294,16 +276,6 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   PR : {exercisePR ? `${exercisePR.estimated1RM.toFixed(1)} kg` : '—'}
                 </span>
               </div>
-              {currentExercise.media && mediaOpen && (
-                <div style={{ marginTop: 10 }}>
-                  <MediaImage
-                    blobId={currentExercise.media.blobId}
-                    url={currentExercise.media.url}
-                    alt={`Démo : ${currentExercise.name}`}
-                    aspectRatio={currentExercise.media.aspectRatio}
-                  />
-                </div>
-              )}
             </div>
 
             <SetTable
@@ -313,6 +285,15 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               weightUnit={weightUnit}
               onSelect={onSelectSet}
             />
+
+            {currentExercise.media && (
+              <MediaImage
+                blobId={currentExercise.media.blobId}
+                url={currentExercise.media.url}
+                alt={`Démo : ${currentExercise.name}`}
+                aspectRatio={currentExercise.media.aspectRatio}
+              />
+            )}
 
             {nextExercise && (
               <Card onClick={goNext}>
