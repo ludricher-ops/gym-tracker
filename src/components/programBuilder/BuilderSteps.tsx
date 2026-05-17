@@ -8,6 +8,7 @@ import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
 import {
   Button, Card, Icon, PrimaryBar, Row, Segmented, Sheet,
 } from '../ui'
+import { MediaImage } from '../exercises/MediaImage'
 import { MusclePicker } from '../exercises/MusclePicker'
 import { ExercisePicker } from './ExercisePicker'
 import { ExerciseConfigSheet } from './ExerciseConfigSheet'
@@ -360,10 +361,17 @@ export function StepEditWorkout({
           Exercices ({workout.exercises.length})
         </p>
 
-        {workout.exercises.map((we, i) => (
+        {workout.exercises.map((we, i) => {
+          const exMedia = exMap.get(we.exerciseId)?.media
+          return (
           <div key={we.localId} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <div style={{ flex: 1 }}>
               <Row
+                leading={exMedia ? (
+                  <div style={{ width: 40, flex: 'none' }}>
+                    <MediaImage blobId={exMedia.blobId} url={exMedia.url} alt="" height={40} radius={8} />
+                  </div>
+                ) : undefined}
                 label={
                   <>
                     {we.supersetGroup && (
@@ -408,7 +416,8 @@ export function StepEditWorkout({
               </button>
             </div>
           </div>
-        ))}
+          )
+        })}
 
         <Button variant="secondary" icon="plus" onClick={() => setExercisePicker(true)}>
           Ajouter un exercice

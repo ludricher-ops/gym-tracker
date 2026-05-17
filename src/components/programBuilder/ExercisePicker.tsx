@@ -3,6 +3,7 @@ import type { MuscleGroup } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { EQUIPMENT_LABEL, MUSCLE_LABEL, MUSCLE_REGIONS } from '../../utils/labels'
 import { Sheet, Button, Icon } from '../ui'
+import { MediaImage } from '../exercises/MediaImage'
 
 interface ExercisePickerProps {
   onConfirm: (exerciseIds: string[]) => void
@@ -78,6 +79,11 @@ export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [] }: Exerci
                 onClick={() => toggle(ex.id)}
                 style={isAdded ? { opacity: 0.45 } : undefined}
               >
+                {ex.media && (
+                  <div style={{ width: 40, flex: 'none' }}>
+                    <MediaImage blobId={ex.media.blobId} url={ex.media.url} alt="" height={40} radius={8} />
+                  </div>
+                )}
                 <span className="gt-row__body">
                   <span className="gt-row__label">{ex.name}</span>
                   <span className="gt-row__sub">
