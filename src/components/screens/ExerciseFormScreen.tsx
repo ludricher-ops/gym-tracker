@@ -56,7 +56,7 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
     try {
       const processed = await processMediaFile(file)
       const blobId = uuid()
-      await putBlob(blobId, processed.blob)
+      await putBlob(blobId, processed.blob, processed.mime)
       await releaseOldBlob()
       setMedia({
         type: processed.type,

@@ -92,9 +92,20 @@ export interface Settings extends Syncable {
 }
 
 /**
+ * Binaire d'un média d'exercice stocké localement et synchronisé au serveur.
+ * La donnée est encodée en base64 (data URL) pour passer en JSON.
+ */
+export interface BlobRecord extends Syncable {
+  /** data URL : "data:<mime>;base64,..." */
+  dataUrl: string
+  mime: string
+  sizeBytes: number
+}
+
+/**
  * Média de démonstration d'un exercice (photo ou GIF). Le binaire est stocké
- * dans le store local `blobs` (non synchronisé) ; seules ces métadonnées
- * voyagent avec l'Exercise.
+ * dans le store `blobs` (synchronisé) ; seules ces métadonnées voyagent avec
+ * l'Exercise.
  */
 export interface ExerciseMedia {
   type: 'photo' | 'gif'
@@ -257,3 +268,4 @@ export type SyncStoreName =
   | 'settings' | 'exercises' | 'programs' | 'workoutTemplates'
   | 'workoutExerciseTemplates' | 'sessions' | 'sessionExercises'
   | 'sets' | 'personalRecords' | 'goals' | 'bodyMeasurements'
+  | 'blobs'

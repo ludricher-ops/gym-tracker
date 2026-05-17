@@ -33,6 +33,7 @@ export const SYNC_STORES: SyncStoreName[] = [
   'personalRecords',
   'goals',
   'bodyMeasurements',
+  'blobs',
 ]
 
 export const OUTBOX_STORE = 'outbox'

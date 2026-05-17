@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { getBlob } from '../db/idb'
 
 /**
- * Charge un blob depuis IndexedDB et renvoie une object URL utilisable dans
- * un <img>. L'URL est révoquée au changement de blobId et au démontage.
+ * Charge un blob depuis IndexedDB et renvoie sa data URL utilisable dans
+ * un <img>. Gère l'ancien format Blob et le nouveau format base64.
  */
 export function useObjectUrl(blobId: string | null | undefined): string | null {
   const [url, setUrl] = useState<string | null>(null)
@@ -13,22 +13,11 @@ export function useObjectUrl(blobId: string | null | undefined): string | null {
       setUrl(null)
       return
     }
-    let revoked = false
-    let created: string | null = null
-
+    let cancelled = false
     getBlob(blobId)
-      .then((blob) => {
-        if (revoked || !blob) return
-        created = URL.createObjectURL(blob)
-        setUrl(created)
-      })
+      .then((dataUrl) => { if (!cancelled) setUrl(dataUrl ?? null) })
       .catch(() => setUrl(null))
-
-    return () => {
-      revoked = true
-      if (created) URL.revokeObjectURL(created)
-      setUrl(null)
-    }
+    return () => { cancelled = true }
   }, [blobId])
 
   return url

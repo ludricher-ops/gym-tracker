@@ -5,7 +5,8 @@
 // passée à `idbTx` doit donc être SYNCHRONE — elle enchaîne uniquement des
 // appels IDB. Toute la logique outbox-atomique repose sur cette garantie.
 
-import { DB_NAME, DB_VERSION, STORES } from './schema'
+import type { BlobRecord } from '../types'
+import { DB_NAME, DB_VERSION, STORES, OUTBOX_STORE } from './schema'
 
 let dbPromise: Promise<IDBDatabase> | null = null
 
@@ -122,19 +123,69 @@ export async function idbDelete(store: string, key: IDBValidKey): Promise<void> 
   })
 }
 
-// ── Blobs (médias d'exercices) — store local non synchronisé ──────────
+// ── Blobs (médias d'exercices) — synchronisés en base64 ───────────────
 
-export async function putBlob(id: string, blob: Blob): Promise<void> {
-  await idbPut('blobs', { id, blob })
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
 }
 
-export async function getBlob(id: string): Promise<Blob | undefined> {
-  const row = await idbGet<{ id: string; blob: Blob }>('blobs', id)
-  return row?.blob
+/**
+ * Stocke un blob en base64 dans IDB et l'ajoute à l'outbox pour synchro.
+ * Signature étendue : `mime` requis pour construire la data URL.
+ */
+export async function putBlob(id: string, blob: Blob, mime: string): Promise<void> {
+  const dataUrl = await blobToDataUrl(blob)
+  const now = Date.now()
+  const record: BlobRecord = {
+    id, dataUrl, mime, sizeBytes: blob.size,
+    updatedAt: now, deleted: false, dirty: true,
+  }
+  await idbTx(['blobs', OUTBOX_STORE], 'readwrite', (tx) => {
+    tx.objectStore('blobs').put(record)
+    tx.objectStore(OUTBOX_STORE).add({ store: 'blobs', id, updatedAt: now })
+  })
 }
 
+/**
+ * Retourne la data URL du blob (format nouveau), ou convertit à la volée
+ * l'ancien format `{ blob: Blob }` pour la compatibilité ascendante.
+ */
+export async function getBlob(id: string): Promise<string | undefined> {
+  const row = await idbGet<BlobRecord & { blob?: Blob }>('blobs', id)
+  if (!row || row.deleted) return undefined
+  if (row.dataUrl) return row.dataUrl
+  // Ancien format (avant synchro) — conversion à la volée.
+  if (row.blob) return blobToDataUrl(row.blob)
+  return undefined
+}
+
+/**
+ * Supprime un blob : tombstone + outbox pour les nouveaux enregistrements,
+ * suppression directe pour l'ancien format non synchronisé.
+ */
 export async function deleteBlob(id: string): Promise<void> {
-  await idbDelete('blobs', id)
+  const row = await idbGet<BlobRecord & { blob?: Blob }>('blobs', id)
+  if (!row) return
+  if (row.blob && !row.dataUrl) {
+    // Ancien format — jamais synchronisé, suppression directe.
+    await idbDelete('blobs', id)
+    return
+  }
+  const now = Date.now()
+  const tombstone: BlobRecord = {
+    id, dataUrl: row.dataUrl ?? '', mime: row.mime ?? '',
+    sizeBytes: row.sizeBytes ?? 0,
+    deleted: true, updatedAt: now, dirty: true,
+  }
+  await idbTx(['blobs', OUTBOX_STORE], 'readwrite', (tx) => {
+    tx.objectStore('blobs').put(tombstone)
+    tx.objectStore(OUTBOX_STORE).add({ store: 'blobs', id, updatedAt: now })
+  })
 }
 
 /** Vide tous les object stores (utilisé par "effacer toutes les données"). */
