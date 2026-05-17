@@ -46,7 +46,7 @@ export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [] }: Exerci
           placeholder="Rechercher…"
           aria-label="Rechercher un exercice"
         />
-        <div className="gt-chips gt-chips--scroll">
+        <div className="gt-chips">
           <button
             type="button"
             className={`gt-chip ${region === 'all' ? 'gt-chip--active' : ''}`}

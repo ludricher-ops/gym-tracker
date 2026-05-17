@@ -67,7 +67,7 @@ export function StatsScreen() {
       </div>
 
       <div className="gt-screen__scroll">
-        <div className="gt-chips gt-chips--scroll">
+        <div className="gt-chips">
           {exercises.map((e) => (
             <button
               key={e.id}
