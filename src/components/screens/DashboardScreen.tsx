@@ -50,6 +50,35 @@ export function DashboardScreen() {
     [endedSessions],
   )
 
+  // ── Progression du programme ─────────────────────────────────────────
+  const progressCells = useMemo(() => {
+    return schedule.map((s) => {
+      const done =
+        endedSessions.some((cs) => cs.programSessionLabel === s.label) ||
+        endedSessions.some(
+          (cs) =>
+            cs.workoutTemplateId === s.workoutTemplateId &&
+            localDayKey(cs.startedAt) === localDayKey(s.date),
+        )
+      return { label: s.label, workoutName: s.workoutName, done }
+    })
+  }, [schedule, endedSessions])
+
+  const progressDoneCount = useMemo(
+    () => progressCells.filter((c) => c.done).length,
+    [progressCells],
+  )
+
+  const progressWeekGroups = useMemo(() => {
+    const groups = new Map<number, typeof progressCells>()
+    for (const cell of progressCells) {
+      const weekNum = parseInt(cell.label.slice(1, cell.label.indexOf('.')))
+      if (!groups.has(weekNum)) groups.set(weekNum, [])
+      groups.get(weekNum)!.push(cell)
+    }
+    return [...groups.entries()].sort(([a], [b]) => a - b)
+  }, [progressCells])
+
   const { current, deltas } = useMemo(() => {
     const cur = statsForWeek(endedSessions, Date.now(), weekStart)
     const prev = statsForPreviousWeek(endedSessions, Date.now(), weekStart)
@@ -233,6 +262,36 @@ export function DashboardScreen() {
               </Button>
             </div>
           </Card>
+        )}
+
+        {activeProgram && schedule.length > 0 && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <p className="t-eyebrow">Avancement</p>
+              <span className="t-num" style={{ fontSize: 12, color: 'var(--muted)' }}>
+                {progressDoneCount} / {schedule.length}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {progressWeekGroups.map(([weekNum, cells]) => (
+                <div key={weekNum} style={{ display: 'flex', gap: 3 }}>
+                  {cells.map((cell) => (
+                    <div
+                      key={cell.label}
+                      title={`${cell.label} — ${cell.workoutName}`}
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 4,
+                        background: cell.done ? 'var(--accent)' : 'var(--surface2)',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         <p className="t-eyebrow">Cette semaine</p>
