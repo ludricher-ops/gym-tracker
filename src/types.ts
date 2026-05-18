@@ -132,7 +132,6 @@ export interface Exercise extends Syncable {
   media?: ExerciseMedia
   isCustom: boolean
   isWarmupExercise?: boolean
-  isAbExercise?: boolean
   popularity?: number
   usageCount?: number
   createdAt: number
