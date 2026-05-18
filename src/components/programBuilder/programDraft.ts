@@ -78,7 +78,7 @@ export function defaultWE(exerciseId: string, trackingType?: TrackingType, isAb?
       exerciseId,
       targetSets: 1,
       repsMode: 'fixed',
-      targetRepsMin: 0,
+      targetRepsMin: 10,
       restSec: 15,
       autoProgress: false,
       progressStepKg: 0,
