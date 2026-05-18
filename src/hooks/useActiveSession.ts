@@ -65,7 +65,11 @@ export function useActiveSession(sessionId: string): ActiveSessionApi {
     () =>
       store.sessionExercises
         .filter((se) => se.sessionId === sessionId)
-        .sort((a, b) => a.order - b.order),
+        .sort((a, b) => {
+          const rank = (se: typeof a) => se.isWarmup ? 0 : se.isAb ? 2 : 1
+          if (rank(a) !== rank(b)) return rank(a) - rank(b)
+          return a.order - b.order
+        }),
     [store.sessionExercises, sessionId],
   )
 
