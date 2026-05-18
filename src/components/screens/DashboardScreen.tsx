@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import type { Weekday } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import {
@@ -9,17 +8,14 @@ import { computeStreak } from '../../utils/streak'
 import { statsForWeek, statsForPreviousWeek, weekDeltas } from '../../utils/stats'
 import { localDayKey } from '../../utils/dates'
 import { formatDuration, formatVolume } from '../../utils/format'
+import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
+import type { ScheduledSession } from '../../utils/programSchedule'
 import { Button, Card, Icon, Row, StatTile } from '../ui'
-
-const WEEKDAYS: Weekday[] = [
-  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
-]
 
 export function DashboardScreen() {
   const store = useStore()
   const nav = useNavigation()
 
-  const todayKey = WEEKDAYS[(new Date().getDay() + 6) % 7]
   const dateLabel = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
@@ -31,10 +27,6 @@ export function DashboardScreen() {
     () => store.programs.find((p) => p.isActive),
     [store.programs],
   )
-  const todayWorkout = useMemo(() => {
-    const wtId = activeProgram?.weekTemplate[todayKey]
-    return wtId ? store.workoutTemplates.find((w) => w.id === wtId) : undefined
-  }, [activeProgram, todayKey, store.workoutTemplates])
 
   const resumable = useMemo(() => recoverableSession(store), [store])
 
@@ -43,35 +35,15 @@ export function DashboardScreen() {
     [store.sessions],
   )
 
-  // Séance du jour déjà terminée aujourd'hui.
-  const todayDoneSession = useMemo(() => {
-    if (!todayWorkout) return undefined
-    const todayStr = localDayKey(Date.now())
-    return endedSessions.find(
-      (s) => s.workoutTemplateId === todayWorkout.id && localDayKey(s.startedAt) === todayStr,
-    )
-  }, [todayWorkout, endedSessions])
+  const schedule = useMemo(
+    () => activeProgram ? generateSchedule(activeProgram, store.workoutTemplates) : [],
+    [activeProgram, store.workoutTemplates],
+  )
 
-  // Dernière séance planifiée non faite sur les 7 jours précédents.
-  const missedWorkout = useMemo(() => {
-    if (!activeProgram) return undefined
-    const todayIdx = (new Date().getDay() + 6) % 7
-    for (let off = 1; off <= 7; off++) {
-      const dayKey = WEEKDAYS[(todayIdx - off + 7) % 7]
-      const wtId = activeProgram.weekTemplate[dayKey]
-      if (!wtId) continue
-      const wt = store.workoutTemplates.find((w) => w.id === wtId)
-      if (!wt) continue
-      const target = new Date()
-      target.setDate(target.getDate() - off)
-      const targetKey = localDayKey(target)
-      const done = endedSessions.some(
-        (s) => s.workoutTemplateId === wtId && localDayKey(s.startedAt) === targetKey,
-      )
-      if (!done) return wt
-    }
-    return undefined
-  }, [activeProgram, endedSessions, store.workoutTemplates])
+  const card = useMemo(
+    () => scheduleCard(schedule, endedSessions, Date.now()),
+    [schedule, endedSessions],
+  )
 
   const streak = useMemo(
     () => computeStreak(endedSessions.map((s) => localDayKey(s.startedAt))),
@@ -87,11 +59,12 @@ export function DashboardScreen() {
   const recent = endedSessions.slice(0, 3)
 
   const openSession = (id: string) => nav.openModal('session', { sessionId: id })
-  const startWorkout = async (wt: NonNullable<typeof todayWorkout>) => {
-    openSession((await startSessionFromTemplate(wt, store)).id)
-  }
-  const startFree = async () => {
-    openSession((await startFreestyleSession(store)).id)
+  const startFree = async () => openSession((await startFreestyleSession(store)).id)
+
+  const startScheduled = async (scheduled: ScheduledSession) => {
+    const wt = store.workoutTemplates.find((w) => w.id === scheduled.workoutTemplateId)
+    if (!wt) return
+    openSession((await startSessionFromTemplate(wt, store, scheduled.label)).id)
   }
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
@@ -131,32 +104,33 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {!resumable && todayWorkout && todayDoneSession && (
+        {!resumable && activeProgram && card.type === 'done_today' && card.todaySession && (
           <Card variant="accent">
             <p className="t-eyebrow">Séance du jour terminée</p>
-            <p className="t-title" style={{ marginTop: 4 }}>
-              {todayWorkout.name}
-            </p>
-            <div className="gt-statrow" style={{ marginTop: 10 }}>
-              <div className="gt-stat">
-                <div className="gt-stat__value" style={{ fontSize: 17 }}>
-                  {formatDuration(todayDoneSession.durationSec ?? 0)}
+            <p className="t-title" style={{ marginTop: 4 }}>{card.todaySession.workoutName}</p>
+            <p className="t-caption" style={{ marginTop: 2 }}>{card.todaySession.label}</p>
+            {card.completedSession && (
+              <div className="gt-statrow" style={{ marginTop: 10 }}>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {formatDuration(card.completedSession.durationSec ?? 0)}
+                  </div>
+                  <div className="gt-stat__label">Durée</div>
                 </div>
-                <div className="gt-stat__label">Durée</div>
-              </div>
-              <div className="gt-stat">
-                <div className="gt-stat__value" style={{ fontSize: 17 }}>
-                  {formatVolume(todayDoneSession.totalVolumeKg ?? 0)} kg
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
+                  </div>
+                  <div className="gt-stat__label">Volume</div>
                 </div>
-                <div className="gt-stat__label">Volume</div>
-              </div>
-              <div className="gt-stat">
-                <div className="gt-stat__value" style={{ fontSize: 17 }}>
-                  {todayDoneSession.completedSets}
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {card.completedSession.completedSets}
+                  </div>
+                  <div className="gt-stat__label">Séries</div>
                 </div>
-                <div className="gt-stat__label">Séries</div>
               </div>
-            </div>
+            )}
             <div style={{ marginTop: 12 }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
@@ -165,43 +139,78 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {!resumable && todayWorkout && !todayDoneSession && (
+        {!resumable && activeProgram && card.type === 'scheduled' && card.todaySession && (
           <Card>
-            <p className="t-eyebrow">Séance du jour</p>
-            <p className="t-title" style={{ marginTop: 4 }}>
-              {todayWorkout.name}
-            </p>
-            <p className="t-caption" style={{ marginTop: 2 }}>
-              {activeProgram?.name}
-            </p>
+            <p className="t-eyebrow">Séance du jour · {card.todaySession.label}</p>
+            <p className="t-title" style={{ marginTop: 4 }}>{card.todaySession.workoutName}</p>
+            <p className="t-caption" style={{ marginTop: 2 }}>{activeProgram.name}</p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Button icon="bolt" onClick={() => startWorkout(todayWorkout)}>
+              <Button icon="bolt" onClick={() => startScheduled(card.todaySession!)}>
                 Commencer la séance
               </Button>
-              {missedWorkout && (
-                <Button variant="ghost" icon="bolt" onClick={() => startWorkout(missedWorkout)}>
-                  Rattraper : {missedWorkout.name}
+              {card.missedSession && (
+                <Button
+                  variant="ghost"
+                  icon="bolt"
+                  onClick={() => startScheduled(card.missedSession!)}
+                >
+                  Rattraper : {card.missedSession.workoutName}
                 </Button>
               )}
             </div>
           </Card>
         )}
 
-        {!resumable && activeProgram && !todayWorkout && (
+        {!resumable && activeProgram && card.type === 'missed' && card.missedSession && (
           <Card>
             <p className="t-eyebrow">Jour de repos</p>
-            <p className="t-title" style={{ marginTop: 4 }}>
-              Récupération
-            </p>
+            <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
             <p className="t-caption" style={{ marginTop: 2 }}>
               Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
             </p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {missedWorkout && (
-                <Button icon="bolt" onClick={() => startWorkout(missedWorkout)}>
-                  Rattraper : {missedWorkout.name}
-                </Button>
-              )}
+              <Button icon="bolt" onClick={() => startScheduled(card.missedSession!)}>
+                Rattraper : {card.missedSession.workoutName}
+              </Button>
+              <Button variant="secondary" icon="plus" onClick={startFree}>
+                Séance libre
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!resumable && activeProgram && card.type === 'early' && card.nextSession && (
+          <Card>
+            <p className="t-eyebrow">Jour de repos</p>
+            <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
+            <p className="t-caption" style={{ marginTop: 2 }}>
+              Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
+            </p>
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Button icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
+                Commencer la séance en avance
+              </Button>
+              <Button variant="secondary" icon="plus" onClick={startFree}>
+                Séance libre
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!resumable && activeProgram && card.type === 'rest_done' && (
+          <Card>
+            <p className="t-eyebrow">
+              {schedule.length > 0 ? 'Programme terminé' : 'Jour de repos'}
+            </p>
+            <p className="t-title" style={{ marginTop: 4 }}>
+              {schedule.length > 0 ? activeProgram.name : 'Récupération'}
+            </p>
+            <p className="t-caption" style={{ marginTop: 2 }}>
+              {schedule.length > 0
+                ? 'Toutes les séances sont complètes. Bravo !'
+                : `Aucune séance prévue aujourd'hui dans « ${activeProgram.name} ».`}
+            </p>
+            <div style={{ marginTop: 12 }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>

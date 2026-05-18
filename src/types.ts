@@ -185,6 +185,7 @@ export interface Session extends Syncable {
   workoutTemplateId?: string
   programId?: string
   programWeek?: number
+  programSessionLabel?: string
   name: string
   startedAt: number
   endedAt?: number

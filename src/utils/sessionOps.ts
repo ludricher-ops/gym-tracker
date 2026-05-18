@@ -69,6 +69,7 @@ function currentProgramWeek(store: StoreApi): { programId?: string; week?: numbe
 export async function startSessionFromTemplate(
   workoutTemplate: WorkoutTemplate,
   store: StoreApi,
+  programSessionLabel?: string,
 ): Promise<Session> {
   const now = Date.now()
   const wets = store.workoutExerciseTemplates
@@ -138,6 +139,7 @@ export async function startSessionFromTemplate(
     workoutTemplateId: workoutTemplate.id,
     programId,
     programWeek: week,
+    programSessionLabel,
     name: workoutTemplate.name,
     startedAt: now,
     totalSets,
