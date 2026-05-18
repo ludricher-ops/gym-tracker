@@ -188,7 +188,7 @@ export function DashboardScreen() {
             </p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Button icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
-                Commencer la séance en avance
+                Commencer la séance en avance : {card.nextSession!.workoutName}
               </Button>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
