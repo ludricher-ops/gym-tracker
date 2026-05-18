@@ -12,12 +12,14 @@ interface ExercisePickerProps {
   alreadyAdded?: string[]
   /** Pré-sélectionne le filtre "Échauffement" et n'affiche que ces exercices par défaut. */
   warmupMode?: boolean
+  /** Pré-sélectionne le filtre "Abdominaux". */
+  abMode?: boolean
 }
 
-export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [], warmupMode }: ExercisePickerProps) {
+export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [], warmupMode, abMode }: ExercisePickerProps) {
   const store = useStore()
   const [query, setQuery] = useState('')
-  const [region, setRegion] = useState(warmupMode ? 'warmup' : 'all')
+  const [region, setRegion] = useState(warmupMode ? 'warmup' : abMode ? 'abs' : 'all')
   const [selected, setSelected] = useState<string[]>([])
   const addedSet = useMemo(() => new Set(alreadyAdded), [alreadyAdded])
 

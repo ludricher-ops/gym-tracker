@@ -293,7 +293,7 @@ export function StepEditWorkout({
   workout, store, onChange, onRemove, onDuplicate, onBack,
 }: StepEditWorkoutProps) {
   const [musclePicker, setMusclePicker] = useState(false)
-  const [exercisePicker, setExercisePicker] = useState<'warmup' | 'main' | false>(false)
+  const [exercisePicker, setExercisePicker] = useState<'warmup' | 'main' | 'ab' | false>(false)
   const [configIndex, setConfigIndex] = useState<number | null>(null)
 
   const exMap = useMemo(
@@ -305,9 +305,10 @@ export function StepEditWorkout({
 
   const moveExercise = (index: number, dir: -1 | 1) => {
     const we = workout.exercises[index]
+    const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : w.isAb ? 'ab' : 'main'
     const group = workout.exercises
       .map((w, i) => ({ w, i }))
-      .filter(({ w }) => !!w.isWarmup === !!we.isWarmup)
+      .filter(({ w }) => groupKey(w) === groupKey(we))
     const posInGroup = group.findIndex(({ i }) => i === index)
     const targetInGroup = posInGroup + dir
     if (targetInGroup < 0 || targetInGroup >= group.length) return
@@ -317,11 +318,15 @@ export function StepEditWorkout({
     onChange({ exercises: list })
   }
 
-  const addExercises = (ids: string[], asWarmup = false) => {
+  const addExercises = (ids: string[], mode: 'main' | 'warmup' | 'ab' = 'main') => {
     onChange({
       exercises: [
         ...workout.exercises,
-        ...ids.map((id) => ({ ...defaultWE(id, exTracking(id)), isWarmup: asWarmup || undefined })),
+        ...ids.map((id) => ({
+          ...defaultWE(id, exTracking(id)),
+          isWarmup: mode === 'warmup' || undefined,
+          isAb: mode === 'ab' || undefined,
+        })),
       ],
     })
   }
@@ -365,11 +370,13 @@ export function StepEditWorkout({
 
         {(() => {
           const warmups = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => we.isWarmup)
-          const mains = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => !we.isWarmup)
+          const mains = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => !we.isWarmup && !we.isAb)
+          const abs = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => we.isAb)
+          const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : w.isAb ? 'ab' : 'main'
 
           const renderRow = ({ we, i }: { we: DraftWE; i: number }) => {
             const exMedia = exMap.get(we.exerciseId)?.media
-            const group = workout.exercises.filter((w) => !!w.isWarmup === !!we.isWarmup)
+            const group = workout.exercises.filter((w) => groupKey(w) === groupKey(we))
             const posInGroup = group.findIndex((w) => w.localId === we.localId)
             return (
               <div key={we.localId} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -439,12 +446,21 @@ export function StepEditWorkout({
                 Exercices ({mains.length})
               </p>
               {mains.map(renderRow)}
+              {abs.length > 0 && (
+                <>
+                  <p className="t-eyebrow" style={{ marginTop: 10 }}>Abdominaux ({abs.length})</p>
+                  {abs.map(renderRow)}
+                </>
+              )}
             </>
           )
         })()}
 
         <Button variant="secondary" icon="plus" onClick={() => setExercisePicker('main')}>
           Ajouter un exercice
+        </Button>
+        <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('ab')}>
+          Ajouter exercice Abdo
         </Button>
         <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('warmup')}>
           Ajouter un échauffement
@@ -477,9 +493,10 @@ export function StepEditWorkout({
       {exercisePicker && (
         <ExercisePicker
           alreadyAdded={workout.exercises.map((e) => e.exerciseId)}
-          onConfirm={(ids) => addExercises(ids, exercisePicker === 'warmup')}
+          onConfirm={(ids) => addExercises(ids, exercisePicker)}
           onClose={() => setExercisePicker(false)}
           warmupMode={exercisePicker === 'warmup'}
+          abMode={exercisePicker === 'ab'}
         />
       )}
       {configIndex != null && workout.exercises[configIndex] && (

@@ -65,9 +65,10 @@ export function SessionOverviewSheet({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {rows.map((r, i) => {
-            const prevIsWarmup = i > 0 ? rows[i - 1].se.isWarmup : undefined
-            const showWorkLabel = !r.se.isWarmup && prevIsWarmup
-            const showWarmupLabel = r.se.isWarmup && (i === 0 || !rows[i - 1].se.isWarmup)
+            const prev = i > 0 ? rows[i - 1].se : undefined
+            const showWarmupLabel = r.se.isWarmup && (i === 0 || !prev?.isWarmup)
+            const showWorkLabel = !r.se.isWarmup && !r.se.isAb && (prev?.isWarmup || prev?.isAb || i === 0)
+            const showAbLabel = r.se.isAb && !prev?.isAb
             return (
               <div key={r.se.id}>
                 {showWarmupLabel && (
@@ -75,6 +76,9 @@ export function SessionOverviewSheet({
                 )}
                 {showWorkLabel && (
                   <p className="t-eyebrow" style={{ margin: '8px 0 4px' }}>Exercices</p>
+                )}
+                {showAbLabel && (
+                  <p className="t-eyebrow" style={{ margin: '8px 0 4px' }}>Abdominaux</p>
                 )}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <button

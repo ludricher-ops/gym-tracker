@@ -23,6 +23,7 @@ export interface DraftWE {
   progressStepKg: number
   notes?: string
   isWarmup?: boolean
+  isAb?: boolean
 }
 
 export interface DraftWorkout {
@@ -123,6 +124,7 @@ export function draftFromProgram(program: Program, store: StoreApi): DraftProgra
           progressStepKg: e.progressStepKg,
           notes: e.notes,
           isWarmup: e.isWarmup,
+          isAb: e.isAb,
         }))
       return {
         localId,
@@ -172,7 +174,7 @@ async function saveWorkoutsFromDraft(
         repsMode: ex.repsMode, targetRepsMin: ex.targetRepsMin, targetRepsMax: ex.targetRepsMax,
         targetDurationSec: ex.targetDurationSec, targetRPE: ex.targetRPE,
         restSec: ex.restSec, autoProgress: ex.autoProgress, progressStepKg: ex.progressStepKg,
-        notes: ex.notes, isWarmup: ex.isWarmup,
+        notes: ex.notes, isWarmup: ex.isWarmup, isAb: ex.isAb,
       })
     }
   }

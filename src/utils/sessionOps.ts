@@ -74,8 +74,8 @@ export async function startSessionFromTemplate(
   const wets = store.workoutExerciseTemplates
     .filter((e) => e.workoutTemplateId === workoutTemplate.id)
     .sort((a, b) => {
-      if (a.isWarmup && !b.isWarmup) return -1
-      if (!a.isWarmup && b.isWarmup) return 1
+      const rank = (w: typeof a) => w.isWarmup ? 0 : w.isAb ? 2 : 1
+      if (rank(a) !== rank(b)) return rank(a) - rank(b)
       return a.order - b.order
     })
 
@@ -93,6 +93,7 @@ export async function startSessionFromTemplate(
       order: wet.order,
       supersetGroup: wet.supersetGroup,
       isWarmup: wet.isWarmup,
+      isAb: wet.isAb,
     })
     const target = prefill(wet, exercise, store)
 

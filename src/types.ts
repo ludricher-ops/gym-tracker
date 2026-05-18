@@ -178,6 +178,7 @@ export interface WorkoutExerciseTemplate extends Syncable {
   progressStepKg: number
   notes?: string
   isWarmup?: boolean
+  isAb?: boolean
 }
 
 export interface Session extends Syncable {
@@ -200,6 +201,7 @@ export interface SessionExercise extends Syncable {
   order: number
   supersetGroup?: string
   isWarmup?: boolean
+  isAb?: boolean
 }
 
 export interface SetRecord extends Syncable {
