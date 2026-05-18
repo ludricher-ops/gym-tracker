@@ -69,15 +69,6 @@ export function DashboardScreen() {
     [progressCells],
   )
 
-  const progressWeekGroups = useMemo(() => {
-    const groups = new Map<number, typeof progressCells>()
-    for (const cell of progressCells) {
-      const weekNum = parseInt(cell.label.slice(1, cell.label.indexOf('.')))
-      if (!groups.has(weekNum)) groups.set(weekNum, [])
-      groups.get(weekNum)!.push(cell)
-    }
-    return [...groups.entries()].sort(([a], [b]) => a - b)
-  }, [progressCells])
 
   const { current, deltas } = useMemo(() => {
     const cur = statsForWeek(endedSessions, Date.now(), weekStart)
@@ -272,23 +263,19 @@ export function DashboardScreen() {
                 {progressDoneCount} / {schedule.length}
               </span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {progressWeekGroups.map(([weekNum, cells]) => (
-                <div key={weekNum} style={{ display: 'flex', gap: 3 }}>
-                  {cells.map((cell) => (
-                    <div
-                      key={cell.label}
-                      title={`${cell.label} — ${cell.workoutName}`}
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: 4,
-                        background: cell.done ? 'var(--accent)' : 'var(--surface2)',
-                        flexShrink: 0,
-                      }}
-                    />
-                  ))}
-                </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {progressCells.map((cell) => (
+                <div
+                  key={cell.label}
+                  title={`${cell.label} — ${cell.workoutName}`}
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 4,
+                    background: cell.done ? 'var(--accent)' : 'var(--surface2)',
+                    flexShrink: 0,
+                  }}
+                />
               ))}
             </div>
           </>
