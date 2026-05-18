@@ -80,7 +80,7 @@ function findCompleted(
   )
 }
 
-export type ScheduleCardType = 'scheduled' | 'done_today' | 'missed' | 'early' | 'rest_done'
+export type ScheduleCardType = 'scheduled' | 'done_today' | 'done_early' | 'missed' | 'early' | 'rest_done'
 
 export interface ScheduleCard {
   type: ScheduleCardType
@@ -126,9 +126,19 @@ export function scheduleCard(
     return { type: 'missed', missedSession: mostRecentMissed }
   }
 
-  const nextSession = schedule.find((s) => s.date.getTime() >= todayStart + 86_400_000)
-  if (nextSession) {
-    return { type: 'early', nextSession }
+  // Parcourt les séances futures dans l'ordre :
+  // - faite aujourd'hui (en avance) → récap
+  // - faite un autre jour → passer à la suivante
+  // - pas faite → proposer de commencer en avance
+  for (const s of schedule.filter((s) => s.date.getTime() >= todayStart + 86_400_000)) {
+    const completed = findCompleted(s, completedSessions)
+    if (completed && localDayKey(completed.startedAt) === todayKey) {
+      return { type: 'done_early', todaySession: s, completedSession: completed }
+    }
+    if (!completed) {
+      return { type: 'early', nextSession: s }
+    }
+    // Faite un jour précédent → passer à la suivante
   }
 
   return { type: 'rest_done' }

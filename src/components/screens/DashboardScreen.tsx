@@ -159,6 +159,41 @@ export function DashboardScreen() {
           </Card>
         )}
 
+        {!resumable && activeProgram && card.type === 'done_early' && card.todaySession && (
+          <Card variant="accent">
+            <p className="t-eyebrow">Séance en avance terminée</p>
+            <p className="t-title" style={{ marginTop: 4 }}>{card.todaySession.workoutName}</p>
+            <p className="t-caption" style={{ marginTop: 2 }}>{card.todaySession.label}</p>
+            {card.completedSession && (
+              <div className="gt-statrow" style={{ marginTop: 10 }}>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {formatDuration(card.completedSession.durationSec ?? 0)}
+                  </div>
+                  <div className="gt-stat__label">Durée</div>
+                </div>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
+                  </div>
+                  <div className="gt-stat__label">Volume</div>
+                </div>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                    {card.completedSession.completedSets}
+                  </div>
+                  <div className="gt-stat__label">Séries</div>
+                </div>
+              </div>
+            )}
+            <div style={{ marginTop: 12 }}>
+              <Button variant="secondary" icon="plus" onClick={startFree}>
+                Ajouter une séance libre
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {!resumable && activeProgram && card.type === 'scheduled' && card.todaySession && (
           <Card>
             <p className="t-eyebrow">Séance du jour · {card.todaySession.label}</p>
