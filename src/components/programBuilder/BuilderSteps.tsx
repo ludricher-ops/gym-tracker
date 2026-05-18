@@ -302,6 +302,7 @@ export function StepEditWorkout({
   )
   const exName = (id: string) => exMap.get(id)?.name ?? 'Exercice supprimé'
   const exTracking = (id: string) => exMap.get(id)?.trackingType ?? 'weight_reps'
+  const exIsCardio = (id: string) => exMap.get(id)?.primaryMuscle === 'cardio'
 
   const moveExercise = (index: number, dir: -1 | 1) => {
     const we = workout.exercises[index]
@@ -504,6 +505,7 @@ export function StepEditWorkout({
           we={workout.exercises[configIndex]}
           exerciseName={exName(workout.exercises[configIndex].exerciseId)}
           trackingType={exTracking(workout.exercises[configIndex].exerciseId)}
+          isCardio={exIsCardio(workout.exercises[configIndex].exerciseId)}
           onChange={(next) => updateWE(configIndex, next)}
           onRemove={() => removeWE(configIndex)}
           onClose={() => setConfigIndex(null)}

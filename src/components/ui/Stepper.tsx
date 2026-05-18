@@ -9,6 +9,8 @@ interface StepperProps {
   unit?: string
   /** Décimales affichées (utile pour les pas de 2.5 kg). */
   decimals?: number
+  /** Formateur personnalisé — remplace value.toFixed() + unit (ex. min→secondes). */
+  format?: (value: number) => string
   ariaLabel?: string
 }
 
@@ -20,6 +22,7 @@ export function Stepper({
   max = Infinity,
   unit,
   decimals = 0,
+  format,
   ariaLabel,
 }: StepperProps) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n))
@@ -37,8 +40,8 @@ export function Stepper({
         <Icon name="minus" size={20} />
       </button>
       <span className="gt-stepper__value" aria-label={ariaLabel} aria-live="polite">
-        {value.toFixed(decimals)}
-        {unit && <span className="gt-stepper__unit"> {unit}</span>}
+        {format ? format(value) : value.toFixed(decimals)}
+        {!format && unit && <span className="gt-stepper__unit"> {unit}</span>}
       </span>
       <button
         type="button"

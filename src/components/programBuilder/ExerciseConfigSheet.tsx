@@ -8,6 +8,8 @@ interface ExerciseConfigSheetProps {
   we: DraftWE
   exerciseName: string
   trackingType: TrackingType
+  /** true si l'exercice est de type cardio → pas de 5 min au lieu de 5 s. */
+  isCardio?: boolean
   onChange: (next: DraftWE) => void
   onRemove: () => void
   onClose: () => void
@@ -17,11 +19,14 @@ const REST_PRESETS = [60, 90, 120, 180]
 const SUPERSETS = ['A', 'B', 'C']
 
 export function ExerciseConfigSheet({
-  we, exerciseName, trackingType, onChange, onRemove, onClose,
+  we, exerciseName, trackingType, isCardio, onChange, onRemove, onClose,
 }: ExerciseConfigSheetProps) {
   const [d, setD] = useState<DraftWE>(we)
   const patch = (p: Partial<DraftWE>) => setD((prev) => ({ ...prev, ...p }))
   const isTime = trackingType === 'time'
+  const timeStep = isCardio ? 300 : 5
+  const timeMin = isCardio ? 300 : 5
+  const timeFormat = isCardio ? (v: number) => `${Math.round(v / 60)} min` : undefined
 
   const setMode = (mode: RepsMode) => {
     if (mode === 'range') {
@@ -61,13 +66,14 @@ export function ExerciseConfigSheet({
         {isTime ? (
           <Field label="Durée par série">
             <Stepper
-              value={d.targetDurationSec ?? 30}
+              value={d.targetDurationSec ?? (isCardio ? 300 : 30)}
               onChange={(v) => patch({ targetDurationSec: v })}
-              step={5}
-              min={5}
-              max={3600}
-              unit="s"
-              ariaLabel="Durée en secondes"
+              step={timeStep}
+              min={timeMin}
+              max={isCardio ? 7200 : 3600}
+              format={timeFormat}
+              unit={timeFormat ? undefined : 's'}
+              ariaLabel="Durée"
             />
           </Field>
         ) : (

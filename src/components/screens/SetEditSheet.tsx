@@ -8,6 +8,8 @@ interface SetEditSheetProps {
   weightUnit: WeightUnit
   /** Incrément du stepper de poids (kg). */
   weightStep?: number
+  /** true si l'exercice est de type cardio → pas de 5 min au lieu de 5 s. */
+  isCardio?: boolean
   onSave: (updated: SetRecord) => void
   onDelete: (set: SetRecord) => void
   onClose: () => void
@@ -15,7 +17,7 @@ interface SetEditSheetProps {
 
 /** Édition d'une série — champs adaptés au type de suivi. */
 export function SetEditSheet({
-  set, trackingType = 'weight_reps', weightUnit, weightStep = 2.5, onSave, onDelete, onClose,
+  set, trackingType = 'weight_reps', weightUnit, weightStep = 2.5, isCardio, onSave, onDelete, onClose,
 }: SetEditSheetProps) {
   const [weightKg, setWeightKg] = useState(set.weightKg)
   const [reps, setReps] = useState(set.reps)
@@ -56,8 +58,17 @@ export function SetEditSheet({
 
         {trackingType === 'time' && (
           <div style={{ textAlign: 'center' }}>
-            <div className="t-eyebrow" style={{ marginBottom: 4 }}>Durée (s)</div>
-            <Stepper value={reps} onChange={setReps} step={5} min={5} ariaLabel="Durée en secondes" />
+            <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+              {isCardio ? 'Durée (min)' : 'Durée (s)'}
+            </div>
+            <Stepper
+              value={reps}
+              onChange={setReps}
+              step={isCardio ? 300 : 5}
+              min={isCardio ? 300 : 5}
+              format={isCardio ? (v) => `${Math.round(v / 60)} min` : undefined}
+              ariaLabel="Durée"
+            />
           </div>
         )}
 

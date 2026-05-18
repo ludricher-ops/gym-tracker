@@ -134,6 +134,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   const trackingType = currentExercise?.trackingType ?? 'weight_reps'
   const showWeight = trackingType === 'weight_reps'
+  const isCardio = currentExercise?.primaryMuscle === 'cardio'
   const weightUnit = prefs.weightUnit
   const exerciseCount = act.exercises.length
   const nextExercise = act.exercises[act.exIndex + 1]
@@ -375,13 +376,16 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     Démarrer · {formatClock(targetDurationSec)}
                   </Button>
                   <div style={{ textAlign: 'center' }}>
-                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>Durée (s)</div>
+                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+                      {isCardio ? 'Durée (min)' : 'Durée (s)'}
+                    </div>
                     <Stepper
                       value={inputR}
                       onChange={setInputR}
-                      step={5}
-                      min={5}
-                      ariaLabel="Durée en secondes"
+                      step={isCardio ? 300 : 5}
+                      min={isCardio ? 300 : 5}
+                      format={isCardio ? (v) => `${Math.round(v / 60)} min` : undefined}
+                      ariaLabel="Durée"
                     />
                   </div>
                 </>
@@ -536,6 +540,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           trackingType={trackingType}
           weightUnit={weightUnit}
           weightStep={prefs.weightStep}
+          isCardio={isCardio}
           onSave={(updated) => {
             act.updateSet(updated)
             setEditSetSheet(null)
