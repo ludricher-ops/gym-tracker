@@ -36,24 +36,42 @@ export function DashboardScreen() {
     return wtId ? store.workoutTemplates.find((w) => w.id === wtId) : undefined
   }, [activeProgram, todayKey, store.workoutTemplates])
 
-  // Prochaine séance planifiée du programme (jours suivants, sur 7 jours).
-  const nextWorkout = useMemo(() => {
-    if (!activeProgram) return undefined
-    const todayIdx = (new Date().getDay() + 6) % 7
-    for (let off = 1; off <= 7; off++) {
-      const wtId = activeProgram.weekTemplate[WEEKDAYS[(todayIdx + off) % 7]]
-      const wt = wtId ? store.workoutTemplates.find((w) => w.id === wtId) : undefined
-      if (wt) return wt
-    }
-    return undefined
-  }, [activeProgram, store.workoutTemplates])
-
   const resumable = useMemo(() => recoverableSession(store), [store])
 
   const endedSessions = useMemo(
     () => store.sessions.filter((s) => s.endedAt != null).sort((a, b) => b.startedAt - a.startedAt),
     [store.sessions],
   )
+
+  // Séance du jour déjà terminée aujourd'hui.
+  const todayDoneSession = useMemo(() => {
+    if (!todayWorkout) return undefined
+    const todayStr = localDayKey(Date.now())
+    return endedSessions.find(
+      (s) => s.workoutTemplateId === todayWorkout.id && localDayKey(s.startedAt) === todayStr,
+    )
+  }, [todayWorkout, endedSessions])
+
+  // Dernière séance planifiée non faite sur les 7 jours précédents.
+  const missedWorkout = useMemo(() => {
+    if (!activeProgram) return undefined
+    const todayIdx = (new Date().getDay() + 6) % 7
+    for (let off = 1; off <= 7; off++) {
+      const dayKey = WEEKDAYS[(todayIdx - off + 7) % 7]
+      const wtId = activeProgram.weekTemplate[dayKey]
+      if (!wtId) continue
+      const wt = store.workoutTemplates.find((w) => w.id === wtId)
+      if (!wt) continue
+      const target = new Date()
+      target.setDate(target.getDate() - off)
+      const targetKey = localDayKey(target)
+      const done = endedSessions.some(
+        (s) => s.workoutTemplateId === wtId && localDayKey(s.startedAt) === targetKey,
+      )
+      if (!done) return wt
+    }
+    return undefined
+  }, [activeProgram, endedSessions, store.workoutTemplates])
 
   const streak = useMemo(
     () => computeStreak(endedSessions.map((s) => localDayKey(s.startedAt))),
@@ -83,9 +101,9 @@ export function DashboardScreen() {
       <div className="gt-topbar">
         <div style={{ flex: 1 }}>
           <div className="t-eyebrow">{dateLabel}</div>
-          <div className="gt-topbar__title" style={{ fontSize: 22 }}>
+          <h1 className="gt-topbar__title" style={{ fontSize: 22 }}>
             {greeting}
-          </div>
+          </h1>
         </div>
         {streak > 0 && (
           <div
@@ -113,7 +131,41 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {!resumable && todayWorkout && (
+        {!resumable && todayWorkout && todayDoneSession && (
+          <Card variant="accent">
+            <p className="t-eyebrow">Séance du jour terminée</p>
+            <p className="t-title" style={{ marginTop: 4 }}>
+              {todayWorkout.name}
+            </p>
+            <div className="gt-statrow" style={{ marginTop: 10 }}>
+              <div className="gt-stat">
+                <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  {formatDuration(todayDoneSession.durationSec ?? 0)}
+                </div>
+                <div className="gt-stat__label">Durée</div>
+              </div>
+              <div className="gt-stat">
+                <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  {formatVolume(todayDoneSession.totalVolumeKg ?? 0)} kg
+                </div>
+                <div className="gt-stat__label">Volume</div>
+              </div>
+              <div className="gt-stat">
+                <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  {todayDoneSession.completedSets}
+                </div>
+                <div className="gt-stat__label">Séries</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Button variant="secondary" icon="plus" onClick={startFree}>
+                Ajouter une séance libre
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!resumable && todayWorkout && !todayDoneSession && (
           <Card>
             <p className="t-eyebrow">Séance du jour</p>
             <p className="t-title" style={{ marginTop: 4 }}>
@@ -122,10 +174,15 @@ export function DashboardScreen() {
             <p className="t-caption" style={{ marginTop: 2 }}>
               {activeProgram?.name}
             </p>
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Button icon="bolt" onClick={() => startWorkout(todayWorkout)}>
                 Commencer la séance
               </Button>
+              {missedWorkout && (
+                <Button variant="ghost" icon="bolt" onClick={() => startWorkout(missedWorkout)}>
+                  Rattraper : {missedWorkout.name}
+                </Button>
+              )}
             </div>
           </Card>
         )}
@@ -140,9 +197,9 @@ export function DashboardScreen() {
               Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
             </p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {nextWorkout && (
-                <Button icon="bolt" onClick={() => startWorkout(nextWorkout)}>
-                  Faire la séance suivante : {nextWorkout.name}
+              {missedWorkout && (
+                <Button icon="bolt" onClick={() => startWorkout(missedWorkout)}>
+                  Rattraper : {missedWorkout.name}
                 </Button>
               )}
               <Button variant="secondary" icon="plus" onClick={startFree}>
