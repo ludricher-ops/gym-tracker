@@ -323,7 +323,7 @@ export function StepEditWorkout({
       exercises: [
         ...workout.exercises,
         ...ids.map((id) => ({
-          ...defaultWE(id, exTracking(id)),
+          ...defaultWE(id, exTracking(id), mode === 'ab'),
           isWarmup: mode === 'warmup' || undefined,
           isAb: mode === 'ab' || undefined,
         })),
