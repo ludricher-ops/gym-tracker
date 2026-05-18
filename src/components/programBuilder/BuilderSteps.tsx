@@ -479,6 +479,7 @@ export function StepEditWorkout({
           alreadyAdded={workout.exercises.map((e) => e.exerciseId)}
           onConfirm={(ids) => addExercises(ids, exercisePicker === 'warmup')}
           onClose={() => setExercisePicker(false)}
+          warmupMode={exercisePicker === 'warmup'}
         />
       )}
       {configIndex != null && workout.exercises[configIndex] && (

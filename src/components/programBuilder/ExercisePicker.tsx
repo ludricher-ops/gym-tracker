@@ -10,12 +10,14 @@ interface ExercisePickerProps {
   onClose: () => void
   /** Exercices déjà dans la séance — marqués comme ajoutés. */
   alreadyAdded?: string[]
+  /** Pré-sélectionne le filtre "Échauffement" et n'affiche que ces exercices par défaut. */
+  warmupMode?: boolean
 }
 
-export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [] }: ExercisePickerProps) {
+export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [], warmupMode }: ExercisePickerProps) {
   const store = useStore()
   const [query, setQuery] = useState('')
-  const [region, setRegion] = useState('all')
+  const [region, setRegion] = useState(warmupMode ? 'warmup' : 'all')
   const [selected, setSelected] = useState<string[]>([])
   const addedSet = useMemo(() => new Set(alreadyAdded), [alreadyAdded])
 
@@ -26,6 +28,7 @@ export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [] }: Exerci
     return store.exercises
       .filter((e) => {
         if (q && !e.name.toLowerCase().includes(q)) return false
+        if (region === 'warmup') return !!e.isWarmupExercise
         if (regionSet && !regionSet.has(e.primaryMuscle)) return false
         return true
       })
@@ -48,6 +51,13 @@ export function ExercisePicker({ onConfirm, onClose, alreadyAdded = [] }: Exerci
           aria-label="Rechercher un exercice"
         />
         <div className="gt-chips">
+          <button
+            type="button"
+            className={`gt-chip ${region === 'warmup' ? 'gt-chip--active' : ''}`}
+            onClick={() => setRegion('warmup')}
+          >
+            Échauffement
+          </button>
           <button
             type="button"
             className={`gt-chip ${region === 'all' ? 'gt-chip--active' : ''}`}
