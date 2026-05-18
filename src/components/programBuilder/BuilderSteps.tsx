@@ -460,7 +460,7 @@ export function StepEditWorkout({
           Ajouter un exercice
         </Button>
         <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('ab')}>
-          Ajouter exercice Abdo
+          Ajouter une séance Abdominaux
         </Button>
         <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('warmup')}>
           Ajouter un échauffement
