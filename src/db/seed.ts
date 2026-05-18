@@ -26,6 +26,7 @@ interface SeedExercise {
   trackingType: TrackingType
   popularity: number
   isWarmupExercise?: boolean
+  isAbExercise?: boolean
 }
 
 const SEED_EXERCISES = rawExercises as SeedExercise[]
@@ -75,6 +76,7 @@ export async function ensureSeed(): Promise<void> {
     instructions: undefined,
     isCustom: false,
     isWarmupExercise: ex.isWarmupExercise,
+    isAbExercise: ex.isAbExercise,
     popularity: ex.popularity,
     usageCount: 0,
     createdAt: now,
