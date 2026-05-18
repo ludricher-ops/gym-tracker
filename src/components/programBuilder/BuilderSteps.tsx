@@ -293,7 +293,7 @@ export function StepEditWorkout({
   workout, store, onChange, onRemove, onDuplicate, onBack,
 }: StepEditWorkoutProps) {
   const [musclePicker, setMusclePicker] = useState(false)
-  const [exercisePicker, setExercisePicker] = useState(false)
+  const [exercisePicker, setExercisePicker] = useState<'warmup' | 'main' | false>(false)
   const [configIndex, setConfigIndex] = useState<number | null>(null)
 
   const exMap = useMemo(
@@ -304,18 +304,24 @@ export function StepEditWorkout({
   const exTracking = (id: string) => exMap.get(id)?.trackingType ?? 'weight_reps'
 
   const moveExercise = (index: number, dir: -1 | 1) => {
-    const next = index + dir
-    if (next < 0 || next >= workout.exercises.length) return
+    const we = workout.exercises[index]
+    const group = workout.exercises
+      .map((w, i) => ({ w, i }))
+      .filter(({ w }) => !!w.isWarmup === !!we.isWarmup)
+    const posInGroup = group.findIndex(({ i }) => i === index)
+    const targetInGroup = posInGroup + dir
+    if (targetInGroup < 0 || targetInGroup >= group.length) return
+    const targetIndex = group[targetInGroup].i
     const list = workout.exercises.slice()
-    ;[list[index], list[next]] = [list[next], list[index]]
+    ;[list[index], list[targetIndex]] = [list[targetIndex], list[index]]
     onChange({ exercises: list })
   }
 
-  const addExercises = (ids: string[]) => {
+  const addExercises = (ids: string[], asWarmup = false) => {
     onChange({
       exercises: [
         ...workout.exercises,
-        ...ids.map((id) => defaultWE(id, exTracking(id))),
+        ...ids.map((id) => ({ ...defaultWE(id, exTracking(id)), isWarmup: asWarmup || undefined })),
       ],
     })
   }
@@ -357,70 +363,91 @@ export function StepEditWorkout({
           onClick={() => setMusclePicker(true)}
         />
 
-        <p className="t-eyebrow" style={{ marginTop: 6 }}>
-          Exercices ({workout.exercises.length})
-        </p>
+        {(() => {
+          const warmups = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => we.isWarmup)
+          const mains = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => !we.isWarmup)
 
-        {workout.exercises.map((we, i) => {
-          const exMedia = exMap.get(we.exerciseId)?.media
+          const renderRow = ({ we, i }: { we: DraftWE; i: number }) => {
+            const exMedia = exMap.get(we.exerciseId)?.media
+            const group = workout.exercises.filter((w) => !!w.isWarmup === !!we.isWarmup)
+            const posInGroup = group.findIndex((w) => w.localId === we.localId)
+            return (
+              <div key={we.localId} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <Row
+                    leading={exMedia ? (
+                      <div style={{ width: 40, flex: 'none' }}>
+                        <MediaImage blobId={exMedia.blobId} url={exMedia.url} alt="" height={40} radius={8} />
+                      </div>
+                    ) : undefined}
+                    label={
+                      <>
+                        {we.supersetGroup && (
+                          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                            {we.supersetGroup} ·{' '}
+                          </span>
+                        )}
+                        {exName(we.exerciseId)}
+                      </>
+                    }
+                    sub={
+                      exTracking(we.exerciseId) === 'time'
+                        ? `${we.targetSets} × ${we.targetDurationSec ?? 30}s · repos ${we.restSec}s`
+                        : `${we.targetSets} × ${
+                            we.repsMode === 'range'
+                              ? `${we.targetRepsMin}-${we.targetRepsMax}`
+                              : we.targetRepsMin
+                          } · repos ${we.restSec}s`
+                    }
+                    chevron
+                    onClick={() => setConfigIndex(i)}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <button
+                    className="gt-iconbtn"
+                    style={{ height: 26 }}
+                    aria-label="Monter"
+                    disabled={posInGroup === 0}
+                    onClick={() => moveExercise(i, -1)}
+                  >
+                    <Icon name="chevron-right" size={16} className="gt-rot-up" />
+                  </button>
+                  <button
+                    className="gt-iconbtn"
+                    style={{ height: 26 }}
+                    aria-label="Descendre"
+                    disabled={posInGroup === group.length - 1}
+                    onClick={() => moveExercise(i, 1)}
+                  >
+                    <Icon name="chevron-right" size={16} className="gt-rot-down" />
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
           return (
-          <div key={we.localId} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <Row
-                leading={exMedia ? (
-                  <div style={{ width: 40, flex: 'none' }}>
-                    <MediaImage blobId={exMedia.blobId} url={exMedia.url} alt="" height={40} radius={8} />
-                  </div>
-                ) : undefined}
-                label={
-                  <>
-                    {we.supersetGroup && (
-                      <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
-                        {we.supersetGroup} ·{' '}
-                      </span>
-                    )}
-                    {exName(we.exerciseId)}
-                  </>
-                }
-                sub={
-                  exTracking(we.exerciseId) === 'time'
-                    ? `${we.targetSets} × ${we.targetDurationSec ?? 30}s · repos ${we.restSec}s`
-                    : `${we.targetSets} × ${
-                        we.repsMode === 'range'
-                          ? `${we.targetRepsMin}-${we.targetRepsMax}`
-                          : we.targetRepsMin
-                      } · repos ${we.restSec}s`
-                }
-                chevron
-                onClick={() => setConfigIndex(i)}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button
-                className="gt-iconbtn"
-                style={{ height: 26 }}
-                aria-label="Monter"
-                disabled={i === 0}
-                onClick={() => moveExercise(i, -1)}
-              >
-                <Icon name="chevron-right" size={16} className="gt-rot-up" />
-              </button>
-              <button
-                className="gt-iconbtn"
-                style={{ height: 26 }}
-                aria-label="Descendre"
-                disabled={i === workout.exercises.length - 1}
-                onClick={() => moveExercise(i, 1)}
-              >
-                <Icon name="chevron-right" size={16} className="gt-rot-down" />
-              </button>
-            </div>
-          </div>
+            <>
+              {warmups.length > 0 && (
+                <>
+                  <p className="t-eyebrow" style={{ marginTop: 6 }}>Échauffement ({warmups.length})</p>
+                  {warmups.map(renderRow)}
+                </>
+              )}
+              <p className="t-eyebrow" style={{ marginTop: warmups.length > 0 ? 10 : 6 }}>
+                Exercices ({mains.length})
+              </p>
+              {mains.map(renderRow)}
+            </>
           )
-        })}
+        })()}
 
-        <Button variant="secondary" icon="plus" onClick={() => setExercisePicker(true)}>
+        <Button variant="secondary" icon="plus" onClick={() => setExercisePicker('main')}>
           Ajouter un exercice
+        </Button>
+        <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('warmup')}>
+          Ajouter un échauffement
         </Button>
 
         <div style={{ display: 'flex', gap: 8 }}>
@@ -450,7 +477,7 @@ export function StepEditWorkout({
       {exercisePicker && (
         <ExercisePicker
           alreadyAdded={workout.exercises.map((e) => e.exerciseId)}
-          onConfirm={addExercises}
+          onConfirm={(ids) => addExercises(ids, exercisePicker === 'warmup')}
           onClose={() => setExercisePicker(false)}
         />
       )}

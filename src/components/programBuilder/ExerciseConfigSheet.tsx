@@ -39,6 +39,15 @@ export function ExerciseConfigSheet({
   return (
     <Sheet title={exerciseName} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Switch
+            checked={d.isWarmup ?? false}
+            onChange={(on) => patch({ isWarmup: on })}
+            label="Exercice d'échauffement"
+          />
+          <span className="t-caption">Exercice d&apos;échauffement</span>
+        </div>
+
         <Field label="Séries">
           <Stepper
             value={d.targetSets}

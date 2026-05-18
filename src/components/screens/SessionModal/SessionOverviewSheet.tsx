@@ -64,56 +64,69 @@ export function SessionOverviewSheet({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {rows.map((r, i) => (
-            <div key={r.se.id} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button
-                type="button"
-                className={`gt-set ${i === currentExIndex ? 'gt-set--active' : ''}`}
-                style={{ flex: 1 }}
-                onClick={() => {
-                  onJump(i)
-                  onClose()
-                }}
-              >
-                <span className="gt-set__perf" style={{ fontFamily: 'var(--font-ui)' }}>
-                  {r.se.supersetGroup && (
-                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
-                      {r.se.supersetGroup} ·{' '}
-                    </span>
-                  )}
-                  {r.name}
-                </span>
-                {r.hasPR && (
-                  <span style={{ color: 'var(--accent)' }}>
-                    <Icon name="bolt" size={16} />
-                  </span>
+          {rows.map((r, i) => {
+            const prevIsWarmup = i > 0 ? rows[i - 1].se.isWarmup : undefined
+            const showWorkLabel = !r.se.isWarmup && prevIsWarmup
+            const showWarmupLabel = r.se.isWarmup && (i === 0 || !rows[i - 1].se.isWarmup)
+            return (
+              <div key={r.se.id}>
+                {showWarmupLabel && (
+                  <p className="t-eyebrow" style={{ marginBottom: 4 }}>Échauffement</p>
                 )}
-                <span className="gt-set__idx" style={{ width: 'auto', textAlign: 'right' }}>
-                  {r.done}/{r.total}
-                </span>
-              </button>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <button
-                  className="gt-iconbtn"
-                  style={{ height: 26 }}
-                  aria-label="Monter l'exercice"
-                  disabled={i === 0}
-                  onClick={() => onReorder(i, i - 1)}
-                >
-                  <Icon name="chevron-right" size={16} className="gt-rot-up" />
-                </button>
-                <button
-                  className="gt-iconbtn"
-                  style={{ height: 26 }}
-                  aria-label="Descendre l'exercice"
-                  disabled={i === rows.length - 1}
-                  onClick={() => onReorder(i, i + 1)}
-                >
-                  <Icon name="chevron-right" size={16} className="gt-rot-down" />
-                </button>
+                {showWorkLabel && (
+                  <p className="t-eyebrow" style={{ margin: '8px 0 4px' }}>Exercices</p>
+                )}
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className={`gt-set ${i === currentExIndex ? 'gt-set--active' : ''}`}
+                    style={{ flex: 1 }}
+                    onClick={() => {
+                      onJump(i)
+                      onClose()
+                    }}
+                  >
+                    <span className="gt-set__perf" style={{ fontFamily: 'var(--font-ui)' }}>
+                      {r.se.supersetGroup && (
+                        <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                          {r.se.supersetGroup} ·{' '}
+                        </span>
+                      )}
+                      {r.name}
+                    </span>
+                    {r.hasPR && (
+                      <span style={{ color: 'var(--accent)' }}>
+                        <Icon name="bolt" size={16} />
+                      </span>
+                    )}
+                    <span className="gt-set__idx" style={{ width: 'auto', textAlign: 'right' }}>
+                      {r.done}/{r.total}
+                    </span>
+                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <button
+                      className="gt-iconbtn"
+                      style={{ height: 26 }}
+                      aria-label="Monter l'exercice"
+                      disabled={i === 0}
+                      onClick={() => onReorder(i, i - 1)}
+                    >
+                      <Icon name="chevron-right" size={16} className="gt-rot-up" />
+                    </button>
+                    <button
+                      className="gt-iconbtn"
+                      style={{ height: 26 }}
+                      aria-label="Descendre l'exercice"
+                      disabled={i === rows.length - 1}
+                      onClick={() => onReorder(i, i + 1)}
+                    >
+                      <Icon name="chevron-right" size={16} className="gt-rot-down" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="gt-field">

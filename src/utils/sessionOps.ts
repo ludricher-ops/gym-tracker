@@ -73,7 +73,11 @@ export async function startSessionFromTemplate(
   const now = Date.now()
   const wets = store.workoutExerciseTemplates
     .filter((e) => e.workoutTemplateId === workoutTemplate.id)
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => {
+      if (a.isWarmup && !b.isWarmup) return -1
+      if (!a.isWarmup && b.isWarmup) return 1
+      return a.order - b.order
+    })
 
   const { programId, week } = currentProgramWeek(store)
   const sessionId = uuid()
@@ -88,6 +92,7 @@ export async function startSessionFromTemplate(
       exerciseId: wet.exerciseId,
       order: wet.order,
       supersetGroup: wet.supersetGroup,
+      isWarmup: wet.isWarmup,
     })
     const target = prefill(wet, exercise, store)
 
