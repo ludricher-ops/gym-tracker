@@ -58,7 +58,32 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
   friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
 }
 
-export function defaultWE(exerciseId: string, trackingType?: TrackingType, isAb?: boolean): DraftWE {
+export function defaultWE(exerciseId: string, trackingType?: TrackingType, isAb?: boolean, isWarmup?: boolean): DraftWE {
+  if (isWarmup) {
+    if (trackingType === 'time') {
+      return {
+        localId: uuid(),
+        exerciseId,
+        targetSets: 1,
+        repsMode: 'fixed',
+        targetRepsMin: 1,
+        targetDurationSec: 20,
+        restSec: 15,
+        autoProgress: false,
+        progressStepKg: 0,
+      }
+    }
+    return {
+      localId: uuid(),
+      exerciseId,
+      targetSets: 1,
+      repsMode: 'fixed',
+      targetRepsMin: 0,
+      restSec: 15,
+      autoProgress: false,
+      progressStepKg: 0,
+    }
+  }
   if (isAb) {
     if (trackingType === 'time') {
       return {
