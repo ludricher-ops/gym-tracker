@@ -138,6 +138,12 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const weightUnit = prefs.weightUnit
   const exerciseCount = act.exercises.length
   const nextExercise = act.exercises[act.exIndex + 1]
+  const supersetGroup = currentSE?.supersetGroup ?? null
+  const supersetPeers = supersetGroup
+    ? act.exercises.filter((e) => e.se.supersetGroup === supersetGroup)
+    : []
+  const isInSuperset = supersetPeers.length > 1
+  const isNextInSameGroup = !!(nextExercise?.se.supersetGroup && nextExercise.se.supersetGroup === supersetGroup)
 
   const prev = currentSE ? lastWorkingSet(currentSE.exerciseId, store) : null
   const exercisePR = currentSE
@@ -295,10 +301,33 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
                 <Pill variant="surface2">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
                 <span className="t-eyebrow">
-                  Ex {act.exIndex + 1}/{exerciseCount}
+                  {supersetGroup
+                    ? `Superset ${supersetGroup}`
+                    : `Ex ${act.exIndex + 1}/${exerciseCount}`}
                 </span>
               </div>
               <p className="t-title">{currentExercise.name}</p>
+              {isInSuperset && (
+                <div className="gt-chips" style={{ marginTop: 8 }}>
+                  {supersetPeers.map((peer) => {
+                    const peerIdx = act.exercises.findIndex((e) => e.se.id === peer.se.id)
+                    const isActive = peerIdx === act.exIndex
+                    const allDone =
+                      peer.sets.length > 0 && peer.sets.every((s) => s.completedAt != null)
+                    return (
+                      <button
+                        key={peer.se.id}
+                        type="button"
+                        className={`gt-chip ${isActive ? 'gt-chip--active' : ''}`}
+                        style={allDone && !isActive ? { opacity: 0.55 } : undefined}
+                        onClick={() => act.goToExercise(peerIdx)}
+                      >
+                        {allDone && !isActive ? '✓ ' : ''}{peer.exercise?.name ?? 'Exercice'}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                 <span className="t-caption">
                   Précédent :{' '}
@@ -335,7 +364,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     {act.exIndex + 2}
                   </span>
                   <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div className="t-eyebrow">Suivant</div>
+                    <div className="t-eyebrow">
+                      {isNextInSameGroup ? `Superset ${supersetGroup}` : 'Suivant'}
+                    </div>
                     <div style={{ fontWeight: 700 }}>
                       {nextExercise.exercise?.name ?? 'Exercice'}
                     </div>
