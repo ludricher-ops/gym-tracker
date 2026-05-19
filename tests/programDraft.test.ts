@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { defaultWE } from '../src/components/programBuilder/programDraft'
+import { defaultWE, draftStats } from '../src/components/programBuilder/programDraft'
+import type { DraftProgram } from '../src/components/programBuilder/programDraft'
 
 describe('defaultWE — exercice principal', () => {
   it('poids+reps : 3 séries, fourchette 8-12, repos 90s, progression activée', () => {
@@ -56,7 +57,10 @@ describe('defaultWE — échauffement (isWarmup)', () => {
   })
 })
 
-describe('defaultWE — abdominaux (isAb)', () => {
+// isAb reste dans le modèle de données pour la compatibilité avec les programmes
+// existants chargés via draftFromProgram. L'UI builder ne crée plus de nouveaux
+// exercices ab (le bouton a été supprimé), mais les anciens programmes les lisent.
+describe('defaultWE — compat données abdominaux (isAb)', () => {
   it('reps : 1 série, 40 reps, fixe, repos 15s, pas de progression', () => {
     const we = defaultWE('ex-1', 'weight_reps', true)
     expect(we.targetSets).toBe(1)
@@ -94,5 +98,68 @@ describe('defaultWE — propriétés communes', () => {
     const we = defaultWE('ex-1', 'reps_only', true, true)
     expect(we.targetRepsMin).toBe(10)
     expect(we.restSec).toBe(15)
+  })
+})
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function makeWorkout(exCount: number, localId: string) {
+  return {
+    localId,
+    name: 'Séance',
+    type: 'upper' as const,
+    muscleGroups: [],
+    exercises: Array.from({ length: exCount }, (_, i) => defaultWE(`ex-${i}`, 'weight_reps')),
+  }
+}
+
+function makeDraft(overrides: Partial<DraftProgram> = {}): DraftProgram {
+  return {
+    name: 'Test',
+    goal: 'hypertrophy',
+    level: 'intermediate',
+    durationWeeks: 12,
+    sessionsPerWeek: 3,
+    color: '#000',
+    workouts: [],
+    week: {},
+    ...overrides,
+  }
+}
+
+describe('draftStats', () => {
+  it('programme vide : 0 jours entraînement, 7 repos, 0 exercices', () => {
+    expect(draftStats(makeDraft())).toEqual({ trainingDays: 0, restDays: 7, totalExercises: 0 })
+  })
+
+  it('compte les jours assignés dans week', () => {
+    const w = makeWorkout(3, 'w1')
+    const stats = draftStats(makeDraft({
+      workouts: [w],
+      week: { monday: 'w1', wednesday: 'w1', friday: 'w1' },
+    }))
+    expect(stats.trainingDays).toBe(3)
+    expect(stats.restDays).toBe(4)
+  })
+
+  it('totalExercises = somme de tous les workouts (assignés ou non)', () => {
+    const stats = draftStats(makeDraft({
+      workouts: [makeWorkout(5, 'w1'), makeWorkout(4, 'w2')],
+      week: { monday: 'w1' },
+    }))
+    expect(stats.totalExercises).toBe(9)
+  })
+
+  it('semaine pleine : 7 jours entraînement, 0 repos', () => {
+    const w = makeWorkout(2, 'w1')
+    const stats = draftStats(makeDraft({
+      workouts: [w],
+      week: {
+        monday: 'w1', tuesday: 'w1', wednesday: 'w1',
+        thursday: 'w1', friday: 'w1', saturday: 'w1', sunday: 'w1',
+      },
+    }))
+    expect(stats.trainingDays).toBe(7)
+    expect(stats.restDays).toBe(0)
   })
 })

@@ -9,6 +9,7 @@ import { useStore } from './useStore'
 import {
   deleteSession, finalizeSession, validateSet as runValidateSet,
 } from '../utils/sessionOps'
+import { nextSupersetIndex } from '../utils/superset'
 import { uuid } from '../utils/uuid'
 
 export interface ActiveExercise {
@@ -130,13 +131,12 @@ export function useActiveSession(sessionId: string): ActiveSessionApi {
       setExIndex(exIndex + 1)
     } else if (se?.supersetGroup) {
       // Superset : rotation automatique vers le prochain exercice du groupe
-      const group = se.supersetGroup
       const groupIndices = sessionExercises
-        .map((e, i) => (e.supersetGroup === group ? i : -1))
+        .map((e, i) => (e.supersetGroup === se.supersetGroup ? i : -1))
         .filter((i) => i !== -1)
-      const posInGroup = groupIndices.indexOf(exIndex)
-      if (posInGroup !== -1 && groupIndices.length > 1) {
-        setExIndex(groupIndices[(posInGroup + 1) % groupIndices.length])
+      const next = nextSupersetIndex(groupIndices, exIndex)
+      if (next !== null) {
+        setExIndex(next)
         supersetRotated = true
       }
     }
