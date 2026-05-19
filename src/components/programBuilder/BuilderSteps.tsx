@@ -293,7 +293,7 @@ export function StepEditWorkout({
   workout, store, onChange, onRemove, onDuplicate, onBack,
 }: StepEditWorkoutProps) {
   const [musclePicker, setMusclePicker] = useState(false)
-  const [exercisePicker, setExercisePicker] = useState<'warmup' | 'main' | 'ab' | false>(false)
+  const [exercisePicker, setExercisePicker] = useState<'warmup' | 'main' | false>(false)
   const [configIndex, setConfigIndex] = useState<number | null>(null)
 
   const exMap = useMemo(
@@ -306,7 +306,7 @@ export function StepEditWorkout({
 
   const moveExercise = (index: number, dir: -1 | 1) => {
     const we = workout.exercises[index]
-    const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : w.isAb ? 'ab' : 'main'
+    const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : 'main'
     const group = workout.exercises
       .map((w, i) => ({ w, i }))
       .filter(({ w }) => groupKey(w) === groupKey(we))
@@ -319,14 +319,13 @@ export function StepEditWorkout({
     onChange({ exercises: list })
   }
 
-  const addExercises = (ids: string[], mode: 'main' | 'warmup' | 'ab' = 'main') => {
+  const addExercises = (ids: string[], mode: 'main' | 'warmup' = 'main') => {
     onChange({
       exercises: [
         ...workout.exercises,
         ...ids.map((id) => ({
-          ...defaultWE(id, exTracking(id), mode === 'ab', mode === 'warmup'),
+          ...defaultWE(id, exTracking(id), false, mode === 'warmup'),
           isWarmup: mode === 'warmup' || undefined,
-          isAb: mode === 'ab' || undefined,
         })),
       ],
     })
@@ -371,9 +370,8 @@ export function StepEditWorkout({
 
         {(() => {
           const warmups = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => we.isWarmup)
-          const mains = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => !we.isWarmup && !we.isAb)
-          const abs = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => we.isAb)
-          const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : w.isAb ? 'ab' : 'main'
+          const mains = workout.exercises.map((we, i) => ({ we, i })).filter(({ we }) => !we.isWarmup)
+          const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : 'main'
 
           const renderRow = ({ we, i }: { we: DraftWE; i: number }) => {
             const exMedia = exMap.get(we.exerciseId)?.media
@@ -447,21 +445,12 @@ export function StepEditWorkout({
                 Exercices ({mains.length})
               </p>
               {mains.map(renderRow)}
-              {abs.length > 0 && (
-                <>
-                  <p className="t-eyebrow" style={{ marginTop: 10 }}>Abdominaux ({abs.length})</p>
-                  {abs.map(renderRow)}
-                </>
-              )}
             </>
           )
         })()}
 
         <Button variant="secondary" icon="plus" onClick={() => setExercisePicker('main')}>
           Ajouter un exercice
-        </Button>
-        <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('ab')}>
-          Ajouter une séance Abdominaux
         </Button>
         <Button variant="ghost" icon="plus" onClick={() => setExercisePicker('warmup')}>
           Ajouter un échauffement
@@ -497,7 +486,6 @@ export function StepEditWorkout({
           onConfirm={(ids) => addExercises(ids, exercisePicker)}
           onClose={() => setExercisePicker(false)}
           warmupMode={exercisePicker === 'warmup'}
-          abMode={exercisePicker === 'ab'}
         />
       )}
       {configIndex != null && workout.exercises[configIndex] && (

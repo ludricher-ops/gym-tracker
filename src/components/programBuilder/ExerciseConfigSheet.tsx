@@ -16,7 +16,7 @@ interface ExerciseConfigSheetProps {
 }
 
 const REST_PRESETS = [60, 90, 120, 180]
-const SUPERSETS = ['A', 'B', 'C']
+const SUPERSETS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
 export function ExerciseConfigSheet({
   we, exerciseName, trackingType, isCardio, onChange, onRemove, onClose,
