@@ -250,6 +250,13 @@ button.gt-row:active {
   border-radius: 5px;
   background: var(--surface2);
 }
+.gt-heatmap__cell--clickable {
+  cursor: pointer;
+}
+.gt-heatmap__cell--selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 
 /* ── StatTile ─────────────────────────────────────────────────────── */
 .gt-statrow {

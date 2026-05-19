@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { addWeeks, localDayKey, weekRange } from '../../utils/dates'
@@ -13,6 +13,7 @@ export function HistoryScreen() {
   const nav = useNavigation()
   const weekStart = store.settings.preferences.weekStart
   const [monthOffset, setMonthOffset] = useState(0)
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   const ended = useMemo(
     () => store.sessions.filter((s) => s.endedAt != null).sort((a, b) => b.startedAt - a.startedAt),
@@ -71,17 +72,30 @@ export function HistoryScreen() {
     return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth()
   })
 
+  const visibleSessions = selectedDay
+    ? monthSessions.filter((s) => localDayKey(s.startedAt) === selectedDay)
+    : monthSessions
+
+  const handleDayClick = (key: string) => {
+    setSelectedDay((prev) => (prev === key ? null : key))
+  }
+
+  const handleMonthChange = (delta: number) => {
+    setSelectedDay(null)
+    setMonthOffset((o) => Math.min(0, o + delta))
+  }
+
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
-        <span className="gt-topbar__title">Historique</span>
+        <h1 className="gt-topbar__title">Historique</h1>
       </div>
 
       <div className="gt-screen__scroll">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             className="gt-iconbtn"
-            onClick={() => setMonthOffset((o) => o - 1)}
+            onClick={() => handleMonthChange(-1)}
             aria-label="Mois précédent"
           >
             <Icon name="chevron-right" size={20} className="gt-rot-up" />
@@ -89,7 +103,7 @@ export function HistoryScreen() {
           <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{monthLabel}</span>
           <button
             className="gt-iconbtn"
-            onClick={() => setMonthOffset((o) => Math.min(0, o + 1))}
+            onClick={() => handleMonthChange(1)}
             aria-label="Mois suivant"
             disabled={monthOffset >= 0}
           >
@@ -97,7 +111,7 @@ export function HistoryScreen() {
           </button>
         </div>
 
-        <Heatmap weeks={weeks} />
+        <Heatmap weeks={weeks} selectedKey={selectedDay} onCellClick={handleDayClick} />
 
         <div>
           <p className="t-eyebrow" style={{ marginBottom: 8 }}>
@@ -121,18 +135,31 @@ export function HistoryScreen() {
           </div>
         </div>
 
-        <p className="t-eyebrow">
-          {monthSessions.length} séance{monthSessions.length > 1 ? 's' : ''}
-        </p>
-        {monthSessions.length === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p className="t-eyebrow" style={{ margin: 0 }}>
+            {selectedDay
+              ? `${visibleSessions.length} séance${visibleSessions.length > 1 ? 's' : ''} — ${new Date(selectedDay).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}`
+              : `${monthSessions.length} séance${monthSessions.length > 1 ? 's' : ''}`}
+          </p>
+          {selectedDay && (
+            <button
+              className="gt-iconbtn"
+              onClick={() => setSelectedDay(null)}
+              aria-label="Effacer la sélection"
+            >
+              <Icon name="x" size={16} />
+            </button>
+          )}
+        </div>
+        {visibleSessions.length === 0 ? (
           <EmptyState
             icon="list"
             title="Aucune séance"
-            sub="Aucune séance enregistrée ce mois-ci."
+            sub={selectedDay ? 'Aucune séance ce jour-là.' : 'Aucune séance enregistrée ce mois-ci.'}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {monthSessions.map((s) => (
+            {visibleSessions.map((s) => (
               <Row
                 key={s.id}
                 icon="dumbbell"
