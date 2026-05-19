@@ -165,7 +165,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       reps,
       rpe: inputRpe ?? undefined,
     }
-    const { pr, restSec, sessionDone } = await act.validateSet(updated)
+    const { pr, restSec, sessionDone, supersetRotated } = await act.validateSet(updated)
     if (isAnyPR(pr)) {
       const exId = currentSE.exerciseId
       const name = currentExercise?.name ?? 'Exercice'
@@ -187,7 +187,8 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       setFinished(true)
       return
     }
-    restTimer.start(restSec)
+    // En superset : on passe directement à l'exercice suivant, sans timer de repos.
+    if (!supersetRotated) restTimer.start(restSec)
     if (prefs.notificationsEnabled && !notifAsked.current) {
       notifAsked.current = true
       requestNotificationPermission()

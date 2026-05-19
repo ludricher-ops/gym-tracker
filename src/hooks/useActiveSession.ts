@@ -25,6 +25,8 @@ export interface ValidateOutcome {
   exerciseDone: boolean
   /** Tous les exercices de la séance sont terminés. */
   sessionDone: boolean
+  /** Bascule automatique vers le prochain exercice du superset (pas de repos). */
+  supersetRotated: boolean
 }
 
 export interface ActiveSessionApi {
@@ -120,10 +122,26 @@ export function useActiveSession(sessionId: string): ActiveSessionApi {
     const exerciseDone =
       seSets.filter((s) => s.completedAt == null && s.id !== set.id).length === 0
     const sessionDone = exerciseDone && exIndex === sessionExercises.length - 1
-    if (exerciseDone && !sessionDone) {
+
+    let supersetRotated = false
+    if (sessionDone) {
+      // La séance est terminée — SessionModal appelle finish()
+    } else if (exerciseDone) {
       setExIndex(exIndex + 1)
+    } else if (se?.supersetGroup) {
+      // Superset : rotation automatique vers le prochain exercice du groupe
+      const group = se.supersetGroup
+      const groupIndices = sessionExercises
+        .map((e, i) => (e.supersetGroup === group ? i : -1))
+        .filter((i) => i !== -1)
+      const posInGroup = groupIndices.indexOf(exIndex)
+      if (posInGroup !== -1 && groupIndices.length > 1) {
+        setExIndex(groupIndices[(posInGroup + 1) % groupIndices.length])
+        supersetRotated = true
+      }
     }
-    return { pr, restSec: restSecFor(se), exerciseDone, sessionDone }
+
+    return { pr, restSec: restSecFor(se), exerciseDone, sessionDone, supersetRotated }
   }
 
   const updateSet = async (set: SetRecord): Promise<void> => {
