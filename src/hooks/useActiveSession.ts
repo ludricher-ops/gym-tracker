@@ -60,7 +60,22 @@ export interface ActiveSessionApi {
 
 export function useActiveSession(sessionId: string): ActiveSessionApi {
   const store = useStore()
-  const [exIndex, setExIndex] = useState(0)
+
+  // Initialise sur le premier exercice avec au moins une série incomplète.
+  // Ne s'exécute qu'au montage : survive à une fermeture/réouverture de la séance.
+  const [exIndex, setExIndex] = useState(() => {
+    const ses = store.sessionExercises
+      .filter((se) => se.sessionId === sessionId)
+      .sort((a, b) => {
+        const rank = (se: typeof a) => se.isWarmup ? 0 : se.isAb ? 2 : 1
+        if (rank(a) !== rank(b)) return rank(a) - rank(b)
+        return a.order - b.order
+      })
+    const idx = ses.findIndex((se) =>
+      store.sets.some((s) => s.sessionExerciseId === se.id && s.completedAt == null),
+    )
+    return idx >= 0 ? idx : 0
+  })
 
   const session = store.sessions.find((s) => s.id === sessionId)
 

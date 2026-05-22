@@ -25,7 +25,11 @@ export function SessionOverviewSheet({
   const rows = useMemo(() => {
     const ses = store.sessionExercises
       .filter((se) => se.sessionId === session.id)
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => {
+        const rank = (se: typeof a) => se.isWarmup ? 0 : se.isAb ? 2 : 1
+        if (rank(a) !== rank(b)) return rank(a) - rank(b)
+        return a.order - b.order
+      })
     return ses.map((se) => {
       const sets = store.sets.filter((s) => s.sessionExerciseId === se.id)
       const done = sets.filter((s) => s.completedAt != null)
