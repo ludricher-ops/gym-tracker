@@ -15,7 +15,7 @@ interface ExerciseConfigSheetProps {
   onClose: () => void
 }
 
-const REST_PRESETS = [60, 90, 120, 180]
+const REST_PRESETS = [0, 60, 90, 120, 180]
 const SUPERSETS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
 export function ExerciseConfigSheet({
@@ -168,7 +168,7 @@ export function ExerciseConfigSheet({
                 className={`gt-chip ${d.restSec === sec ? 'gt-chip--active' : ''}`}
                 onClick={() => patch({ restSec: sec })}
               >
-                {Math.floor(sec / 60)}:{String(sec % 60).padStart(2, '0')}
+                {sec === 0 ? 'Sans' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`}
               </button>
             ))}
           </div>
@@ -176,7 +176,7 @@ export function ExerciseConfigSheet({
             value={d.restSec}
             onChange={(v) => patch({ restSec: v })}
             step={15}
-            min={15}
+            min={0}
             max={600}
             unit="s"
             ariaLabel="Temps de repos en secondes"

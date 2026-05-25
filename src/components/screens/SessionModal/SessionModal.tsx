@@ -187,8 +187,8 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       setFinished(true)
       return
     }
-    // En superset : on passe directement à l'exercice suivant, sans timer de repos.
-    if (!supersetRotated) restTimer.start(restSec)
+    // En superset ou repos à 0 s : pas de timer de repos.
+    if (!supersetRotated && restSec > 0) restTimer.start(restSec)
     if (prefs.notificationsEnabled && !notifAsked.current) {
       notifAsked.current = true
       requestNotificationPermission()
