@@ -86,7 +86,7 @@ export interface ScheduleCard {
   type: ScheduleCardType
   /** Séance prévue aujourd'hui (types scheduled et done_today). */
   todaySession?: ScheduledSession
-  /** Séance manquée la plus récente (types missed et scheduled avec rattrapage). */
+  /** Séance manquée la plus ancienne (types missed, scheduled et done_today avec rattrapage). */
   missedSession?: ScheduledSession
   /** Prochaine séance à venir (type early). */
   nextSession?: ScheduledSession
@@ -111,19 +111,19 @@ export function scheduleCard(
   const missed = schedule.filter(
     (s) => s.date.getTime() < todayStart && !findCompleted(s, completedSessions),
   )
-  const mostRecentMissed = missed.length > 0 ? missed[missed.length - 1] : undefined
+  const oldestMissed = missed.length > 0 ? missed[0] : undefined
 
   if (todayScheduled) {
     const completedSession = findCompleted(todayScheduled, completedSessions)
     if (completedSession) {
-      return { type: 'done_today', todaySession: todayScheduled, completedSession }
+      return { type: 'done_today', todaySession: todayScheduled, completedSession, missedSession: oldestMissed }
     }
-    return { type: 'scheduled', todaySession: todayScheduled, missedSession: mostRecentMissed }
+    return { type: 'scheduled', todaySession: todayScheduled, missedSession: oldestMissed }
   }
 
   // Jour de repos ou après la fin du programme.
-  if (mostRecentMissed) {
-    return { type: 'missed', missedSession: mostRecentMissed }
+  if (oldestMissed) {
+    return { type: 'missed', missedSession: oldestMissed }
   }
 
   // Parcourt les séances futures dans l'ordre :

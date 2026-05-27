@@ -151,10 +151,15 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
               </Button>
+              {card.missedSession && (
+                <Button variant="ghost" icon="bolt" onClick={() => startScheduled(card.missedSession!)}>
+                  Rattraper : {card.missedSession.workoutName}
+                </Button>
+              )}
             </div>
           </Card>
         )}
