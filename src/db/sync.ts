@@ -8,7 +8,7 @@
 // surtout pas dans `settings`, qui est lui-même synchronisé.
 
 import type { OutboxEntry, Syncable } from '../types'
-import { idbGet, idbGetAll, idbGetAllKeys, idbDeleteKeys, idbPut } from './idb'
+import { idbBatchGet, idbGet, idbGetAll, idbGetAllKeys, idbDeleteKeys, idbTx } from './idb'
 import { OUTBOX_STORE } from './schema'
 
 const CURSOR_KEY = 'gymtrack-sync-cursor'
@@ -82,13 +82,30 @@ export async function pullChanges(): Promise<number> {
       hasMore: boolean
     }
 
-    for (const { store, record } of data.records) {
-      const local = await idbGet<Syncable>(store, record.id)
-      // LWW : on n'écrase que si l'entrant est strictement plus récent.
-      if (!local || record.updatedAt > local.updatedAt) {
-        await idbPut(store, record) // écriture directe — pas de ré-entrée outbox
-        applied++
-      }
+    // Batch LWW : regroupe les records par store pour réduire le nombre de
+    // transactions IDB (1 lecture + 1 écriture par store au lieu de 2N).
+    const byStore = new Map<string, { store: string; record: Syncable }[]>()
+    for (const item of data.records) {
+      const arr = byStore.get(item.store) ?? []
+      arr.push(item)
+      byStore.set(item.store, arr)
+    }
+    for (const [storeName, items] of byStore) {
+      const ids = items.map((i) => i.record.id)
+      const existing = await idbBatchGet<Syncable>(storeName, ids)
+      const toWrite = items
+        .filter(({ record }) => {
+          const local = existing.get(record.id)
+          return !local || record.updatedAt > local.updatedAt
+        })
+        .map(({ record }) => record)
+      if (toWrite.length === 0) continue
+      applied += toWrite.length
+      // Écriture en lot — pas de ré-entrée outbox (données venant du serveur).
+      await idbTx([storeName], 'readwrite', (tx) => {
+        const s = tx.objectStore(storeName)
+        for (const record of toWrite) s.put(record)
+      })
     }
 
     cursor = data.cursor

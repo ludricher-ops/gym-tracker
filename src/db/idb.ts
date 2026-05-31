@@ -42,10 +42,43 @@ export function initDB(): Promise<IDBDatabase> {
       }
     }
     req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-    req.onblocked = () => reject(new Error('IndexedDB bloquée par un autre onglet'))
+    req.onerror = () => {
+      // Réinitialise le cache pour permettre un retry au prochain appel.
+      dbPromise = null
+      reject(req.error)
+    }
+    req.onblocked = () => {
+      // Un autre onglet retient une ancienne version — reset pour retry possible.
+      dbPromise = null
+      reject(new Error('IndexedDB bloquée par un autre onglet — fermez les autres onglets puis rechargez.'))
+    }
   })
   return dbPromise
+}
+
+/**
+ * Lit plusieurs clés dans une même transaction readonly et retourne
+ * un Map<id, record>. Réduit le nombre de transactions par rapport à
+ * N appels séquentiels à `idbGet`.
+ */
+export async function idbBatchGet<T>(
+  store: string,
+  ids: string[],
+): Promise<Map<string, T>> {
+  if (ids.length === 0) return new Map()
+  const db = await initDB()
+  return new Promise((resolve, reject) => {
+    const result = new Map<string, T>()
+    const tx = db.transaction(store, 'readonly')
+    tx.oncomplete = () => resolve(result)
+    tx.onerror = () => reject(tx.error)
+    tx.onabort = () => reject(tx.error ?? new Error('Transaction IDB annulée'))
+    const s = tx.objectStore(store)
+    for (const id of ids) {
+      const req = s.get(id)
+      req.onsuccess = () => { if (req.result != null) result.set(id, req.result as T) }
+    }
+  })
 }
 
 /**

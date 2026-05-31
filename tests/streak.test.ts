@@ -45,6 +45,13 @@ describe('longestStreak', () => {
   it('jours isolés → 1', () => {
     expect(longestStreak(['2026-01-01', '2026-03-01'])).toBe(1)
   })
+  it("streak a cheval sur un changement d'annee", () => {
+    expect(longestStreak(['2025-12-30', '2025-12-31', '2026-01-01'])).toBe(3)
+  })
+  it("streak a cheval sur un changement d'annee avec trou", () => {
+    // Trou le 31/12 → deux séquences de 1
+    expect(longestStreak(['2025-12-30', '2026-01-01'])).toBe(1)
+  })
 })
 
 describe('streakInDanger', () => {
