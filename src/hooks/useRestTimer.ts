@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 export interface RestTimer {
   active: boolean
@@ -21,6 +21,10 @@ export function useRestTimer(onComplete?: () => void): RestTimer {
   const [targetSec, setTargetSec] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const fired = useRef(false)
+  // Ref stable pour éviter que onComplete inline soit une dépendance d'effet
+  // et déclenche plusieurs fois la complétion si le parent re-rend.
+  const onCompleteRef = useRef(onComplete)
+  useLayoutEffect(() => { onCompleteRef.current = onComplete })
 
   useEffect(() => {
     if (endsAt == null) return
@@ -33,9 +37,9 @@ export function useRestTimer(onComplete?: () => void): RestTimer {
   useEffect(() => {
     if (endsAt != null && remainingSec === 0 && !fired.current) {
       fired.current = true
-      onComplete?.()
+      onCompleteRef.current?.()
     }
-  }, [endsAt, remainingSec, onComplete])
+  }, [endsAt, remainingSec])
 
   const start = useCallback((durationSec: number) => {
     fired.current = false

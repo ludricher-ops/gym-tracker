@@ -18,6 +18,9 @@ export function playBeep(): void {
     osc.start()
     osc.stop(ctx.currentTime + 0.42)
     osc.onended = () => ctx.close()
+    // Fallback : certains navigateurs (Safari) ne déclenchent pas onended.
+    // Les navigateurs limitent à ~6 AudioContext simultanés ; forcer la fermeture évite le blocage.
+    setTimeout(() => { if (ctx.state !== 'closed') void ctx.close() }, 600)
   } catch {
     /* audio indisponible — ignoré */
   }

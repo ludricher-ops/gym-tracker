@@ -31,17 +31,31 @@ export function buildExerciseStats(exerciseId: string, store: StoreApi): Exercis
       .filter((p) => p.exerciseId === exerciseId && p.type === '1rm')
       .sort((a, b) => b.estimated1RM - a.estimated1RM)[0] ?? null
 
+  // Pré-indexage pour éviter l'itération O(sessions × sessionExercises × sets).
+  // seBySession : sessionId → SessionExercise (premier match pour cet exercice)
+  const seBySession = new Map<string, typeof store.sessionExercises[0]>()
+  for (const se of store.sessionExercises) {
+    if (se.exerciseId === exerciseId && !seBySession.has(se.sessionId)) {
+      seBySession.set(se.sessionId, se)
+    }
+  }
+  // setsBySeId : sessionExerciseId → SetRecord[]
+  const setsBySeId = new Map<string, SetRecord[]>()
+  for (const s of store.sets) {
+    if (!setsBySeId.has(s.sessionExerciseId)) setsBySeId.set(s.sessionExerciseId, [])
+    setsBySeId.get(s.sessionExerciseId)!.push(s)
+  }
+
   const performances: ExercisePerformance[] = []
   let totalTonnage = 0
   let totalSets = 0
 
   for (const session of store.sessions) {
-    const se = store.sessionExercises.find(
-      (x) => x.sessionId === session.id && x.exerciseId === exerciseId,
-    )
+    const se = seBySession.get(session.id)
     if (!se) continue
-    const sets = store.sets
-      .filter((s) => s.sessionExerciseId === se.id && s.completedAt != null && !s.isWarmup)
+    const allSets = setsBySeId.get(se.id) ?? []
+    const sets = allSets
+      .filter((s) => s.completedAt != null && !s.isWarmup)
       .sort((a, b) => a.index - b.index)
     if (sets.length === 0) continue
 
@@ -74,12 +88,14 @@ export function buildExerciseStats(exerciseId: string, store: StoreApi): Exercis
 
 /** Exercices ayant au moins une performance enregistrée. */
 export function exercisesWithHistory(store: StoreApi): string[] {
+  // Pré-indexage des sets complétés par sessionExerciseId pour éviter O(SE × sets).
+  const completedSeIds = new Set<string>()
+  for (const s of store.sets) {
+    if (s.completedAt != null && !s.isWarmup) completedSeIds.add(s.sessionExerciseId)
+  }
   const ids = new Set<string>()
   for (const se of store.sessionExercises) {
-    const hasCompleted = store.sets.some(
-      (s) => s.sessionExerciseId === se.id && s.completedAt != null && !s.isWarmup,
-    )
-    if (hasCompleted) ids.add(se.exerciseId)
+    if (completedSeIds.has(se.id)) ids.add(se.exerciseId)
   }
   return [...ids]
 }
