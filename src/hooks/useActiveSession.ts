@@ -225,7 +225,8 @@ export function useActiveSession(sessionId: string): ActiveSessionApi {
     if (!moved) return
     list.splice(toIndex, 0, moved)
     for (let i = 0; i < list.length; i++) {
-      if (list[i].order !== i) await store.sessionExercise.save({ ...list[i], order: i })
+      const item = list[i]
+      if (item && item.order !== i) await store.sessionExercise.save({ ...item, order: i })
     }
   }
 

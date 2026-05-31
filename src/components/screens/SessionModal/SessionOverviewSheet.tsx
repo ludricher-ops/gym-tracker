@@ -69,7 +69,7 @@ export function SessionOverviewSheet({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {rows.map((r, i) => {
-            const prev = i > 0 ? rows[i - 1].se : undefined
+            const prev = i > 0 ? rows[i - 1]?.se : undefined
             const showWarmupLabel = r.se.isWarmup && (i === 0 || !prev?.isWarmup)
             const showWorkLabel = !r.se.isWarmup && !r.se.isAb && (prev?.isWarmup || prev?.isAb || i === 0)
             const showAbLabel = r.se.isAb && !prev?.isAb

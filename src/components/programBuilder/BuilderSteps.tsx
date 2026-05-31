@@ -306,6 +306,7 @@ export function StepEditWorkout({
 
   const moveExercise = (index: number, dir: -1 | 1) => {
     const we = workout.exercises[index]
+    if (!we) return
     const groupKey = (w: DraftWE) => w.isWarmup ? 'warmup' : 'main'
     const group = workout.exercises
       .map((w, i) => ({ w, i }))
@@ -313,9 +314,14 @@ export function StepEditWorkout({
     const posInGroup = group.findIndex(({ i }) => i === index)
     const targetInGroup = posInGroup + dir
     if (targetInGroup < 0 || targetInGroup >= group.length) return
-    const targetIndex = group[targetInGroup].i
+    const targetIndex = group[targetInGroup]?.i
+    if (targetIndex === undefined) return
     const list = workout.exercises.slice()
-    ;[list[index], list[targetIndex]] = [list[targetIndex], list[index]]
+    const a = list[index]
+    const b = list[targetIndex]
+    if (!a || !b) return
+    list[index] = b
+    list[targetIndex] = a
     onChange({ exercises: list })
   }
 

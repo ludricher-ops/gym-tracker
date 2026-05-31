@@ -142,7 +142,7 @@ export function emptyDraft(): DraftProgram {
     level: 'intermediate',
     durationWeeks: 12,
     sessionsPerWeek: 3,
-    color: PROGRAM_COLORS[0],
+    color: PROGRAM_COLORS[0] ?? '#c8f000',
     workouts: [],
     week: {},
   }
@@ -216,8 +216,7 @@ async function saveWorkoutsFromDraft(
     const wtId = uuid()
     localToReal.set(w.localId, wtId)
     await store.workoutTemplate.save({ id: wtId, programId, name: w.name, type: w.type, muscleGroups: w.muscleGroups })
-    for (let i = 0; i < w.exercises.length; i++) {
-      const ex = w.exercises[i]
+    for (const [i, ex] of w.exercises.entries()) {
       await store.workoutExerciseTemplate.save({
         id: uuid(), workoutTemplateId: wtId, exerciseId: ex.exerciseId, order: i,
         supersetGroup: ex.supersetGroup, targetSets: ex.targetSets,

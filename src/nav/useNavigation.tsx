@@ -93,7 +93,7 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const api = useMemo<NavApi>(
     () => ({
       activeTab,
-      currentScreen: stack[stack.length - 1],
+      currentScreen: stack[stack.length - 1]!,
       modal,
       canGoBack: stack.length > 1 || modal != null,
       switchTab,

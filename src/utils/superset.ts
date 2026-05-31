@@ -7,5 +7,5 @@ export function nextSupersetIndex(groupIndices: number[], currentIndex: number):
   if (groupIndices.length < 2) return null
   const pos = groupIndices.indexOf(currentIndex)
   if (pos === -1) return null
-  return groupIndices[(pos + 1) % groupIndices.length]
+  return groupIndices[(pos + 1) % groupIndices.length] ?? null
 }

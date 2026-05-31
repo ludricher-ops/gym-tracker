@@ -16,7 +16,7 @@ export const ACCENTS: AccentDef[] = [
   { key: 'amber', label: 'Ambre', accent: 'oklch(0.78 0.16 75)', ink: 'oklch(0.18 0.02 75)' },
 ]
 
-export const DEFAULT_ACCENT = ACCENTS[0].accent
+export const DEFAULT_ACCENT = ACCENTS[0]?.accent ?? 'oklch(0.88 0.20 130)'
 
 /** Retrouve la couleur d'encre associée à un accent (repli : encre sombre). */
 export function inkFor(accent: string): string {

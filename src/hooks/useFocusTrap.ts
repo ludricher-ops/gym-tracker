@@ -29,6 +29,7 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, onEscape?: () =
       if (items.length === 0) return
       const firstEl = items[0]
       const lastEl = items[items.length - 1]
+      if (!firstEl || !lastEl) return
       if (e.shiftKey && document.activeElement === firstEl) {
         e.preventDefault()
         lastEl.focus()

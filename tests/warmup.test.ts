@@ -10,9 +10,9 @@ describe('generateWarmup', () => {
   it('produit 3 paliers barre / 50 % / 70 %', () => {
     const w = generateWarmup(100)
     expect(w).toHaveLength(3)
-    expect(w[0].weightKg).toBe(20)
-    expect(w[1].weightKg).toBe(50)
-    expect(w[2].weightKg).toBe(70)
+    expect(w[0]!.weightKg).toBe(20)
+    expect(w[1]!.weightKg).toBe(50)
+    expect(w[2]!.weightKg).toBe(70)
   })
 
   it('élimine le palier 50 % quand il est égal à la barre (poids travail = 40 kg)', () => {

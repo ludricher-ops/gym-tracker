@@ -57,8 +57,8 @@ describe('generateSchedule', () => {
   it('trie les séances par date croissante', () => {
     const schedule = generateSchedule(makeProgram(), WTS)
     for (let i = 1; i < schedule.length; i++) {
-      expect(schedule[i].date.getTime()).toBeGreaterThanOrEqual(
-        schedule[i - 1].date.getTime(),
+      expect(schedule[i]!.date.getTime()).toBeGreaterThanOrEqual(
+        schedule[i - 1]!.date.getTime(),
       )
     }
   })
