@@ -45,8 +45,8 @@ function AppShell() {
       {!nav.modal && (
         <TabBar tabs={TABS} active={nav.activeTab} onSelect={nav.switchTab} />
       )}
-      {nav.modal?.name === 'session' && (
-        <SessionModal sessionId={nav.modal.params?.sessionId as string} />
+      {nav.modal?.name === 'session' && typeof nav.modal.params?.sessionId === 'string' && (
+        <SessionModal sessionId={nav.modal.params.sessionId} />
       )}
       <UpdateBanner />
     </div>

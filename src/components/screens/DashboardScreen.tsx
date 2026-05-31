@@ -40,9 +40,18 @@ export function DashboardScreen() {
     [activeProgram, store.workoutTemplates],
   )
 
+  // Sessions du programme actif uniquement — évite les collisions de labels
+  // entre deux runs du même programme (findCompleted sans filtre programId).
+  const programSessions = useMemo(
+    () => activeProgram
+      ? endedSessions.filter((s) => s.programId === activeProgram.id)
+      : endedSessions,
+    [endedSessions, activeProgram],
+  )
+
   const card = useMemo(
-    () => scheduleCard(schedule, endedSessions, Date.now()),
-    [schedule, endedSessions],
+    () => scheduleCard(schedule, programSessions, Date.now()),
+    [schedule, programSessions],
   )
 
   const streak = useMemo(
@@ -54,15 +63,15 @@ export function DashboardScreen() {
   const progressCells = useMemo(() => {
     return schedule.map((s) => {
       const done =
-        endedSessions.some((cs) => cs.programSessionLabel === s.label) ||
-        endedSessions.some(
+        programSessions.some((cs) => cs.programSessionLabel === s.label) ||
+        programSessions.some(
           (cs) =>
             cs.workoutTemplateId === s.workoutTemplateId &&
             localDayKey(cs.startedAt) === localDayKey(s.date),
         )
       return { label: s.label, workoutName: s.workoutName, done }
     })
-  }, [schedule, endedSessions])
+  }, [schedule, programSessions])
 
   const progressDoneCount = useMemo(
     () => progressCells.filter((c) => c.done).length,

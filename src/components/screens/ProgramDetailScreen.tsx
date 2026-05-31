@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
@@ -12,7 +12,7 @@ import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 export function ProgramDetailScreen({ params }: ScreenProps) {
   const store = useStore()
   const nav = useNavigation()
-  const id = params?.id as string | undefined
+  const id = typeof params?.id === 'string' ? params.id : undefined
   const program = useMemo(
     () => store.programs.find((p) => p.id === id),
     [store.programs, id],
@@ -26,7 +26,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
             <Icon name="arrow" size={22} strokeWidth={1.8} />
           </button>
-          <span className="gt-topbar__title">Programme</span>
+          <h1 className="gt-topbar__title">Programme</h1>
         </div>
         <div className="gt-screen__scroll">
           <EmptyState icon="info" title="Programme introuvable" />
@@ -63,7 +63,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">{program.isTemplate ? 'Template' : 'Programme'}</span>
+        <h1 className="gt-topbar__title">{program.isTemplate ? 'Template' : 'Programme'}</h1>
         {program.isActive && <Pill variant="accent">ACTIF</Pill>}
       </div>
 

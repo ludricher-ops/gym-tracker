@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent } from 'react'
+﻿import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type {
   Equipment, ExerciseCategory, ExerciseMedia, MuscleGroup, TrackingType,
 } from '../../types'
@@ -20,7 +20,7 @@ import { MediaImage } from '../exercises/MediaImage'
 export function ExerciseFormScreen({ params }: ScreenProps) {
   const store = useStore()
   const nav = useNavigation()
-  const editId = params?.id as string | undefined
+  const editId = typeof params?.id === 'string' ? params.id : undefined
   const editing = useMemo(
     () => store.exercises.find((e) => e.id === editId),
     [store.exercises, editId],
@@ -143,9 +143,9 @@ export function ExerciseFormScreen({ params }: ScreenProps) {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Fermer">
           <Icon name="close" size={22} />
         </button>
-        <span className="gt-topbar__title">
+        <h1 className="gt-topbar__title">
           {editing ? "Modifier l'exercice" : 'Exercice perso'}
-        </span>
+        </h1>
         <button
           className="gt-iconbtn"
           onClick={save}

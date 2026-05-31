@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
@@ -11,7 +11,7 @@ import { Card, EmptyState, Icon, StatTile } from '../ui'
 export function ExerciseDetailScreen({ params }: ScreenProps) {
   const store = useStore()
   const nav = useNavigation()
-  const exerciseId = params?.exerciseId as string | undefined
+  const exerciseId = typeof params?.exerciseId === 'string' ? params.exerciseId : undefined
   const exercise = store.exercises.find((e) => e.id === exerciseId)
   const weightUnit = store.settings.preferences.weightUnit
 
@@ -27,7 +27,7 @@ export function ExerciseDetailScreen({ params }: ScreenProps) {
           <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
             <Icon name="arrow" size={22} strokeWidth={1.8} />
           </button>
-          <span className="gt-topbar__title">Exercice</span>
+          <h1 className="gt-topbar__title">Exercice</h1>
         </div>
         <div className="gt-screen__scroll">
           <EmptyState icon="info" title="Exercice introuvable" />
@@ -42,7 +42,7 @@ export function ExerciseDetailScreen({ params }: ScreenProps) {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">{exercise.name}</span>
+        <h1 className="gt-topbar__title">{exercise.name}</h1>
       </div>
 
       <div className="gt-screen__scroll">

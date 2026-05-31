@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import type { WorkoutType } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -29,7 +29,7 @@ function parseDateInput(s: string): number {
 export function ProgramBuilderScreen({ params }: ScreenProps) {
   const store = useStore()
   const nav = useNavigation()
-  const fromId = params?.fromProgramId as string | undefined
+  const fromId = typeof params?.fromProgramId === 'string' ? params.fromProgramId : undefined
 
   const isEditing = !!fromId
 
@@ -155,7 +155,7 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
         <button className="gt-iconbtn" onClick={onLeft} aria-label="Retour">
           <Icon name={view.step === 3 ? 'arrow' : 'close'} size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">{STEP_TITLE[stepNum - 1]}</span>
+        <h1 className="gt-topbar__title">{STEP_TITLE[stepNum - 1]}</h1>
         <span className="t-caption" style={{ fontWeight: 700 }}>
           {stepNum}/4
         </span>

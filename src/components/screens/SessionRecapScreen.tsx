@@ -18,7 +18,7 @@ import { SetEditSheet } from './SetEditSheet'
 export function SessionRecapScreen({ params }: ScreenProps) {
   const store = useStore()
   const nav = useNavigation()
-  const sessionId = params?.sessionId as string | undefined
+  const sessionId = typeof params?.sessionId === 'string' ? params.sessionId : undefined
 
   const recap = useMemo(
     () => (sessionId ? buildSessionRecap(sessionId, store) : null),
@@ -42,7 +42,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
             <Icon name="arrow" size={22} strokeWidth={1.8} />
           </button>
-          <span className="gt-topbar__title">Récap</span>
+          <h1 className="gt-topbar__title">Récap</h1>
         </div>
         <div className="gt-screen__scroll">
           <EmptyState icon="info" title="Séance introuvable" />
@@ -146,7 +146,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
         <div style={{ flex: 1 }}>
-          <div className="gt-topbar__title">{start.toLocaleDateString('fr-FR')}</div>
+          <h1 className="gt-topbar__title">{start.toLocaleDateString('fr-FR')}</h1>
           <div className="t-caption">{timeRange}</div>
         </div>
         <button className="gt-iconbtn" onClick={() => setEditOpen(true)} aria-label="Modifier">

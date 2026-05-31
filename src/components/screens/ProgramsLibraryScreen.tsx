@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+﻿import { useCallback, useMemo, useState } from 'react'
 import type { ProgramGoal } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -32,7 +32,8 @@ export function ProgramsLibraryScreen() {
   )
 
   const renderRow = (id: string) => {
-    const p = store.programs.find((x) => x.id === id)!
+    const p = store.programs.find((x) => x.id === id)
+    if (!p) return null
     const s = programSummary(p, store)
     return (
       <Row
@@ -52,7 +53,7 @@ export function ProgramsLibraryScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Programmes</span>
+        <h1 className="gt-topbar__title">Programmes</h1>
       </div>
 
       <div className="gt-screen__scroll">
