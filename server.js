@@ -36,7 +36,10 @@ if (process.env.DATABASE_URL) {
 }
 
 const app = express()
-app.use(express.json({ limit: '20mb' }))
+// Limite globale conservatrice ; la route /api/sync/push applique sa propre
+// limite 20 Mo pour les blobs base64.
+app.use(express.json({ limit: '1mb' }))
+app.use('/api/sync/push', express.json({ limit: '20mb' }))
 
 app.get('/api/health', async (_req, res) => {
   if (!pool) return res.json({ ok: true, db: false })
@@ -44,7 +47,8 @@ app.get('/api/health', async (_req, res) => {
     await pool.query('SELECT 1')
     res.json({ ok: true, db: true })
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message })
+    console.error('health:', err.message)
+    res.status(500).json({ ok: false, error: 'Database error' })
   }
 })
 

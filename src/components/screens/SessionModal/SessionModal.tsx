@@ -52,6 +52,8 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   // Overlay de célébration : une fois par exercice et par séance.
   const celebrated = useRef<Set<string>>(new Set())
   const notifAsked = useRef(false)
+  // Verrou anti double-tap : empêche deux validations concurrentes.
+  const isValidating = useRef(false)
 
   const { session, currentSE, currentExercise, currentSets, doneCount, totalCount } = act
   const elapsed = useSessionTimer(session?.startedAt ?? Date.now())
@@ -108,7 +110,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   if (!session) {
     return (
-      <Modal>
+      <Modal ariaLabel="Séance introuvable" onRequestClose={nav.closeModal}>
         <div className="gt-screen__scroll">
           <p className="t-caption">Séance introuvable.</p>
           <Button onClick={nav.closeModal}>Fermer</Button>
@@ -119,7 +121,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   if (finished) {
     return (
-      <Modal>
+      <Modal ariaLabel="Séance terminée">
         <SessionCompleteView
           sessionId={sessionId}
           onHome={() => nav.closeModal()}
@@ -155,45 +157,50 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const canValidate = isValidSet(showWeight ? inputW : 0, inputR)
 
   const validateImpl = async (repsOverride?: number) => {
-    if (!activeSet || !currentSE) return
+    if (isValidating.current || !activeSet || !currentSE) return
     const reps = repsOverride ?? inputR
     if (!isValidSet(showWeight ? inputW : 0, reps)) return
+    isValidating.current = true
     exerciseTimer.skip()
-    const updated: SetRecord = {
-      ...activeSet,
-      weightKg: showWeight ? inputW : 0,
-      reps,
-      rpe: inputRpe ?? undefined,
-    }
-    const { pr, restSec, sessionDone, supersetRotated } = await act.validateSet(updated)
-    if (isAnyPR(pr)) {
-      const exId = currentSE.exerciseId
-      const name = currentExercise?.name ?? 'Exercice'
-      if (prefs.prCelebrationEnabled && !celebrated.current.has(exId)) {
-        celebrated.current.add(exId)
-        setCelebration({
-          exerciseName: name,
-          weightKg: updated.weightKg,
-          reps: updated.reps,
-          estimated1RM: pr.estimated1RM,
-          previousBest1RM: pr.previousBest1RM,
-        })
-      } else {
-        setPrFlash(name)
+    try {
+      const updated: SetRecord = {
+        ...activeSet,
+        weightKg: showWeight ? inputW : 0,
+        reps,
+        rpe: inputRpe ?? undefined,
       }
+      const { pr, restSec, sessionDone, supersetRotated } = await act.validateSet(updated)
+      if (isAnyPR(pr)) {
+        const exId = currentSE.exerciseId
+        const name = currentExercise?.name ?? 'Exercice'
+        if (prefs.prCelebrationEnabled && !celebrated.current.has(exId)) {
+          celebrated.current.add(exId)
+          setCelebration({
+            exerciseName: name,
+            weightKg: updated.weightKg,
+            reps: updated.reps,
+            estimated1RM: pr.estimated1RM,
+            previousBest1RM: pr.previousBest1RM,
+          })
+        } else {
+          setPrFlash(name)
+        }
+      }
+      if (sessionDone) {
+        await act.finish()
+        setFinished(true)
+        return
+      }
+      // En superset ou repos à 0 s : pas de timer de repos.
+      if (!supersetRotated && restSec > 0) restTimer.start(restSec)
+      if (prefs.notificationsEnabled && !notifAsked.current) {
+        notifAsked.current = true
+        requestNotificationPermission()
+      }
+      setEditingSetId(null)
+    } finally {
+      isValidating.current = false
     }
-    if (sessionDone) {
-      await act.finish()
-      setFinished(true)
-      return
-    }
-    // En superset ou repos à 0 s : pas de timer de repos.
-    if (!supersetRotated && restSec > 0) restTimer.start(restSec)
-    if (prefs.notificationsEnabled && !notifAsked.current) {
-      notifAsked.current = true
-      requestNotificationPermission()
-    }
-    setEditingSetId(null)
   }
   const validate = () => void validateImpl()
 
@@ -237,7 +244,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   }
 
   return (
-    <Modal onRequestClose={close}>
+    <Modal onRequestClose={close} ariaLabel={session.name ?? 'Séance en cours'}>
       {/* Barre du haut */}
       <div className="gt-topbar" style={{ paddingBottom: 8 }}>
         <button className="gt-iconbtn" onClick={close} aria-label="Fermer la séance">

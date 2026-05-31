@@ -12,6 +12,16 @@ import { idbGet, idbGetAll, idbGetAllKeys, idbDeleteKeys, idbPut } from './idb'
 import { OUTBOX_STORE } from './schema'
 
 const CURSOR_KEY = 'gymtrack-sync-cursor'
+// Secret partagé optionnel — si VITE_SYNC_SECRET est défini au build, il est
+// envoyé dans chaque requête de synchro. Le serveur l'accepte ou rejette via SYNC_SECRET.
+const SYNC_SECRET = import.meta.env.VITE_SYNC_SECRET as string | undefined
+
+function syncHeaders(json = true): Record<string, string> {
+  const h: Record<string, string> = {}
+  if (json) h['Content-Type'] = 'application/json'
+  if (SYNC_SECRET) h['Authorization'] = `Bearer ${SYNC_SECRET}`
+  return h
+}
 
 function getCursor(): number {
   return Number(localStorage.getItem(CURSOR_KEY) || 0)
@@ -44,7 +54,7 @@ export async function pushOutbox(): Promise<number> {
 
   const res = await fetch('/api/sync/push', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: syncHeaders(),
     body: JSON.stringify({ changes }),
   })
   if (!res.ok) throw new Error(`sync/push ${res.status}`)
@@ -62,7 +72,9 @@ export async function pullChanges(): Promise<number> {
   let hasMore = true
 
   while (hasMore) {
-    const res = await fetch(`/api/sync/pull?since=${cursor}`)
+    const res = await fetch(`/api/sync/pull?since=${cursor}`, {
+      headers: syncHeaders(false),
+    })
     if (!res.ok) throw new Error(`sync/pull ${res.status}`)
     const data = (await res.json()) as {
       records: { store: string; record: Syncable }[]
@@ -86,9 +98,8 @@ export async function pullChanges(): Promise<number> {
   return applied
 }
 
-/** Synchro complète : pull puis push. Renvoie le nombre d'enregistrements reçus. */
+/** Synchro complète : push d'abord (LWW), puis pull. Renvoie le nombre d'enregistrements reçus. */
 export async function syncNow(): Promise<number> {
-  const pulled = await pullChanges()
   await pushOutbox()
-  return pulled
+  return pullChanges()
 }

@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' : la mise à jour attend une confirmation explicite.
+      // Évite les rechargements forcés pendant une séance active.
+      registerType: 'prompt',
       // Le manifeste est servi depuis public/manifest.webmanifest.
       manifest: false,
       workbox: {

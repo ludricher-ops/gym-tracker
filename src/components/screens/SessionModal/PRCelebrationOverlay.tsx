@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import type { WeightUnit } from '../../../types'
 import { formatWeight } from '../../../utils/units'
 import { shareOrCopy } from '../../../utils/feedback'
 import { ACCENTS } from '../../../theme/accents'
+import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import { Button, Icon } from '../../ui'
 
 export interface PRCelebration {
@@ -22,6 +23,9 @@ interface PRCelebrationOverlayProps {
 const CONFETTI_COLORS = [...ACCENTS.map((a) => a.accent), '#ffffff']
 
 export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrationOverlayProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFocusTrap(ref, onContinue) // Échap → continuer la séance
+
   // Confetti statique : positions/couleurs tirées une fois au montage.
   const confetti = useMemo(
     () =>
@@ -47,7 +51,7 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
   }
 
   return (
-    <div className="gt-pr-overlay" role="dialog" aria-modal="true" aria-label="Nouveau record">
+    <div ref={ref} className="gt-pr-overlay" role="dialog" aria-modal="true" aria-label="Nouveau record">
       {confetti.map((c) => (
         <span
           key={c.id}
