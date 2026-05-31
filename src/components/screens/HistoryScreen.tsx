@@ -147,7 +147,7 @@ export function HistoryScreen() {
               onClick={() => setSelectedDay(null)}
               aria-label="Effacer la sélection"
             >
-              <Icon name="x" size={16} />
+              <Icon name="close" size={16} />
             </button>
           )}
         </div>
