@@ -132,7 +132,7 @@ button.gt-row:active {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: oklch(0.99 0.003 80);
+  background: var(--toggle-thumb);
   transition: transform 0.16s ease;
 }
 .gt-switch--on .gt-switch__knob {
@@ -221,7 +221,7 @@ button.gt-row:active {
 }
 .gt-btn--danger {
   background: var(--danger);
-  color: oklch(0.99 0.003 25);
+  color: var(--danger-ink);
 }
 .gt-btn--ghost {
   background: transparent;
@@ -439,7 +439,7 @@ button.gt-row:active {
 .gt-overlay__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay-dim);
 }
 .gt-sheet {
   position: relative;
@@ -548,7 +548,7 @@ h2.gt-topbar__title {
   gap: 14px;
   padding: 32px var(--pad-screen);
   text-align: center;
-  background: rgba(0, 0, 0, 0.74);
+  background: var(--overlay-dark);
   overflow: hidden;
 }
 .gt-pr-halo {

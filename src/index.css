@@ -35,6 +35,19 @@
   --font-ui: 'Space Grotesk', -apple-system, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
+  /* Échelle typographique */
+  --fs-display: 30px;
+  --fs-title: 23px;
+  --fs-body: 14px;
+  --fs-caption: 12px;
+  --fs-eyebrow: 10.5px;
+
+  /* Couleurs de surface spéciales */
+  --overlay-dim: oklch(0 0 0 / 0.55);
+  --overlay-dark: oklch(0 0 0 / 0.74);
+  --toggle-thumb: oklch(0.99 0.003 80);
+  --danger-ink: oklch(0.99 0.003 25);
+
   /* Coquille mobile */
   --shell-width: 430px;
 }
@@ -105,27 +118,27 @@ a {
 /* ── Échelle typographique (cahier 4.2) ───────────────────────────── */
 
 .t-display {
-  font-size: 30px;
+  font-size: var(--fs-display);
   font-weight: 700;
   letter-spacing: -0.6px;
   line-height: 1.1;
 }
 .t-title {
-  font-size: 23px;
+  font-size: var(--fs-title);
   font-weight: 700;
   letter-spacing: -0.3px;
 }
 .t-body {
-  font-size: 14px;
+  font-size: var(--fs-body);
   font-weight: 500;
 }
 .t-caption {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 500;
   color: var(--muted);
 }
 .t-eyebrow {
-  font-size: 10.5px;
+  font-size: var(--fs-eyebrow);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.4px;
