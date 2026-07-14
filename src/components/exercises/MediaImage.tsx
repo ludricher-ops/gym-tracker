@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useState } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { Icon } from '../ui'
 
@@ -23,6 +24,7 @@ export function MediaImage({
 }: MediaImageProps) {
   const objectUrl = useObjectUrl(blobId)
   const src = url || objectUrl
+  const [errored, setErrored] = useState(false)
 
   const box: CSSProperties = {
     width: '100%',
@@ -37,7 +39,7 @@ export function MediaImage({
     flex: 'none',
   }
 
-  if (!src) {
+  if (!src || errored) {
     return (
       <div style={box} aria-label={alt}>
         <span style={{ color: 'var(--dim)' }}>
@@ -52,6 +54,7 @@ export function MediaImage({
         src={src}
         alt={alt}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        onError={() => setErrored(true)}
       />
     </div>
   )
