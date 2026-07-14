@@ -4,16 +4,18 @@ import { StoreProvider, useStore } from './hooks/useStore'
 import { NavProvider, useNavigation } from './nav/useNavigation'
 import { TABS } from './nav/navigation'
 import { SCREENS } from './nav/screenRegistry'
-import { TabBar, EmptyState, UpdateBanner } from './components/ui'
+import { TabBar, EmptyState, UpdateBanner, ChromeGate } from './components/ui'
 import { SessionModal } from './components/screens/SessionModal/SessionModal'
 
 export function App() {
   return (
-    <StoreProvider>
-      <NavProvider>
-        <AppShell />
-      </NavProvider>
-    </StoreProvider>
+    <ChromeGate>
+      <StoreProvider>
+        <NavProvider>
+          <AppShell />
+        </NavProvider>
+      </StoreProvider>
+    </ChromeGate>
   )
 }
 
