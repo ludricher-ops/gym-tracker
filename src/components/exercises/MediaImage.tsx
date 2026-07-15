@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { Icon } from '../ui'
 
@@ -25,6 +25,7 @@ export function MediaImage({
   const objectUrl = useObjectUrl(blobId)
   const src = url || objectUrl
   const [errored, setErrored] = useState(false)
+  useEffect(() => { setErrored(false) }, [src])
 
   const box: CSSProperties = {
     width: '100%',

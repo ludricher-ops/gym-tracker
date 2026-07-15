@@ -12,6 +12,8 @@ import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
 import { Button, Card, Icon, Row, StatTile } from '../ui'
 
+const WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+
 export function DashboardScreen() {
   const store = useStore()
   const nav = useNavigation()
@@ -96,11 +98,12 @@ export function DashboardScreen() {
     openSession((await startSessionFromTemplate(wt, store, scheduled.label)).id)
   }
 
-  // Séances uniques du programme actif (ordre du weekTemplate, dédupliquées).
+  // Séances uniques du programme actif, triées lundi → dimanche.
   const programWorkouts = useMemo(() => {
     if (!activeProgram) return []
     const seen = new Set<string>()
-    return Object.values(activeProgram.weekTemplate)
+    return WEEK_ORDER
+      .map((day) => activeProgram.weekTemplate[day])
       .filter((id): id is string => !!id && !seen.has(id) && (seen.add(id), true))
       .map((id) => store.workoutTemplates.find((w) => w.id === id && !w.deleted))
       .filter((w): w is NonNullable<typeof w> => w != null)
