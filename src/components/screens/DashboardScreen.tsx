@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import {
@@ -94,6 +94,25 @@ export function DashboardScreen() {
     const wt = store.workoutTemplates.find((w) => w.id === scheduled.workoutTemplateId)
     if (!wt) return
     openSession((await startSessionFromTemplate(wt, store, scheduled.label)).id)
+  }
+
+  // Séances uniques du programme actif (ordre du weekTemplate, dédupliquées).
+  const programWorkouts = useMemo(() => {
+    if (!activeProgram) return []
+    const seen = new Set<string>()
+    return Object.values(activeProgram.weekTemplate)
+      .filter((id): id is string => !!id && !seen.has(id) && (seen.add(id), true))
+      .map((id) => store.workoutTemplates.find((w) => w.id === id && !w.deleted))
+      .filter((w): w is NonNullable<typeof w> => w != null)
+  }, [activeProgram, store.workoutTemplates])
+
+  const [showWorkoutPicker, setShowWorkoutPicker] = useState(false)
+
+  const startFromWorkout = async (wtId: string) => {
+    const wt = store.workoutTemplates.find((w) => w.id === wtId)
+    if (!wt) return
+    setShowWorkoutPicker(false)
+    openSession((await startSessionFromTemplate(wt, store)).id)
   }
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
@@ -305,6 +324,33 @@ export function DashboardScreen() {
               </Button>
             </div>
           </Card>
+        )}
+
+        {activeProgram && programWorkouts.length > 0 && (
+          <>
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => setShowWorkoutPicker((v) => !v)}
+            >
+              <p className="t-eyebrow">Séances du programme</p>
+              <span style={{ color: 'var(--muted)' }}>
+                <Icon name={showWorkoutPicker ? 'chevron-up' : 'chevron-down'} size={14} />
+              </span>
+            </div>
+            {showWorkoutPicker && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {programWorkouts.map((wt) => (
+                  <Row
+                    key={wt.id}
+                    icon="dumbbell"
+                    label={wt.name}
+                    chevron
+                    onClick={() => startFromWorkout(wt.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {activeProgram && schedule.length > 0 && (

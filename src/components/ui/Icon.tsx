@@ -15,6 +15,8 @@ const PATHS = {
   bolt: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
   dumbbell: 'M6.5 8v8M9 6.5v11M15 6.5v11M17.5 8v8M9 12h6M3 10v4M21 10v4',
   'chevron-right': 'M9 6l6 6-6 6',
+  'chevron-down': 'M6 9l6 6 6-6',
+  'chevron-up': 'M18 15l-6-6-6 6',
   pause: 'M9 5v14M15 5v14',
   skip: 'M5 5l10 7-10 7zM19 5v14',
   trend: 'M3 17l6-6 4 4 8-8M15 7h6v6',
