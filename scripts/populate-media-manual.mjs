@@ -17,7 +17,7 @@ const pool = new Pool({ connectionString: connString, ssl: { rejectUnauthorized:
 // ── Mapping complet : nom français → URL directe du GIF/image ────────────────
 const URLS = {
   // Poids du corps / Cardio ─────────────────────────────────────────────────
-  'Dips':                           'https://www.docteur-fitness.com/wp-content/uploads/2000/01/dips-pectoraux.gif',
+  'Dips':                           'https://fitnessprogramer.com/wp-content/uploads/2021/02/Chest-Dip.gif',
   'Squats sautés':                  'https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif',
   'Burpees':                        'https://fitnessprogramer.com/wp-content/uploads/2021/02/burpees.gif',
   'Good morning poids du corps':    'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif',
@@ -54,14 +54,19 @@ const URLS = {
   'Développé incliné barre':        'https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Barbell-Bench-Press.gif',
   'Développé décliné barre':       'https://fitnessprogramer.com/wp-content/uploads/2021/03/Decline-Barbell-Bench-Press.gif',
   'Écarté poulie':                  'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crossover.gif',
+  'Pec deck':                       'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif',
   // Épaules ─────────────────────────────────────────────────────────────────
   'Développé militaire barre':      'https://fitnessprogramer.com/wp-content/uploads/2021/07/Barbell-Standing-Military-Press.gif',
   'Développé épaules haltères':     'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif',
   'Développé Arnold':               'https://fitnessprogramer.com/wp-content/uploads/2021/02/Arnold-Press.gif',
   'Élévations frontales':           'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Front-Raise.gif',
   'Face pull':                      'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif',
+  'Élévations latérales poulie':   'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif',
   // Biceps ──────────────────────────────────────────────────────────────────
   'Curl barre':                     'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif',
+  'Curl haltères':                  'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Curl.gif',
+  'Curl poulie':                    'https://fitnessprogramer.com/wp-content/uploads/2021/02/cable-curl.gif',
+  'Curl incliné haltères':          'https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Incline-Dumbbell-Curl.gif',
   'Curl pupitre':                   'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Preacher-Curl.gif',
   'Curl concentration':             'https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif',
   // Triceps ─────────────────────────────────────────────────────────────────
@@ -102,6 +107,12 @@ const URLS = {
   'Clamshell':                      'https://fitnessprogramer.com/wp-content/uploads/2021/02/Clamshell.gif',
   'Cat-Cow':                        'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cat-Cow-Stretch.gif',
   'Squat poids du corps':           'https://fitnessprogramer.com/wp-content/uploads/2021/02/Air-Squat.gif',
+  'Hip 90/90':                      'https://fitnessprogramer.com/wp-content/uploads/2022/08/90-90-Hip-Stretch.gif',
+  'Leg swings':                     'https://fitnessprogramer.com/wp-content/uploads/2023/06/Lateral-Leg-Swings.gif',
+  'Band pull-apart':                'https://fitnessprogramer.com/wp-content/uploads/2021/06/Band-pull-apart.gif',
+  "Cercles d'épaules":              'https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif',
+  // Dos unilatéral ──────────────────────────────────────────────────────────
+  'Rowing haltère unilatéral (appui sur banc)': 'https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif',
 }
 
 // ── Exécution ─────────────────────────────────────────────────────────────────
