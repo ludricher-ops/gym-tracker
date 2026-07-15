@@ -100,7 +100,7 @@ describe('scheduleCard', () => {
     const card = scheduleCard(schedule, [], mondayAm)
     expect(card.type).toBe('scheduled')
     expect(card.todaySession?.label).toBe('S1.01')
-    expect(card.missedSession).toBeUndefined() // aucune séance manquée
+    expect(card.missedSessions).toHaveLength(0) // aucune séance manquée
   })
 
   it('type done_today quand séance du jour déjà faite', () => {
@@ -113,7 +113,7 @@ describe('scheduleCard', () => {
     expect(card.todaySession?.label).toBe('S1.01')
   })
 
-  it('done_today expose missedSession si séances manquées', () => {
+  it('done_today expose missedSessions si séances manquées', () => {
     // Lundi semaine 2 : S1.01 et S1.03 sont manquées, S2.01 prévu aujourd'hui
     const now = d(2025, 1, 13) + 9 * 3600_000 // lundi 13/1
     const sess = makeSession({
@@ -122,15 +122,17 @@ describe('scheduleCard', () => {
     const card = scheduleCard(schedule, [sess], now)
     expect(card.type).toBe('done_today')
     // La plus ancienne manquée = S1.01
-    expect(card.missedSession?.label).toBe('S1.01')
+    expect(card.missedSessions[0]?.label).toBe('S1.01')
+    expect(card.missedSessions).toHaveLength(2)
   })
 
-  it('type missed quand jour de repos avec séances manquées — propose la plus ancienne', () => {
+  it('type missed quand jour de repos avec séances manquées — expose toutes', () => {
     // Jeudi 9/1 : S1.01 (lundi) et S1.03 (mercredi) sont manquées
     const now = d(2025, 1, 9) + 9 * 3600_000
     const card = scheduleCard(schedule, [], now)
     expect(card.type).toBe('missed')
-    expect(card.missedSession?.label).toBe('S1.01') // la plus ancienne, pas S1.03
+    expect(card.missedSessions[0]?.label).toBe('S1.01') // la plus ancienne, pas S1.03
+    expect(card.missedSessions).toHaveLength(2)
   })
 
   it('ne compte plus une séance comme manquée après rattrapage (label)', () => {
@@ -142,7 +144,8 @@ describe('scheduleCard', () => {
     const card = scheduleCard(schedule, [catchup], now)
     // S1.01 rattrapée, S1.03 reste manquée
     expect(card.type).toBe('missed')
-    expect(card.missedSession?.label).toBe('S1.03')
+    expect(card.missedSessions[0]?.label).toBe('S1.03')
+    expect(card.missedSessions).toHaveLength(1)
   })
 
   it('type early quand repos et aucune séance manquée', () => {
@@ -188,12 +191,13 @@ describe('scheduleCard', () => {
     expect(card.type).toBe('rest_done')
   })
 
-  it('scheduled expose missedSession si des séances précédentes sont manquées', () => {
+  it('scheduled expose missedSessions si des séances précédentes sont manquées', () => {
     // Lundi 13/1 : S1.01 et S1.03 manquées, S2.01 prévu aujourd'hui
     const now = d(2025, 1, 13) + 9 * 3600_000
     const card = scheduleCard(schedule, [], now)
     expect(card.type).toBe('scheduled')
     expect(card.todaySession?.label).toBe('S2.01')
-    expect(card.missedSession?.label).toBe('S1.01') // plus ancienne manquée
+    expect(card.missedSessions[0]?.label).toBe('S1.01') // plus ancienne manquée
+    expect(card.missedSessions).toHaveLength(2)
   })
 })

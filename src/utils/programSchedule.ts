@@ -86,8 +86,8 @@ export interface ScheduleCard {
   type: ScheduleCardType
   /** Séance prévue aujourd'hui (types scheduled et done_today). */
   todaySession?: ScheduledSession
-  /** Séance manquée la plus ancienne (types missed, scheduled et done_today avec rattrapage). */
-  missedSession?: ScheduledSession
+  /** Toutes les séances manquées, triées de la plus ancienne à la plus récente. */
+  missedSessions: ScheduledSession[]
   /** Prochaine séance à venir (type early). */
   nextSession?: ScheduledSession
   /** Record de la séance réalisée aujourd'hui (type done_today). */
@@ -116,14 +116,14 @@ export function scheduleCard(
   if (todayScheduled) {
     const completedSession = findCompleted(todayScheduled, completedSessions)
     if (completedSession) {
-      return { type: 'done_today', todaySession: todayScheduled, completedSession, missedSession: oldestMissed }
+      return { type: 'done_today', todaySession: todayScheduled, completedSession, missedSessions: missed }
     }
-    return { type: 'scheduled', todaySession: todayScheduled, missedSession: oldestMissed }
+    return { type: 'scheduled', todaySession: todayScheduled, missedSessions: missed }
   }
 
   // Jour de repos ou après la fin du programme.
   if (oldestMissed) {
-    return { type: 'missed', missedSession: oldestMissed }
+    return { type: 'missed', missedSessions: missed }
   }
 
   // Parcourt les séances futures dans l'ordre :
@@ -133,13 +133,13 @@ export function scheduleCard(
   for (const s of schedule.filter((s) => s.date.getTime() >= todayStart + 86_400_000)) {
     const completed = findCompleted(s, completedSessions)
     if (completed && localDayKey(completed.startedAt) === todayKey) {
-      return { type: 'done_early', todaySession: s, completedSession: completed }
+      return { type: 'done_early', todaySession: s, completedSession: completed, missedSessions: [] }
     }
     if (!completed) {
-      return { type: 'early', nextSession: s }
+      return { type: 'early', nextSession: s, missedSessions: [] }
     }
     // Faite un jour précédent → passer à la suivante
   }
 
-  return { type: 'rest_done' }
+  return { type: 'rest_done', missedSessions: [] }
 }

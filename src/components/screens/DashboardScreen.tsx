@@ -164,11 +164,11 @@ export function DashboardScreen() {
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
               </Button>
-              {card.missedSession && (
-                <Button variant="ghost" icon="bolt" onClick={() => startScheduled(card.missedSession!)}>
-                  Rattraper : {card.missedSession.workoutName}
+              {card.missedSessions.map((s) => (
+                <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
+                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
                 </Button>
-              )}
+              ))}
             </div>
           </Card>
         )}
@@ -217,20 +217,16 @@ export function DashboardScreen() {
               <Button icon="bolt" onClick={() => startScheduled(card.todaySession!)}>
                 Commencer la séance
               </Button>
-              {card.missedSession && (
-                <Button
-                  variant="ghost"
-                  icon="bolt"
-                  onClick={() => startScheduled(card.missedSession!)}
-                >
-                  Rattraper : {card.missedSession.workoutName}
+              {card.missedSessions.map((s) => (
+                <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
+                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
                 </Button>
-              )}
+              ))}
             </div>
           </Card>
         )}
 
-        {!resumable && activeProgram && card.type === 'missed' && card.missedSession && (
+        {!resumable && activeProgram && card.type === 'missed' && card.missedSessions.length > 0 && (
           <Card>
             <p className="t-eyebrow">Jour de repos</p>
             <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
@@ -238,9 +234,16 @@ export function DashboardScreen() {
               Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
             </p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Button icon="bolt" onClick={() => startScheduled(card.missedSession!)}>
-                Rattraper : {card.missedSession.workoutName}
-              </Button>
+              {card.missedSessions.map((s, i) => (
+                <Button
+                  key={s.label}
+                  variant={i === 0 ? 'primary' : 'ghost'}
+                  icon="bolt"
+                  onClick={() => startScheduled(s)}
+                >
+                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
+                </Button>
+              ))}
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>

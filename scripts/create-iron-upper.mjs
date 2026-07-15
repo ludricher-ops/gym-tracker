@@ -10,8 +10,14 @@ import { randomUUID } from 'node:crypto'
 const { Pool } = pg
 const NOW = Date.now()
 
+const connString = process.env.DATABASE_PUBLIC_URL ?? process.env.DATABASE_URL
+if (!connString) {
+  console.error('❌ DATABASE_PUBLIC_URL ou DATABASE_URL requis.')
+  process.exit(1)
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connString,
   ssl: { rejectUnauthorized: false },
 })
 
@@ -117,7 +123,7 @@ async function run() {
       durationWeeks: 13,
       sessionsPerWeek: 3,
       color: '#f97316',
-      isTemplate: false,
+      isTemplate: true,
       isActive: false,
       createdAt: NOW,
       weekTemplate: {
