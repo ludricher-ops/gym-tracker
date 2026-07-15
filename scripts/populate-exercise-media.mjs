@@ -233,6 +233,13 @@ async function run() {
         continue
       }
 
+      if (!result.exercise.gifUrl) {
+        console.log(`   ⚠️  SANS_GIFURL  "${frName}" (tier gratuit ExerciseDB sans gif)`)
+        notFound++
+        await sleep(300)
+        continue
+      }
+
       // Mise à jour
       const data = { ...existing }
       data.media = {
