@@ -43,10 +43,15 @@ export function DashboardScreen() {
   )
 
   // Sessions du programme actif uniquement — évite les collisions de labels
-  // entre deux runs du même programme (findCompleted sans filtre programId).
+  // entre deux runs du même programme. On filtre aussi par startedAt pour que
+  // les sessions d'un run précédent ne comptent pas dans le run courant.
   const programSessions = useMemo(
     () => activeProgram
-      ? endedSessions.filter((s) => s.programId === activeProgram.id)
+      ? endedSessions.filter(
+          (s) =>
+            s.programId === activeProgram.id &&
+            (!activeProgram.startedAt || s.startedAt >= activeProgram.startedAt),
+        )
       : endedSessions,
     [endedSessions, activeProgram],
   )

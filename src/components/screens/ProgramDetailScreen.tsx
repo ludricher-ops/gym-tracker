@@ -5,7 +5,7 @@ import type { ScreenProps } from '../../nav/screenRegistry'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
 import { programSummary } from '../../utils/programInfo'
 import { Button, Card, EmptyState, Icon, Pill, PrimaryBar } from '../ui'
-import { deleteProgram } from '../../utils/programOps'
+import { deleteProgram, deactivateProgram } from '../../utils/programOps'
 import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 
@@ -47,6 +47,12 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''
     if (!confirm(`Supprimer le programme « ${program.name} » ?${warn}`)) return
     await deleteProgram(program, store)
+    nav.back()
+  }
+
+  const stop = async () => {
+    if (!confirm(`Arrêter le programme « ${program.name} » ?`)) return
+    await deactivateProgram(program, store)
     nav.back()
   }
 
@@ -146,6 +152,13 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             <div style={{ flex: 1 }}>
               <Button icon="check" onClick={() => setSheet(true)}>
                 Utiliser
+              </Button>
+            </div>
+          )}
+          {program.isActive && (
+            <div style={{ flex: 1 }}>
+              <Button variant="ghost" icon="pause" onClick={stop}>
+                Arrêter
               </Button>
             </div>
           )}

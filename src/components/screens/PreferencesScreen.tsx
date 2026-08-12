@@ -2,7 +2,7 @@
 import { useNavigation } from '../../nav/useNavigation'
 import { useSettings } from '../../hooks/useSettings'
 import { ACCENTS } from '../../theme/accents'
-import { Icon, Segmented, Stepper, ToggleRow, Switch } from '../ui'
+import { Icon, Row, Segmented, Stepper, ToggleRow, Switch } from '../ui'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -186,27 +186,6 @@ export function PreferencesScreen() {
         </Section>
 
         <Section title="Avancé">
-          <Field label="Échelle RPE">
-            <Segmented
-              value={p.rpeScale}
-              onChange={(rpeScale) => updatePreferences({ rpeScale })}
-              options={[
-                { value: '6-10', label: '6 → 10' },
-                { value: '1-10', label: '1 → 10' },
-              ]}
-            />
-          </Field>
-          <Field label="Formule 1RM">
-            <Segmented
-              value={p.oneRMFormula}
-              onChange={(oneRMFormula) => updatePreferences({ oneRMFormula })}
-              options={[
-                { value: 'epley', label: 'Epley' },
-                { value: 'brzycki', label: 'Brzycki' },
-                { value: 'lombardi', label: 'Lombardi' },
-              ]}
-            />
-          </Field>
           <ToggleRow
             label="Aperçu de la séance du jour"
             control={

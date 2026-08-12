@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigation } from '../../nav/useNavigation'
 import { useSettings } from '../../hooks/useSettings'
 import { idbClearAll } from '../../db/idb'
@@ -47,7 +47,7 @@ export function AccountScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Compte personnel</span>
+        <h1 className="gt-topbar__title">Compte personnel</h1>
       </div>
 
       <div className="gt-screen__scroll">

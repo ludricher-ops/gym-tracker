@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { computeStreak, longestStreak } from '../../utils/streak'
@@ -36,7 +36,7 @@ export function ProfileScreen() {
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
-        <span className="gt-topbar__title">Profil</span>
+        <h1 className="gt-topbar__title">Profil</h1>
       </div>
 
       <div className="gt-screen__scroll">

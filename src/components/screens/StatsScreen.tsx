@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { buildExerciseStats, exercisesWithHistory } from '../../utils/exerciseStats'
@@ -47,7 +47,7 @@ export function StatsScreen() {
     return (
       <div className="gt-screen">
         <div className="gt-topbar">
-          <span className="gt-topbar__title">Progression</span>
+          <h1 className="gt-topbar__title">Progression</h1>
         </div>
         <div className="gt-screen__scroll">
           <EmptyState
@@ -63,7 +63,7 @@ export function StatsScreen() {
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
-        <span className="gt-topbar__title">Progression</span>
+        <h1 className="gt-topbar__title">Progression</h1>
       </div>
 
       <div className="gt-screen__scroll">

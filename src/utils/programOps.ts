@@ -76,6 +76,13 @@ export async function deleteProgram(program: Program, store: StoreApi): Promise<
 }
 
 /**
+ * Désactive le programme actif sans en activer un autre.
+ */
+export async function deactivateProgram(program: Program, store: StoreApi): Promise<void> {
+  await store.program.save({ ...program, isActive: false, archivedAt: Date.now() })
+}
+
+/**
  * Active un programme : archive le programme actif précédent, clone la cible
  * si c'est un template, puis marque le programme comme actif à la date donnée.
  * Renvoie le programme désormais actif.

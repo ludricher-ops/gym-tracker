@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import type { BodyMeasurement } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -53,7 +53,7 @@ export function BodyScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Corps &amp; mesures</span>
+        <h1 className="gt-topbar__title">Corps &amp; mesures</h1>
         <button
           className="gt-iconbtn"
           onClick={() => setCreating(true)}

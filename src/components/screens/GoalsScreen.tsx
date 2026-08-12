@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import type { Goal } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -25,7 +25,7 @@ export function GoalsScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Objectifs</span>
+        <h1 className="gt-topbar__title">Objectifs</h1>
       </div>
 
       <div className="gt-screen__scroll">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import type { MuscleGroup } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -44,7 +44,7 @@ export function MyExercisesScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Mes exercices</span>
+        <h1 className="gt-topbar__title">Mes exercices</h1>
       </div>
 
       {/* Zone de filtre fixe — toujours visible, hors flux de scroll */}
