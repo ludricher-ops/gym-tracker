@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+﻿import type { ReactNode } from 'react'
 import { useNavigation } from '../../nav/useNavigation'
 import { useSettings } from '../../hooks/useSettings'
 import { ACCENTS } from '../../theme/accents'
@@ -34,7 +34,7 @@ export function PreferencesScreen() {
         <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
-        <span className="gt-topbar__title">Préférences</span>
+        <h1 className="gt-topbar__title">Préférences</h1>
       </div>
 
       <div className="gt-screen__scroll">
@@ -236,6 +236,25 @@ export function PreferencesScreen() {
                 onChange={(prCelebrationEnabled) => updatePreferences({ prCelebrationEnabled })}
                 label="Célébration des records"
               />
+            }
+          />
+        </Section>
+
+        <Section title="Données">
+          <ToggleRow
+            label="Forcer la re-synchro complète"
+            sub="Recharge toutes les données depuis le serveur. Utile si l'historique a disparu sur cet appareil."
+            control={
+              <button
+                className="gt-btn gt-btn--secondary"
+                style={{ fontSize: 13, padding: '6px 14px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  localStorage.removeItem('gymtrack-sync-cursor')
+                  window.location.reload()
+                }}
+              >
+                Relancer
+              </button>
             }
           />
         </Section>
