@@ -241,21 +241,15 @@ export function PreferencesScreen() {
         </Section>
 
         <Section title="Données">
-          <ToggleRow
+          <Row
+            icon="database"
             label="Forcer la re-synchro complète"
-            sub="Recharge toutes les données depuis le serveur. Utile si l'historique a disparu sur cet appareil."
-            control={
-              <button
-                className="gt-btn gt-btn--secondary"
-                style={{ fontSize: 13, padding: '6px 14px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  localStorage.removeItem('gymtrack-sync-cursor')
-                  window.location.reload()
-                }}
-              >
-                Relancer
-              </button>
-            }
+            sub="Recharge tout depuis le serveur — utile si l'historique a disparu"
+            chevron
+            onClick={() => {
+              localStorage.removeItem('gymtrack-sync-cursor')
+              window.location.reload()
+            }}
           />
         </Section>
       </div>
