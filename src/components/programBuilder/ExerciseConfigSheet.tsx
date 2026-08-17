@@ -44,14 +44,20 @@ export function ExerciseConfigSheet({
   return (
     <Sheet title={exerciseName} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Switch
-            checked={d.isWarmup ?? false}
-            onChange={(on) => patch({ isWarmup: on })}
-            label="Exercice d'échauffement"
+        <Field label="Section">
+          <Segmented
+            value={d.isWarmup ? 'warmup' : d.isAb ? 'ab' : 'main'}
+            onChange={(v) => patch({
+              isWarmup: v === 'warmup' ? true : undefined,
+              isAb:     v === 'ab'     ? true : undefined,
+            })}
+            options={[
+              { value: 'warmup', label: 'Échauffement' },
+              { value: 'main',   label: 'Exercice' },
+              { value: 'ab',     label: 'Abdominaux' },
+            ]}
           />
-          <span className="t-caption">Exercice d&apos;échauffement</span>
-        </div>
+        </Field>
 
         <Field label="Séries">
           <Stepper

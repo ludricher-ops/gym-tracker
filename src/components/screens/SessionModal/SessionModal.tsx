@@ -147,6 +147,19 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const isInSuperset = supersetPeers.length > 1
   const isNextInSameGroup = !!(nextExercise?.se.supersetGroup && nextExercise.se.supersetGroup === supersetGroup)
 
+  // Section : échauffement → exercices → abdominaux
+  const SECTION_LABEL = { warmup: 'Échauffement', main: 'Exercices', ab: 'Abdominaux' } as const
+  type Section = keyof typeof SECTION_LABEL
+  const getSection = (se: { isWarmup?: boolean; isAb?: boolean } | undefined): Section =>
+    se?.isWarmup ? 'warmup' : se?.isAb ? 'ab' : 'main'
+  const currentSection = getSection(currentSE)
+  const nextSection = nextExercise ? getSection(nextExercise.se) : null
+  const isNewSection = nextSection !== null && nextSection !== currentSection
+  // Compteur Ex N/M limité à la section courante
+  const sectionExs = act.exercises.filter((e) => getSection(e.se) === currentSection)
+  const sectionIdx = sectionExs.findIndex((e) => e.se.id === currentSE?.id)
+  const sectionCount = sectionExs.length
+
   const prev = currentSE ? lastWorkingSet(currentSE.exerciseId, store) : null
   const exercisePR = currentSE
     ? store.personalRecords
@@ -311,7 +324,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                 <span className="t-eyebrow">
                   {supersetGroup
                     ? `Superset ${supersetGroup}`
-                    : `Ex ${act.exIndex + 1}/${exerciseCount}`}
+                    : currentSection !== 'main'
+                      ? SECTION_LABEL[currentSection]
+                      : `Ex ${sectionIdx + 1}/${sectionCount}`}
                 </span>
               </div>
               <p className="t-title">{currentExercise.name}</p>
@@ -373,7 +388,11 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   </span>
                   <div style={{ flex: 1, textAlign: 'left' }}>
                     <div className="t-eyebrow">
-                      {isNextInSameGroup ? `Superset ${supersetGroup}` : 'Suivant'}
+                      {isNewSection
+                        ? `→ ${SECTION_LABEL[nextSection!]}`
+                        : isNextInSameGroup
+                          ? `Superset ${supersetGroup}`
+                          : 'Suivant'}
                     </div>
                     <div style={{ fontWeight: 700 }}>
                       {nextExercise.exercise?.name ?? 'Exercice'}
