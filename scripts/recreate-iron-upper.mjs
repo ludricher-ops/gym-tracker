@@ -1,9 +1,10 @@
-// Supprime l'Iron Upper existant et le recrée avec une structure équilibrée.
-// Changements vs v1 :
-//   Jour 3 : ajout Rowing haltère (traction manquante) + Développé couché
-//            remplace les séances isolation-only par un vrai push/pull
-//   Core   : 1 triset par séance (Planche + Crunch vélo + Russian twist)
-//            au lieu de 3 blocs / 8 exercices — volume réduit à l'essentiel
+// Supprime l'Iron Upper existant et le recrée à l'identique de la config actuelle.
+// Structure reflète exactement ce qui est en base (vérifié via inspect-iron-upper.mjs) :
+//   Échauffement : 5 exos spécifiques par séance (Jumping jacks, Mountain climbers…)
+//   J1 Poitrine+Dos  : A(DC↔RowUniDroit↔RowUniGauche) B(DI↔Row) Solo(Écarté) + Abdos
+//   J2 Épaules+Bras  : A(Dev↔Curl×20) B(Ext↔Marteau) C(Lat↔Oiseau) + Abdos
+//   J3 Full Upper    : A(Row↔DC auto+) B(Dips↔Pullover) C(Écarté↔Oiseau) + Abdos
+//   Abdominaux : D(Planche 3×45s + Gainage 2×30s) + 7 exos solo (bloc J1)
 //
 // Usage : railway run node scripts/recreate-iron-upper.mjs
 
@@ -52,9 +53,10 @@ function wet(exerciseId, order, sets, repsMin, rest, group, opts = {}) {
   }
 }
 
-// Exercice d'échauffement (1 set, pas de progression)
+// Exercice d'échauffement (1 set, repos 0s par défaut)
 function warmup(exerciseId, order, repsMin, opts = {}) {
-  return wet(exerciseId, order, 1, repsMin, 15, null, { ...opts, isWarmup: true })
+  const { restSec = 0, ...rest } = opts
+  return wet(exerciseId, order, 1, repsMin, restSec, null, { ...rest, isWarmup: true })
 }
 
 // Bloc abdo (isAb: true → section Abdominaux dans l'UI)
@@ -86,8 +88,11 @@ async function run() {
     const needed = {
       // Échauffement
       cerclesEpaules:   "Cercles d'épaules",
-      bandPullApart:    'Band pull-apart',
-      catCow:           'Cat-Cow',
+      jumpingJacks:     'Jumping jacks',
+      mountainClimbers: 'Mountain climbers',
+      superman:         'Superman',
+      fentes:           'Fentes marchées',
+      squatCorps:       'Squat poids du corps',
       // Exercices principaux
       devCouche:        'Développé couché haltères',
       rowingUniDroit:   'Rowing haltère Droit (appui sur banc)',
@@ -223,73 +228,86 @@ async function run() {
       type: 'upper', muscleGroups: ['chest', 'back', 'triceps', 'core'],
     })
 
-    // Échauffement commun aux 3 séances (upper body)
-    const warmupBlock = (startOrder) => [
-      warmup(ex.cerclesEpaules, startOrder,     15),           // mobilité épaules
-      warmup(ex.bandPullApart,  startOrder + 1, 15),           // activation dorsaux
-      warmup(ex.catCow,         startOrder + 2, 10),           // mobilité thoracique
+    // Échauffements — spécifiques par séance (ordre isWarmup → sort après main+abs)
+    // J1 : Poitrine + Dos
+    const warmupJ1 = (s) => [
+      warmup(ex.cerclesEpaules,   s,     10),
+      warmup(ex.jumpingJacks,     s + 1, 40),
+      warmup(ex.mountainClimbers, s + 2, 10),
+      warmup(ex.squatCorps,       s + 3, 10),
+      warmup(ex.superman,         s + 4, 10, { restSec: 15 }),
+    ]
+    // J2 : Épaules + Bras
+    const warmupJ2 = (s) => [
+      warmup(ex.cerclesEpaules,   s,     10),
+      warmup(ex.jumpingJacks,     s + 1, 40),
+      warmup(ex.fentes,           s + 2, 10, { autoProgress: true }),
+      warmup(ex.mountainClimbers, s + 3, 20),
+      warmup(ex.superman,         s + 4, 10),
+    ]
+    // J3 : Full Upper
+    const warmupJ3 = (s) => [
+      warmup(ex.cerclesEpaules,   s,     10),
+      warmup(ex.jumpingJacks,     s + 1, 40),
+      warmup(ex.mountainClimbers, s + 2, 20),
+      warmup(ex.superman,         s + 3, 10),
+      warmup(ex.fentes,           s + 4, 10),
     ]
 
     // ── Jour 1 : Poitrine + Dos ──────────────────────────────────────────────
-    // Échauffement : Cercles d'épaules / Band pull-apart / Cat-Cow
-    // A : Développé couché + Rowing Droit + Rowing Gauche (triset push/pull)
-    // B : Développé incliné ↔ Rowing haltère               (superset, auto+)
+    // A : Développé couché + Rowing Gauche + Rowing Droit (triset, auto+)
+    // B : Développé incliné ↔ Rowing haltère              (superset, auto+)
     // Solo : Écarté haltères
-    // Abdominaux : Planche / Crunch vélo / Russian twist
     const j1 = [
-      ...warmupBlock(0),
-      wet(ex.devCouche,       0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.rowingUniDroit,  1, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.rowingUniGauche, 2, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.devIncline,      3, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.rowing,          4, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.ecarte,          5, 3, 12, 90, null),
-      ...coreBlock(ex, 0),
+      ...warmupJ1(20),
+      wet(ex.devCouche,       0, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowingUniGauche, 1, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowingUniDroit,  2, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.devIncline,      3, 3, 10, 30, 'B', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowing,          4, 3, 10, 30, 'B', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.ecarte,          5, 3, 12, 30, null),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j1) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt1Id, ...w })
 
     // ── Jour 2 : Épaules + Bras ──────────────────────────────────────────────
-    // Échauffement : Cercles d'épaules / Band pull-apart / Cat-Cow
-    // A : Développé épaules ↔ Curl haltères      (push/pull)
+    // A : Développé épaules ↔ Curl haltères ×20  (push/pull)
     // B : Extension triceps nuque ↔ Curl marteau  (push/pull)
     // C : Élévations latérales ↔ Oiseau           (isolation épaules)
-    // Abdominaux : Planche / Crunch vélo / Russian twist
     const j2 = [
-      ...warmupBlock(0),
-      wet(ex.devEpaules,  0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.curlAlt,     1, 3, 10, 90, 'A'),
-      wet(ex.extTriceps,  2, 3, 10, 90, 'B'),
-      wet(ex.curlMarteau, 3, 3, 10, 90, 'B'),
-      wet(ex.elevLat,     4, 3, 12, 90, 'C'),
-      wet(ex.oiseau,      5, 3, 12, 90, 'C'),
-      ...coreBlock(ex, 0),
+      ...warmupJ2(20),
+      wet(ex.devEpaules,  0, 3, 10, 45, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.curlAlt,     1, 3, 20, 45, 'A'),
+      wet(ex.extTriceps,  2, 3, 10, 45, 'B'),
+      wet(ex.curlMarteau, 3, 3, 20, 45, 'B'),
+      wet(ex.elevLat,     4, 3, 12, 45, 'C'),
+      wet(ex.oiseau,      5, 3, 12, 45, 'C'),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j2) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt2Id, ...w })
 
-    // ── Jour 3 : Full Upper (rebalancé) ─────────────────────────────────────
-    // Échauffement : Cercles d'épaules / Band pull-apart / Cat-Cow
+    // ── Jour 3 : Full Upper ──────────────────────────────────────────────────
     // A : Rowing haltère ↔ Développé couché haltères (pull/push, auto+)
-    // B : Dips triceps ↔ Pull-over haltère            (triceps / grand dorsal)
-    // C : Écarté haltères ↔ Oiseau                    (isolation finisher)
-    // Abdominaux : Planche / Crunch vélo / Russian twist
+    // B : Dips triceps ↔ Pull-over haltère
+    // C : Écarté haltères ↔ Oiseau
     const j3 = [
-      ...warmupBlock(0),
-      wet(ex.rowing,    0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.devCouche, 1, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.dips,      2, 3, 10, 90, 'B'),
-      wet(ex.pullover,  3, 3, 12, 90, 'B'),
-      wet(ex.ecarte,    4, 3, 12, 90, 'C'),
-      wet(ex.oiseau,    5, 3, 12, 90, 'C'),
-      ...coreBlock(ex, 0),
+      ...warmupJ3(20),
+      wet(ex.rowing,    0, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.devCouche, 1, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.dips,      2, 3, 10, 30, 'B'),
+      wet(ex.pullover,  3, 3, 10, 30, 'B'),
+      wet(ex.ecarte,    4, 3, 12, 30, 'C'),
+      wet(ex.oiseau,    5, 3, 12, 30, 'C'),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j3) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt3Id, ...w })
 
     await client.query('COMMIT')
 
-    console.log('\n✅ Iron Upper rebalancé créé !')
-    console.log('   J1 Poitrine+Dos  : A(DC↔RowUni) B(DI↔Row) Solo(Écarté) Core')
-    console.log('   J2 Épaules+Bras  : A(Dev↔Curl) B(Ext↔Marteau) C(Lat↔Oiseau) Core')
-    console.log('   J3 Full Upper    : A(Row↔DC) B(Dips↔Pullover) C(Écarté↔Oiseau) Core')
+    console.log('\n✅ Iron Upper recréé !')
+    console.log('   J1 Poitrine+Dos  : échauff×5 | A(DC↔RowG↔RowD) B(DI↔Row) Solo(Écarté) | Abdos×9')
+    console.log('   J2 Épaules+Bras  : échauff×5 | A(Dev↔Curl×20) B(Ext↔Marteau) C(Lat↔Oiseau) | Abdos×9')
+    console.log('   J3 Full Upper    : échauff×5 | A(Row↔DC auto+) B(Dips↔Pullover) C(Écarté↔Oiseau) | Abdos×9')
     console.log('\n   Force une synchro dans l\'app pour voir le template mis à jour.')
   } catch (err) {
     await client.query('ROLLBACK')
