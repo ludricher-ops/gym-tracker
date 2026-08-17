@@ -114,6 +114,7 @@ const URLS = {
   // Dos unilatéral ──────────────────────────────────────────────────────────
   'Rowing haltère unilatéral (appui sur banc)': 'https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif',
   'Rowing haltère Droit (appui sur banc)':      'https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif',
+  'Rowing haltère Gauche (appui sur banc)':     'https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif',
   // Sport / cardio ──────────────────────────────────────────────────────────
   'Football':                                   'https://fitnessprogramer.com/wp-content/uploads/2021/09/Run-in-Place.gif',
   // Exercices manquants du seed ─────────────────────────────────────────────

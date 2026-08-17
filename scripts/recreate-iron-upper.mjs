@@ -70,9 +70,10 @@ async function run() {
     const byName = Object.fromEntries(rows.map((r) => [r.name, r.id]))
 
     const needed = {
-      devCouche:   'Développé couché haltères',
-      rowingUni:   'Rowing haltère unilatéral (appui sur banc)',
-      devIncline:  'Développé incliné haltères',
+      devCouche:        'Développé couché haltères',
+      rowingUniDroit:   'Rowing haltère Droit (appui sur banc)',
+      rowingUniGauche:  'Rowing haltère Gauche (appui sur banc)',
+      devIncline:       'Développé incliné haltères',
       rowing:      'Rowing haltère',
       ecarte:      'Écarté haltères',
       devEpaules:  'Développé épaules haltères',
@@ -90,8 +91,9 @@ async function run() {
 
     // Fallbacks : noms alternatifs si le nom exact est absent
     const fallbacks = {
-      rowingUni: ['Rowing haltère Droit (appui sur banc)', 'Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing 1 bras', 'Rowing haltère'],
-      curlAlt:   ['Curl haltères alterné', 'Curl haltères'],
+      rowingUniDroit:  ['Rowing haltère Droit (appui sur banc)', 'Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing haltère'],
+      rowingUniGauche: ['Rowing haltère Gauche (appui sur banc)', 'Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing haltère'],
+      curlAlt:         ['Curl haltères alterné', 'Curl haltères'],
     }
     for (const [key, candidates] of Object.entries(fallbacks)) {
       for (const name of candidates) {
@@ -196,17 +198,18 @@ async function run() {
     })
 
     // ── Jour 1 : Poitrine + Dos ──────────────────────────────────────────────
-    // A : Développé couché ↔ Rowing unilatéral  (push/pull, auto+)
-    // B : Développé incliné ↔ Rowing haltère     (push/pull, auto+)
+    // A : Développé couché + Rowing Droit + Rowing Gauche (triset push/pull)
+    // B : Développé incliné ↔ Rowing haltère               (superset, auto+)
     // Solo : Écarté haltères
     // C : Planche + Crunch vélo + Russian twist
     const j1 = [
-      wet(ex.devCouche,  0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.rowingUni,  1, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.devIncline, 2, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.rowing,     3, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
-      wet(ex.ecarte,     4, 3, 12, 90, null),
-      ...coreTriset(ex, 5, 'C'),
+      wet(ex.devCouche,       0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowingUniDroit,  1, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowingUniGauche, 2, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.devIncline,      3, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.rowing,          4, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
+      wet(ex.ecarte,          5, 3, 12, 90, null),
+      ...coreTriset(ex, 6, 'C'),
     ]
     for (const w of j1) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt1Id, ...w })
 
