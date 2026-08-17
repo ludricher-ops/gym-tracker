@@ -88,10 +88,18 @@ async function run() {
       russian:     'Russian twist',
     }
 
-    // Fallback : 'Curl haltères alterné' → 'Curl haltères' si absent
-    if (!byName[needed.curlAlt]) {
-      needed.curlAlt = 'Curl haltères'
-      console.log('   ℹ️  "Curl haltères alterné" introuvable → "Curl haltères" utilisé')
+    // Fallbacks : noms alternatifs si le nom exact est absent
+    const fallbacks = {
+      rowingUni: ['Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing 1 bras', 'Rowing haltère'],
+      curlAlt:   ['Curl haltères alterné', 'Curl haltères'],
+    }
+    for (const [key, candidates] of Object.entries(fallbacks)) {
+      for (const name of candidates) {
+        if (byName[name]) { needed[key] = name; break }
+      }
+      if (needed[key] !== candidates[0]) {
+        console.log(`   ℹ️  "${candidates[0]}" introuvable → "${needed[key]}" utilisé`)
+      }
     }
 
     const ex = {}
@@ -102,6 +110,12 @@ async function run() {
     }
     if (missing.length) {
       console.error('❌ Exercices introuvables :', missing.join(', '))
+      // Afficher les exercices qui ressemblent au nom manquant pour aider
+      const keywords = missing.map((m) => m.toLowerCase().replace(/[^a-zàâéèêëîïôùûü\s]/g, '').trim().split(' ').slice(0, 2).join(' '))
+      for (const kw of keywords) {
+        const similar = rows.filter((r) => r.name.toLowerCase().includes(kw.split(' ')[0] ?? ''))
+        if (similar.length) console.error(`   Exercices avec "${kw.split(' ')[0]}" en base :`, similar.map((r) => `"${r.name}"`).join(', '))
+      }
       process.exit(1)
     }
 
