@@ -92,7 +92,6 @@ async function run() {
       mountainClimbers: 'Mountain climbers',
       superman:         'Superman',
       fentes:           'Fentes marchées',
-      squatCorps:       'Squat poids du corps',
       // Exercices principaux
       devCouche:        'Développé couché haltères',
       rowingUniDroit:   'Rowing haltère Droit (appui sur banc)',
@@ -228,25 +227,8 @@ async function run() {
       type: 'upper', muscleGroups: ['chest', 'back', 'triceps', 'core'],
     })
 
-    // Échauffements — spécifiques par séance (ordre isWarmup → sort après main+abs)
-    // J1 : Poitrine + Dos
-    const warmupJ1 = (s) => [
-      warmup(ex.cerclesEpaules,   s,     10),
-      warmup(ex.jumpingJacks,     s + 1, 40),
-      warmup(ex.mountainClimbers, s + 2, 10),
-      warmup(ex.squatCorps,       s + 3, 10),
-      warmup(ex.superman,         s + 4, 10, { restSec: 15 }),
-    ]
-    // J2 : Épaules + Bras
-    const warmupJ2 = (s) => [
-      warmup(ex.cerclesEpaules,   s,     10),
-      warmup(ex.jumpingJacks,     s + 1, 40),
-      warmup(ex.fentes,           s + 2, 10, { autoProgress: true }),
-      warmup(ex.mountainClimbers, s + 3, 20),
-      warmup(ex.superman,         s + 4, 10),
-    ]
-    // J3 : Full Upper
-    const warmupJ3 = (s) => [
+    // Échauffement commun aux 3 séances
+    const warmupBlock = (s) => [
       warmup(ex.cerclesEpaules,   s,     10),
       warmup(ex.jumpingJacks,     s + 1, 40),
       warmup(ex.mountainClimbers, s + 2, 20),
@@ -259,7 +241,7 @@ async function run() {
     // B : Développé incliné ↔ Rowing haltère              (superset, auto+)
     // Solo : Écarté haltères
     const j1 = [
-      ...warmupJ1(20),
+      ...warmupBlock(20),
       wet(ex.devCouche,       0, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.rowingUniGauche, 1, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.rowingUniDroit,  2, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
@@ -275,7 +257,7 @@ async function run() {
     // B : Extension triceps nuque ↔ Curl marteau  (push/pull)
     // C : Élévations latérales ↔ Oiseau           (isolation épaules)
     const j2 = [
-      ...warmupJ2(20),
+      ...warmupBlock(20),
       wet(ex.devEpaules,  0, 3, 10, 45, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.curlAlt,     1, 3, 20, 45, 'A'),
       wet(ex.extTriceps,  2, 3, 10, 45, 'B'),
@@ -291,7 +273,7 @@ async function run() {
     // B : Dips triceps ↔ Pull-over haltère
     // C : Écarté haltères ↔ Oiseau
     const j3 = [
-      ...warmupJ3(20),
+      ...warmupBlock(20),
       wet(ex.rowing,    0, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.devCouche, 1, 3, 10, 30, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.dips,      2, 3, 10, 30, 'B'),
