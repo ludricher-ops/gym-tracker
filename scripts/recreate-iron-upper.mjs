@@ -50,12 +50,12 @@ function wet(exerciseId, order, sets, repsMin, rest, group, opts = {}) {
   }
 }
 
-// Core triset commun (Planche + Crunch vélo + Russian twist)
-function coreTriset(ex, startOrder, groupLetter) {
+// Bloc core individuel (Planche + Crunch vélo + Russian twist) — sets séparés
+function coreBlock(ex, startOrder) {
   return [
-    wet(ex.planche,    startOrder,     3, 1,  30, groupLetter, { durationSec: 45 }),
-    wet(ex.crunchVelo, startOrder + 1, 3, 20, 30, groupLetter),
-    wet(ex.russian,    startOrder + 2, 3, 20, 30, groupLetter),
+    wet(ex.planche,    startOrder,     3, 1,  60, null, { durationSec: 45 }),
+    wet(ex.crunchVelo, startOrder + 1, 3, 20, 60, null),
+    wet(ex.russian,    startOrder + 2, 3, 20, 60, null),
   ]
 }
 
@@ -201,7 +201,7 @@ async function run() {
     // A : Développé couché + Rowing Droit + Rowing Gauche (triset push/pull)
     // B : Développé incliné ↔ Rowing haltère               (superset, auto+)
     // Solo : Écarté haltères
-    // C : Planche + Crunch vélo + Russian twist
+    // Core : Planche / Crunch vélo / Russian twist (sets individuels, 60 s)
     const j1 = [
       wet(ex.devCouche,       0, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.rowingUniDroit,  1, 3, 10, 90, 'A', { autoProgress: true, progressStep: 2.5 }),
@@ -209,7 +209,7 @@ async function run() {
       wet(ex.devIncline,      3, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.rowing,          4, 3, 10, 90, 'B', { autoProgress: true, progressStep: 2.5 }),
       wet(ex.ecarte,          5, 3, 12, 90, null),
-      ...coreTriset(ex, 6, 'C'),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j1) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt1Id, ...w })
 
@@ -225,7 +225,7 @@ async function run() {
       wet(ex.curlMarteau, 3, 3, 10, 90, 'B'),
       wet(ex.elevLat,     4, 3, 12, 90, 'C'),
       wet(ex.oiseau,      5, 3, 12, 90, 'C'),
-      ...coreTriset(ex, 6, 'D'),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j2) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt2Id, ...w })
 
@@ -243,7 +243,7 @@ async function run() {
       wet(ex.pullover,  3, 3, 12, 90, 'B'),
       wet(ex.ecarte,    4, 3, 12, 90, 'C'),
       wet(ex.oiseau,    5, 3, 12, 90, 'C'),
-      ...coreTriset(ex, 6, 'D'),
+      ...coreBlock(ex, 6),
     ]
     for (const w of j3) await upsert(client, 'workoutExerciseTemplates', randomUUID(), { workoutTemplateId: wt3Id, ...w })
 
