@@ -57,12 +57,19 @@ function warmup(exerciseId, order, repsMin, opts = {}) {
   return wet(exerciseId, order, 1, repsMin, 15, null, { ...opts, isWarmup: true })
 }
 
-// Bloc abdo individuel (isAb: true → section Abdominaux dans l'UI)
+// Bloc abdo (isAb: true → section Abdominaux dans l'UI)
+// Structure actuelle : superset D (Planche 3×45s + Gainage latéral 2×30s) + 7 exos individuels
 function coreBlock(ex, startOrder) {
   return [
-    wet(ex.planche,    startOrder,     3, 1,  60, null, { durationSec: 45, isAb: true }),
-    wet(ex.crunchVelo, startOrder + 1, 3, 20, 60, null, { isAb: true }),
-    wet(ex.russian,    startOrder + 2, 3, 20, 60, null, { isAb: true }),
+    wet(ex.planche,       startOrder,     3, 1,  0, 'D', { durationSec: 45, isAb: true }),
+    wet(ex.gainageLat,    startOrder + 1, 2, 1,  0, 'D', { durationSec: 30, isAb: true }),
+    wet(ex.ciseaux,       startOrder + 2, 1, 40, 0, null, { isAb: true }),
+    wet(ex.relevJambes,   startOrder + 3, 1, 15, 0, null, { isAb: true }),
+    wet(ex.crunchVelo,    startOrder + 4, 1, 40, 0, null, { isAb: true }),
+    wet(ex.russian,       startOrder + 5, 1, 40, 0, null, { isAb: true }),
+    wet(ex.toucheTalon,   startOrder + 6, 1, 40, 0, null, { isAb: true }),
+    wet(ex.crunch,        startOrder + 7, 1, 15, 0, null, { isAb: true }),
+    wet(ex.crunchJambesV, startOrder + 8, 1, 15, 0, null, { isAb: true }),
   ]
 }
 
@@ -96,9 +103,16 @@ async function run() {
       oiseau:      'Oiseau (buste penché)',
       dips:        'Dips triceps',
       pullover:    'Pull-over haltère',
-      planche:     'Planche',
-      crunchVelo:  'Crunch bicyclette',
-      russian:     'Russian twist',
+      // Abdominaux
+      planche:       'Planche',
+      gainageLat:    'Gainage latéral',
+      ciseaux:       'Ciseaux',
+      relevJambes:   'Relevé de jambes',
+      crunchVelo:    'Crunch bicyclette',
+      russian:       'Russian twist',
+      toucheTalon:   'Touche talon alternés',
+      crunch:        'Crunch',
+      crunchJambesV: 'Crunch avec jambes verticales',
     }
 
     // Fallbacks : noms alternatifs si le nom exact est absent
