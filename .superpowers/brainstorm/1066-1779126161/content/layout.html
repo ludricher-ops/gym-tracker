@@ -1,0 +1,204 @@
+<h2>Layout du graphique de progression</h2>
+<p class="subtitle">Programme exemple : 4 semaines, lun/mer/ven — 2 semaines faites, 2 restantes</p>
+
+<style>
+  .demo-wrap {
+    background: oklch(0.16 0.008 75);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 8px;
+  }
+  .demo-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: oklch(0.62 0.008 75);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Accent et surface */
+  --c-accent: oklch(0.88 0.20 130);
+  --c-surface2: oklch(0.27 0.008 75);
+
+  /* OPTION A : grille calendrier 7 colonnes */
+  .grid-cal {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .grid-cal .day-header {
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: oklch(0.45 0.008 75);
+    padding-bottom: 4px;
+    letter-spacing: .05em;
+  }
+  .grid-cal .cell {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background: transparent;
+  }
+  .grid-cal .cell.rest {
+    background: transparent;
+  }
+  .grid-cal .cell.done {
+    background: oklch(0.88 0.20 130);
+  }
+  .grid-cal .cell.todo {
+    background: oklch(0.27 0.008 75);
+  }
+
+  /* OPTION B : strip séquentiel */
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .strip .cell {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .strip .cell.done { background: oklch(0.88 0.20 130); }
+  .strip .cell.todo { background: oklch(0.27 0.008 75); }
+  .strip .week-sep {
+    width: 100%;
+    height: 0;
+  }
+
+  /* OPTION C : lignes de semaines (training days only) */
+  .weeks-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .weeks-rows .week-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .weeks-rows .week-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: oklch(0.45 0.008 75);
+    width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .weeks-rows .cell {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: oklch(0.18 0.02 130);
+  }
+  .weeks-rows .cell.done {
+    background: oklch(0.88 0.20 130);
+  }
+  .weeks-rows .cell.done-dim {
+    background: oklch(0.88 0.20 130);
+    opacity: 0.45;
+  }
+  .weeks-rows .cell.todo {
+    background: oklch(0.27 0.008 75);
+    color: oklch(0.45 0.008 75);
+  }
+</style>
+
+<div class="cards">
+
+  <!-- OPTION A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="demo-wrap">
+        <div class="demo-label">Avancement · S2.05 / S4.05</div>
+        <div class="grid-cal">
+          <!-- headers -->
+          <div class="day-header">L</div>
+          <div class="day-header">M</div>
+          <div class="day-header">M</div>
+          <div class="day-header">J</div>
+          <div class="day-header">V</div>
+          <div class="day-header">S</div>
+          <div class="day-header">D</div>
+          <!-- sem 1 -->
+          <div class="cell done"></div><div class="cell rest"></div><div class="cell done"></div><div class="cell rest"></div><div class="cell done"></div><div class="cell rest"></div><div class="cell rest"></div>
+          <!-- sem 2 -->
+          <div class="cell done"></div><div class="cell rest"></div><div class="cell done"></div><div class="cell rest"></div><div class="cell done"></div><div class="cell rest"></div><div class="cell rest"></div>
+          <!-- sem 3 -->
+          <div class="cell todo"></div><div class="cell rest"></div><div class="cell todo"></div><div class="cell rest"></div><div class="cell todo"></div><div class="cell rest"></div><div class="cell rest"></div>
+          <!-- sem 4 -->
+          <div class="cell todo"></div><div class="cell rest"></div><div class="cell todo"></div><div class="cell rest"></div><div class="cell todo"></div><div class="cell rest"></div><div class="cell rest"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Grille calendrier</h3>
+      <p>7 colonnes (lun–dim), une ligne par semaine. Les jours de repos restent vides. Montre la structure hebdomadaire complète.</p>
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="demo-wrap">
+        <div class="demo-label">Avancement · 6 / 12 séances</div>
+        <div class="strip">
+          <!-- sem 1 -->
+          <div class="cell done"></div><div class="cell done"></div><div class="cell done"></div>
+          <div class="week-sep"></div>
+          <!-- sem 2 -->
+          <div class="cell done"></div><div class="cell done"></div><div class="cell done"></div>
+          <div class="week-sep"></div>
+          <!-- sem 3 -->
+          <div class="cell todo"></div><div class="cell todo"></div><div class="cell todo"></div>
+          <div class="week-sep"></div>
+          <!-- sem 4 -->
+          <div class="cell todo"></div><div class="cell todo"></div><div class="cell todo"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Strip séquentiel</h3>
+      <p>Une case par séance prévue, pas de cases vides pour les jours de repos. Compact, montre uniquement le ratio fait/restant.</p>
+    </div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="demo-wrap">
+        <div class="demo-label">Avancement · S2 / S4</div>
+        <div class="weeks-rows">
+          <div class="week-row">
+            <div class="week-num">S1</div>
+            <div class="cell done">L</div><div class="cell done">M</div><div class="cell done">V</div>
+          </div>
+          <div class="week-row">
+            <div class="week-num">S2</div>
+            <div class="cell done">L</div><div class="cell done">M</div><div class="cell done">V</div>
+          </div>
+          <div class="week-row">
+            <div class="week-num">S3</div>
+            <div class="cell todo">L</div><div class="cell todo">M</div><div class="cell todo">V</div>
+          </div>
+          <div class="week-row">
+            <div class="week-num">S4</div>
+            <div class="cell todo">L</div><div class="cell todo">M</div><div class="cell todo">V</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Lignes de semaines</h3>
+      <p>Une ligne par semaine avec uniquement les jours d'entraînement. Numéro de semaine à gauche, initiale du jour dans la case.</p>
+    </div>
+  </div>
+
+</div>
