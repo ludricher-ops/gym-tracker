@@ -90,7 +90,7 @@ async function run() {
 
     // Fallbacks : noms alternatifs si le nom exact est absent
     const fallbacks = {
-      rowingUni: ['Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing 1 bras', 'Rowing haltère'],
+      rowingUni: ['Rowing haltère Droit (appui sur banc)', 'Rowing haltère unilatéral (appui sur banc)', 'Rowing haltère unilatéral', 'Rowing 1 bras', 'Rowing haltère'],
       curlAlt:   ['Curl haltères alterné', 'Curl haltères'],
     }
     for (const [key, candidates] of Object.entries(fallbacks)) {
