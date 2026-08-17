@@ -113,6 +113,31 @@ const URLS = {
   "Cercles d'épaules":              'https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif',
   // Dos unilatéral ──────────────────────────────────────────────────────────
   'Rowing haltère unilatéral (appui sur banc)': 'https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif',
+  // Exercices manquants du seed ─────────────────────────────────────────────
+  'Développé couché haltères':    'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Bench-Press.gif',
+  'Développé incliné haltères':   'https://fitnessprogramer.com/wp-content/uploads/2021/06/Incline-Dumbbell-Bench-Press.gif',
+  'Écarté haltères':              'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Fly.gif',
+  'Rowing haltère':               'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Bent-Over-Row.gif',
+  'Rowing machine':               'https://fitnessprogramer.com/wp-content/uploads/2021/06/Machine-Row.gif',
+  'Pull-over haltère':            'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Pullover.gif',
+  'Élévations latérales':         'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif',
+  'Oiseau (buste penché)':        'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Rear-Delt-Fly.gif',
+  'Curl marteau':                 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif',
+  'Gainage latéral':              'https://fitnessprogramer.com/wp-content/uploads/2022/02/Side-Plank.gif',
+  'Russian twist':                'https://fitnessprogramer.com/wp-content/uploads/2021/02/Russian-Twist.gif',
+  'Course (tapis)':               'https://fitnessprogramer.com/wp-content/uploads/2021/02/Treadmill.gif',
+  'Vélo':                         'https://fitnessprogramer.com/wp-content/uploads/2021/02/Stationary-Bike.gif',
+  'Rameur':                       'https://fitnessprogramer.com/wp-content/uploads/2021/04/Rowing-Machine.gif',
+  'Elliptique':                   'https://fitnessprogramer.com/wp-content/uploads/2021/06/Elliptical-Trainer.gif',
+  "World's greatest stretch":     'https://fitnessprogramer.com/wp-content/uploads/2022/08/World-Greatest-Stretch.gif',
+  'Rotations thoraciques':        'https://fitnessprogramer.com/wp-content/uploads/2021/09/Thoracic-Rotation.gif',
+  // Alias exercices personnalisés courants ──────────────────────────────────
+  'Squat':                        'https://fitnessprogramer.com/wp-content/uploads/2021/02/Air-Squat.gif',
+  'Pompe':                        'https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif',
+  'Traction':                     'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif',
+  'Fente':                        'https://fitnessprogramer.com/wp-content/uploads/2023/10/Static-Lunge.gif',
+  'Développé couché':             'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif',
+  'Élévation latérale':           'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif',
 }
 
 // ── Exécution ─────────────────────────────────────────────────────────────────
