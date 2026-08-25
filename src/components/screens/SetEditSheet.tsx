@@ -17,7 +17,7 @@ interface SetEditSheetProps {
 
 /** Édition d'une série — champs adaptés au type de suivi. */
 export function SetEditSheet({
-  set, trackingType = 'weight_reps', weightUnit, weightStep = 2.5, isCardio, onSave, onDelete, onClose,
+  set, trackingType = 'weight_reps', weightUnit, weightStep = 1, isCardio, onSave, onDelete, onClose,
 }: SetEditSheetProps) {
   const [weightKg, setWeightKg] = useState(set.weightKg)
   const [reps, setReps] = useState(set.reps)
