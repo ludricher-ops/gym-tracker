@@ -4,31 +4,50 @@
 // - push : draine l'outbox vers POST /api/sync/push
 // - pull : récupère GET /api/sync/pull?since=<server_seq> et fusionne en LWW
 //
-// Le curseur de pull est stocké en localStorage (spécifique à l'appareil) —
-// surtout pas dans `settings`, qui est lui-même synchronisé.
+// Auth : cookie httpOnly gt_session — envoyé automatiquement via credentials:'include'.
+// Le curseur de pull est stocké en localStorage, scopé par userId.
 
 import type { OutboxEntry, Syncable } from '../types'
 import { idbBatchGet, idbGet, idbGetAll, idbGetAllKeys, idbDeleteKeys, idbTx } from './idb'
 import { OUTBOX_STORE } from './schema'
 
-const CURSOR_KEY = 'gymtrack-sync-cursor'
-// Secret partagé optionnel — si VITE_SYNC_SECRET est défini au build, il est
-// envoyé dans chaque requête de synchro. Le serveur l'accepte ou rejette via SYNC_SECRET.
-const SYNC_SECRET = import.meta.env.VITE_SYNC_SECRET as string | undefined
+// ── État partagé (userId courant) ─────────────────────────────────────────────
+
+let _userId: number | null = null
+
+/** Appelé par AuthContext après login/logout. */
+export function setSyncUserId(id: number | null): void {
+  _userId = id
+}
+
+// ── Curseur de pull (localStorage, scopé par userId) ─────────────────────────
+
+function cursorKey(): string {
+  return _userId ? `gymtrack-sync-cursor-${_userId}` : 'gymtrack-sync-cursor'
+}
+
+function getCursor(): number {
+  return Number(localStorage.getItem(cursorKey()) || 0)
+}
+function setCursor(n: number): void {
+  localStorage.setItem(cursorKey(), String(n))
+}
+
+/** Remet le curseur à zéro (appelé après login pour forcer un full-pull). */
+export function resetSyncCursor(): void {
+  if (_userId) localStorage.removeItem(`gymtrack-sync-cursor-${_userId}`)
+  localStorage.removeItem('gymtrack-sync-cursor')
+}
+
+// ── Headers communs ───────────────────────────────────────────────────────────
 
 function syncHeaders(json = true): Record<string, string> {
   const h: Record<string, string> = {}
   if (json) h['Content-Type'] = 'application/json'
-  if (SYNC_SECRET) h['Authorization'] = `Bearer ${SYNC_SECRET}`
   return h
 }
 
-function getCursor(): number {
-  return Number(localStorage.getItem(CURSOR_KEY) || 0)
-}
-function setCursor(n: number): void {
-  localStorage.setItem(CURSOR_KEY, String(n))
-}
+// ── Push ──────────────────────────────────────────────────────────────────────
 
 /** Draine l'outbox vers le serveur. Renvoie le nombre d'enregistrements poussés. */
 export async function pushOutbox(): Promise<number> {
@@ -54,6 +73,7 @@ export async function pushOutbox(): Promise<number> {
 
   const res = await fetch('/api/sync/push', {
     method: 'POST',
+    credentials: 'include',
     headers: syncHeaders(),
     body: JSON.stringify({ changes }),
   })
@@ -65,6 +85,8 @@ export async function pushOutbox(): Promise<number> {
   return changes.length
 }
 
+// ── Pull ──────────────────────────────────────────────────────────────────────
+
 /** Récupère les changements serveur et les fusionne (LWW). Renvoie le nombre appliqué. */
 export async function pullChanges(): Promise<number> {
   let cursor = getCursor()
@@ -73,6 +95,7 @@ export async function pullChanges(): Promise<number> {
 
   while (hasMore) {
     const res = await fetch(`/api/sync/pull?since=${cursor}`, {
+      credentials: 'include',
       headers: syncHeaders(false),
     })
     if (!res.ok) throw new Error(`sync/pull ${res.status}`)
@@ -114,6 +137,8 @@ export async function pullChanges(): Promise<number> {
   }
   return applied
 }
+
+// ── Sync complète ─────────────────────────────────────────────────────────────
 
 /** Synchro complète : push d'abord (LWW), puis pull. Renvoie le nombre d'enregistrements reçus. */
 export async function syncNow(): Promise<number> {

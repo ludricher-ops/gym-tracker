@@ -3,6 +3,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import { useSettings } from '../../hooks/useSettings'
 import { idbClearAll } from '../../db/idb'
 import { Button, Icon, PrimaryBar } from '../ui'
+import { useAuth } from '../../auth/AuthContext'
 
 const GENDERS: { value: 'male' | 'female' | 'other'; label: string }[] = [
   { value: 'male', label: 'Homme' },
@@ -13,6 +14,7 @@ const GENDERS: { value: 'male' | 'female' | 'other'; label: string }[] = [
 export function AccountScreen() {
   const nav = useNavigation()
   const { settings, updateProfile } = useSettings()
+  const { user, logout } = useAuth()
 
   const [firstName, setFirstName] = useState(settings.firstName)
   const [lastName, setLastName] = useState(settings.lastName)
@@ -34,11 +36,16 @@ export function AccountScreen() {
   }
 
   const wipe = async () => {
-    if (!confirm('Effacer TOUTES les données de l’app ? Action irréversible.')) return
-    if (!confirm('Confirmer : toutes les séances, programmes et exercices perso seront perdus.'))
+    if (!confirm("Effacer TOUTES les données de l’app ? Action irréversible.")) return
+    if (!confirm("Confirmer : toutes les séances, programmes et exercices perso seront perdus."))
       return
     await idbClearAll()
     location.reload()
+  }
+
+  const handleLogout = async () => {
+    if (!confirm("Se déconnecter ?")) return
+    await logout()
   }
 
   return (
@@ -131,6 +138,16 @@ export function AccountScreen() {
             onChange={(e) => setBio(e.target.value)}
           />
         </div>
+
+        {user && (
+          <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 4 }}>
+            Connecté en tant que <strong style={{ color: 'var(--fg)' }}>{user.email}</strong>
+          </p>
+        )}
+
+        <Button variant="ghost" icon="trash" onClick={handleLogout}>
+          Se déconnecter
+        </Button>
 
         <Button variant="ghost" icon="trash" onClick={wipe}>
           Effacer toutes les données

@@ -6,16 +6,53 @@ import { TABS } from './nav/navigation'
 import { SCREENS } from './nav/screenRegistry'
 import { TabBar, EmptyState, UpdateBanner, ChromeGate } from './components/ui'
 import { SessionModal } from './components/screens/SessionModal/SessionModal'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import { LoginScreen } from './components/screens/LoginScreen'
 
 export function App() {
   return (
     <ChromeGate>
-      <StoreProvider>
-        <NavProvider>
-          <AppShell />
-        </NavProvider>
-      </StoreProvider>
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
     </ChromeGate>
+  )
+}
+
+/** Affiche le login si non connecté, l'app sinon. */
+function AuthGate() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    // Écran de chargement minimal pendant la vérification du cookie
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100dvh',
+        background: 'var(--bg)',
+      }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: 'var(--accent)',
+          opacity: 0.6,
+          animation: 'pulse 1.2s ease-in-out infinite',
+        }} />
+      </div>
+    )
+  }
+
+  if (!user) return <LoginScreen />
+
+  return (
+    <StoreProvider>
+      <NavProvider>
+        <AppShell />
+      </NavProvider>
+    </StoreProvider>
   )
 }
 
