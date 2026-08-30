@@ -57,17 +57,15 @@ export function ProgramsLibraryScreen() {
       </div>
 
       <div className="gt-screen__scroll">
-        {store.isAdmin && (
-          <Card variant="accent" onClick={() => nav.navigate('programBuilder')}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Icon name="plus" size={24} />
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Créer mon programme</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>Workflow guidé en 4 étapes</div>
-              </div>
+        <Card variant="accent" onClick={() => nav.navigate('programBuilder')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Icon name="plus" size={24} />
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Créer mon programme</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>Workflow guidé en 4 étapes</div>
             </div>
-          </Card>
-        )}
+          </div>
+        </Card>
 
         <input
           className="gt-input"
