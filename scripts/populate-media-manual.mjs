@@ -142,6 +142,20 @@ const URLS = {
   'Fente':                        'https://fitnessprogramer.com/wp-content/uploads/2023/10/Static-Lunge.gif',
   'Développé couché':             'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif',
   'Élévation latérale':           'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif',
+  // Nouveaux exercices seed (abdos, fessiers BW, cardio) ────────────────────
+  'Crunch bicyclette':            'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicycle-Crunch.gif',
+  'Ciseaux abdominaux':           'https://fitnessprogramer.com/wp-content/uploads/2022/01/Scissors-Exercise.gif',
+  'Touche talons alternés':       'https://fitnessprogramer.com/wp-content/uploads/2022/02/Oblique-Heel-Touch.gif',
+  'Crunch jambes verticales':     'https://fitnessprogramer.com/wp-content/uploads/2021/05/Vertical-Leg-Crunch.gif',
+  'Donkey kick':                  'https://fitnessprogramer.com/wp-content/uploads/2021/04/Donkey-Kick.gif',
+  'Fire hydrant':                 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Fire-Hydrant-Exercise.gif',
+  'Fente curtsy':                 'https://fitnessprogramer.com/wp-content/uploads/2022/01/Curtsy-Lunge.gif',
+  'Hip thrust poids du corps':    'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hip-Thrust.gif',
+  'Burpee':                       'https://fitnessprogramer.com/wp-content/uploads/2021/02/burpees.gif',
+  // Alias Iron Upper (noms anciens des exos abdos) ──────────────────────────
+  'Ciseaux':                      'https://fitnessprogramer.com/wp-content/uploads/2022/01/Scissors-Exercise.gif',
+  'Touche talon alternés':        'https://fitnessprogramer.com/wp-content/uploads/2022/02/Oblique-Heel-Touch.gif',
+  'Crunch avec jambes verticales':'https://fitnessprogramer.com/wp-content/uploads/2021/05/Vertical-Leg-Crunch.gif',
 }
 
 // ── Exécution ─────────────────────────────────────────────────────────────────
