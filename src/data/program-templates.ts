@@ -477,9 +477,10 @@ const wbJ3Wet: WorkoutExerciseTemplate[] = [
 // Exports
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Iron Upper et 3 Semaines Sans Matériel sont gérés directement en DB via
+// les scripts recreate-iron-upper.mjs et create-sans-materiel.mjs — ils ne
+// font pas partie du seed générique (ils référencent des exercices spécifiques).
 export const PROGRAM_TEMPLATES: Program[] = [
-  iuProgram,
-  bwProgram,
   wmProgram,
   wbProgram,
 ]
@@ -494,14 +495,10 @@ export function buildTemplateRecords(_now: number): TemplateRecords {
   return {
     programs: PROGRAM_TEMPLATES,
     workoutTemplates: [
-      ...iuWorkoutTemplates,
-      ...bwWorkoutTemplates,
       ...wmWorkoutTemplates,
       ...wbWorkoutTemplates,
     ],
     workoutExerciseTemplates: [
-      ...iuJ1Wet, ...iuJ2Wet, ...iuJ3Wet,
-      ...bwJ1Wet, ...bwJ2Wet, ...bwJ3Wet,
       ...wmJ1Wet, ...wmJ2Wet, ...wmJ3Wet,
       ...wbJ1Wet, ...wbJ2Wet, ...wbJ3Wet,
     ],
