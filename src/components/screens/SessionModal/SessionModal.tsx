@@ -49,6 +49,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const [celebration, setCelebration] = useState<PRCelebration | null>(null)
   const [finished, setFinished] = useState(false)
   const [exitSheet, setExitSheet] = useState(false)
+  const [imageZoom, setImageZoom] = useState(false)
   // Overlay de célébration : une fois par exercice et par séance.
   const celebrated = useRef<Set<string>>(new Set())
   const notifAsked = useRef(false)
@@ -321,11 +322,15 @@ export function SessionModal({ sessionId }: SessionModalProps) {
             {/* Hero compact : image 72×72 + infos */}
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               {currentExercise.media && (
-                <div
+                <button
+                  type="button"
+                  onClick={() => setImageZoom(true)}
+                  aria-label="Agrandir l'image"
                   style={{
                     width: 72, height: 72, borderRadius: 14, overflow: 'hidden',
                     flexShrink: 0, background: 'var(--surface2)',
                     border: '0.5px solid var(--border)',
+                    padding: 0, cursor: 'zoom-in',
                   }}
                 >
                   <MediaImage
@@ -334,7 +339,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     alt=""
                     aspectRatio={1}
                   />
-                </div>
+                </button>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
@@ -643,6 +648,46 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           weightUnit={weightUnit}
           onContinue={() => setCelebration(null)}
         />
+      )}
+
+      {/* Zoom image exercice */}
+      {imageZoom && currentExercise?.media && (
+        <div
+          role="dialog"
+          aria-label={`Image : ${currentExercise.name}`}
+          onClick={() => setImageZoom(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'var(--overlay-dark)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            zIndex: 200,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '92vw',
+              maxHeight: '72vh',
+              borderRadius: 20,
+              overflow: 'hidden',
+              background: 'var(--surface2)',
+            }}
+          >
+            <MediaImage
+              blobId={currentExercise.media.blobId}
+              url={currentExercise.media.url}
+              alt={currentExercise.name}
+              aspectRatio={currentExercise.media.aspectRatio}
+            />
+          </div>
+          <p className="t-caption" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Appuie pour fermer
+          </p>
+        </div>
       )}
     </Modal>
   )
