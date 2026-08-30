@@ -352,7 +352,16 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                         : `Ex ${sectionIdx + 1}/${sectionCount}`}
                   </span>
                 </div>
-                <p className="t-title">{currentExercise.name}</p>
+                <p
+                  className="t-title"
+                  style={{
+                    // En superset : hauteur fixe = 2 lignes de titre pour que
+                    // les séries restent au même niveau quel que soit l'exercice.
+                    minHeight: isInSuperset ? '60px' : undefined,
+                  }}
+                >
+                  {currentExercise.name}
+                </p>
                 {isInSuperset && (
                   <div className="gt-chips" style={{ marginTop: 8 }}>
                     {supersetPeers.map((peer) => {
