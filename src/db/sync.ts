@@ -11,13 +11,22 @@ import type { OutboxEntry, Syncable } from '../types'
 import { idbBatchGet, idbGet, idbGetAll, idbGetAllKeys, idbDeleteKeys, idbTx } from './idb'
 import { OUTBOX_STORE } from './schema'
 
-// ── État partagé (userId courant) ─────────────────────────────────────────────
+// ── État partagé (userId courant, flag admin) ─────────────────────────────────
 
 let _userId: number | null = null
 
 /** Appelé par AuthContext après login/logout. */
 export function setSyncUserId(id: number | null): void {
   _userId = id
+}
+
+// Flag admin — initialisé depuis localStorage pour survivre aux rechargements,
+// mis à jour à chaque pull depuis la réponse serveur.
+let _isAdmin: boolean = localStorage.getItem('gymtrack-is-admin') === '1'
+
+/** Retourne true si l'utilisateur courant est l'administrateur. */
+export function getIsAdmin(): boolean {
+  return _isAdmin
 }
 
 // ── Curseur de pull (localStorage, scopé par userId) ─────────────────────────
@@ -103,6 +112,13 @@ export async function pullChanges(): Promise<number> {
       records: { store: string; record: Syncable }[]
       cursor: number
       hasMore: boolean
+      isAdmin?: boolean
+    }
+
+    // Met à jour le flag admin depuis la réponse serveur
+    if (typeof data.isAdmin === 'boolean') {
+      _isAdmin = data.isAdmin
+      localStorage.setItem('gymtrack-is-admin', data.isAdmin ? '1' : '0')
     }
 
     // Batch LWW : regroupe les records par store pour réduire le nombre de

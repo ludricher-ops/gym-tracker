@@ -90,17 +90,19 @@ export function MyExercisesScreen() {
           <StatTile label="Bibliothèque" value={String(store.exercises.length)} />
         </div>
 
-        <Card variant="accent" onClick={() => nav.navigate('exerciseForm')}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Icon name="plus" size={24} />
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Créer un exercice</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
-                Une variation ou un exercice spécifique
+        {store.isAdmin && (
+          <Card variant="accent" onClick={() => nav.navigate('exerciseForm')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Icon name="plus" size={24} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Créer un exercice</div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>
+                  Une variation ou un exercice spécifique
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
 
         {visible.length === 0 ? (
           <EmptyState
@@ -131,7 +133,11 @@ export function MyExercisesScreen() {
                 sub={`${MUSCLE_LABEL[ex.primaryMuscle]} · ${EQUIPMENT_LABEL[ex.equipment]}`}
                 value={ex.isCustom ? 'Perso' : undefined}
                 chevron
-                onClick={() => nav.navigate('exerciseForm', { id: ex.id })}
+                onClick={() =>
+                  store.isAdmin
+                    ? nav.navigate('exerciseForm', { id: ex.id })
+                    : nav.navigate('exerciseDetail', { exerciseId: ex.id })
+                }
               />
             ))}
           </div>

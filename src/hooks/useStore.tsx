@@ -3,8 +3,10 @@
 // à jour dans la foulée). Source de vérité = IndexedDB.
 
 import {
-  createContext, useContext, useEffect, useMemo, useState, type ReactNode,
+  createContext, useContext, useEffect, useMemo, useState, useCallback,
+  type ReactNode,
 } from 'react'
+import { getIsAdmin } from '../db/sync'
 import type {
   BodyMeasurement, Exercise, Goal, PersonalRecord, Program, Session,
   SessionExercise, Settings, SetRecord, Syncable, WorkoutExerciseTemplate,
@@ -37,6 +39,8 @@ interface EntityActions<T extends Syncable> {
 
 export interface StoreApi extends Collections {
   ready: boolean
+  /** true si l'utilisateur courant est l'administrateur (user_id=1). */
+  isAdmin: boolean
   settings: Settings
   saveSettings: (next: Settings) => Promise<void>
   exercise: EntityActions<Exercise>
@@ -73,28 +77,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cols, setCols] = useState<Collections>(EMPTY)
   const [settings, setSettings] = useState<Settings | null>(null)
   const [ready, setReady] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(() => getIsAdmin())
 
-  const loadAll = useMemo(
-    () => async () => {
-      const [
-        exercises, programs, workoutTemplates, workoutExerciseTemplates,
-        sessions, sessionExercises, sets, personalRecords, goals,
-        bodyMeasurements, settingsRow,
-      ] = await Promise.all([
-        exerciseRepo.all(), programRepo.all(), workoutTemplateRepo.all(),
-        workoutExerciseTemplateRepo.all(), sessionRepo.all(),
-        sessionExerciseRepo.all(), setRepo.all(), personalRecordRepo.all(),
-        goalRepo.all(), bodyMeasurementRepo.all(), settingsRepo.get('singleton'),
-      ])
-      setCols({
-        exercises, programs, workoutTemplates, workoutExerciseTemplates,
-        sessions, sessionExercises, sets, personalRecords, goals,
-        bodyMeasurements,
-      })
-      if (settingsRow) setSettings(settingsRow)
-    },
-    [],
-  )
+  const loadAll = useCallback(async () => {
+    const [
+      exercises, programs, workoutTemplates, workoutExerciseTemplates,
+      sessions, sessionExercises, sets, personalRecords, goals,
+      bodyMeasurements, settingsRow,
+    ] = await Promise.all([
+      exerciseRepo.all(), programRepo.all(), workoutTemplateRepo.all(),
+      workoutExerciseTemplateRepo.all(), sessionRepo.all(),
+      sessionExerciseRepo.all(), setRepo.all(), personalRecordRepo.all(),
+      goalRepo.all(), bodyMeasurementRepo.all(), settingsRepo.get('singleton'),
+    ])
+    setCols({
+      exercises, programs, workoutTemplates, workoutExerciseTemplates,
+      sessions, sessionExercises, sets, personalRecords, goals,
+      bodyMeasurements,
+    })
+    if (settingsRow) setSettings(settingsRow)
+    // Met à jour le flag admin depuis la valeur la plus récente (post-pull)
+    setIsAdmin(getIsAdmin())
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -156,13 +160,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!ready || !settings) return null
     return {
       ready: true,
+      isAdmin,
       settings,
       saveSettings,
       reload: loadAll,
       ...cols,
       ...actions,
     }
-  }, [ready, settings, saveSettings, loadAll, cols, actions])
+  }, [ready, isAdmin, settings, saveSettings, loadAll, cols, actions])
 
   if (!api) {
     return (

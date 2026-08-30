@@ -52,6 +52,8 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
   }, [store.workoutTemplates, program.id, program.weekTemplate])
 
+  const canEdit = !program.isTemplate || store.isAdmin
+
   const del = async () => {
     const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''
     if (!confirm(`Supprimer le programme « ${program.name} » ?${warn}`)) return
@@ -241,7 +243,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           )
         })}
 
-        {!program.isTemplate && (
+        {canEdit && (
           <Button variant="ghost" icon="trash" onClick={del}>
             Supprimer le programme
           </Button>
@@ -250,15 +252,17 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
 
       <PrimaryBar>
         <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <Button
-              variant="secondary"
-              icon="edit"
-              onClick={() => nav.navigate('programBuilder', { fromProgramId: program.id })}
-            >
-              Personnaliser
-            </Button>
-          </div>
+          {canEdit && (
+            <div style={{ flex: 1 }}>
+              <Button
+                variant="secondary"
+                icon="edit"
+                onClick={() => nav.navigate('programBuilder', { fromProgramId: program.id })}
+              >
+                Personnaliser
+              </Button>
+            </div>
+          )}
           {!program.isActive && (
             <div style={{ flex: 1 }}>
               <Button icon="check" onClick={() => setSheet(true)}>
