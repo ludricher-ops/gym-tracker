@@ -220,9 +220,9 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                       onClick={() => setPreviewWorkout(w)}
                       style={{
                         flexShrink: 0,
-                        width: 48,
-                        height: 48,
-                        borderRadius: 10,
+                        width: 60,
+                        height: 60,
+                        borderRadius: 12,
                         background: 'var(--surface2)',
                         border: '1px dashed var(--border)',
                         cursor: 'pointer',
@@ -315,14 +315,15 @@ function Metric({ value, label }: { value: string; label: string }) {
   )
 }
 
-/** Vignette 48×48 avec image GIF ou icône de fallback. */
+/** Vignette 60×60 avec image GIF ou icône de fallback.
+ *  object-position: center 70% pour cadrer sous le logo fitnessprogramer.com */
 function ExThumb({ url }: { url?: string }) {
   return (
     <div
       style={{
-        width: 48,
-        height: 48,
-        borderRadius: 10,
+        width: 60,
+        height: 60,
+        borderRadius: 12,
         background: 'var(--surface2)',
         border: '0.5px solid var(--border)',
         overflow: 'hidden',
@@ -336,7 +337,7 @@ function ExThumb({ url }: { url?: string }) {
         <img
           src={url}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 70%' }}
           onError={(e) => {
             const img = e.currentTarget
             img.style.display = 'none'
