@@ -393,6 +393,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               weightUnit={weightUnit}
               onSelect={onSelectSet}
               onValidate={validate}
+              layout={isInSuperset ? 'grid' : 'list'}
             />
 
             {nextExercise && (
