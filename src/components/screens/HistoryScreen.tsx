@@ -48,7 +48,7 @@ export function HistoryScreen() {
       const vol = volumeByDay.get(key) ?? 0
       cells.push({
         key,
-        intensity: vol > 0 ? 0.35 + 0.65 * (vol / maxDayVolume) : 0,
+        intensity: volumeByDay.has(key) ? 0.35 + 0.65 * (vol / maxDayVolume) : 0,
         title: key,
       })
     }

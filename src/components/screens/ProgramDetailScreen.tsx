@@ -1,13 +1,21 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
 import { programSummary } from '../../utils/programInfo'
-import { Button, Card, EmptyState, Icon, Pill, PrimaryBar } from '../ui'
+import { Button, Card, EmptyState, Icon, Pill, PrimaryBar, Sheet } from '../ui'
 import { deleteProgram, deactivateProgram } from '../../utils/programOps'
 import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
+import type { WorkoutTemplate } from '../../types'
+
+/** Formate les séries + reps d'un WET pour l'affichage dans le sheet. */
+function fmtSets(sets: number, repsMin: number, repsMax?: number, durSec?: number): string {
+  if (durSec) return `${sets} × ${durSec} s`
+  if (repsMax && repsMax !== repsMin) return `${sets} × ${repsMin}–${repsMax} reps`
+  return `${sets} × ${repsMin} reps`
+}
 
 export function ProgramDetailScreen({ params }: ScreenProps) {
   const store = useStore()
@@ -18,6 +26,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     [store.programs, id],
   )
   const [sheet, setSheet] = useState(false)
+  const [previewWorkout, setPreviewWorkout] = useState<WorkoutTemplate | null>(null)
 
   if (!program) {
     return (
@@ -56,12 +65,23 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     nav.back()
   }
 
-  const exerciseNames = (workoutTemplateId: string) =>
+  /** Retourne les WETs d'un workout avec exercice + média associé, triés par ordre. */
+  const wetInfos = (workoutTemplateId: string) =>
     store.workoutExerciseTemplates
-      .filter((e) => e.workoutTemplateId === workoutTemplateId)
+      .filter((e) => e.workoutTemplateId === workoutTemplateId && !e.deleted)
       .sort((a, b) => a.order - b.order)
-      .map((e) => store.exercises.find((x) => x.id === e.exerciseId)?.name)
-      .filter(Boolean)
+      .map((wet) => {
+        const ex = store.exercises.find((x) => x.id === wet.exerciseId)
+        return { wet, ex }
+      })
+      .filter(({ ex }) => ex !== undefined)
+
+  /** WETs du workout actuellement affiché dans le sheet de prévisualisation. */
+  const previewInfos = useMemo(
+    () => (previewWorkout ? wetInfos(previewWorkout.id) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [previewWorkout, store.workoutExerciseTemplates, store.exercises],
+  )
 
   return (
     <div className="gt-screen">
@@ -119,13 +139,104 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
 
         <p className="t-eyebrow">Séances</p>
         {workouts.map((w) => {
-          const names = exerciseNames(w.id)
+          const infos = wetInfos(w.id)
+          const thumbs = infos.slice(0, 4)
+          const extra = infos.length - thumbs.length
           return (
-            <Card key={w.id}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>{w.name}</div>
-              <div className="t-caption" style={{ marginTop: 4 }}>
-                {names.length ? names.join(' · ') : 'Aucun exercice'}
-              </div>
+            <Card key={w.id} style={{ padding: 0, overflow: 'hidden' }}>
+              {/* En-tête cliquable → ouvre le sheet de prévisualisation */}
+              <button
+                onClick={() => setPreviewWorkout(w)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '12px 14px 8px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+                aria-label={`Voir les exercices de ${w.name}`}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{w.name}</div>
+                  <div className="t-caption" style={{ marginTop: 2, color: 'var(--dim)' }}>
+                    {infos.length} exercice{infos.length > 1 ? 's' : ''} · Voir les images
+                  </div>
+                </div>
+                <Icon name="chevron-right" size={16} />
+              </button>
+
+              {/* Strip de miniatures */}
+              {thumbs.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 6,
+                    padding: '0 14px 12px',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                  }}
+                >
+                  {thumbs.map(({ wet, ex }) => (
+                    <button
+                      key={wet.id}
+                      onClick={() => setPreviewWorkout(w)}
+                      style={{
+                        flexShrink: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 3,
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                      aria-label={ex?.name}
+                    >
+                      <ExThumb url={ex?.media?.url} />
+                      <span
+                        style={{
+                          fontSize: 9,
+                          color: 'var(--dim)',
+                          maxWidth: 52,
+                          textAlign: 'center',
+                          lineHeight: 1.2,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {ex?.name}
+                      </span>
+                    </button>
+                  ))}
+                  {extra > 0 && (
+                    <button
+                      onClick={() => setPreviewWorkout(w)}
+                      style={{
+                        flexShrink: 0,
+                        width: 48,
+                        height: 48,
+                        borderRadius: 10,
+                        background: 'var(--surface2)',
+                        border: '1px dashed var(--border)',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--dim)',
+                      }}
+                      aria-label={`${extra} autres exercices`}
+                    >
+                      +{extra}
+                    </button>
+                  )}
+                </div>
+              )}
             </Card>
           )
         })}
@@ -165,6 +276,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
         </div>
       </PrimaryBar>
 
+      {/* Sheet activation programme */}
       {sheet && (
         <ActivationSheet
           program={program}
@@ -176,9 +288,21 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           }}
         />
       )}
+
+      {/* Sheet prévisualisation exercices */}
+      {previewWorkout && (
+        <Sheet
+          title={previewWorkout.name}
+          onClose={() => setPreviewWorkout(null)}
+        >
+          <ExercisePreviewList infos={previewInfos} />
+        </Sheet>
+      )}
     </div>
   )
 }
+
+// ─── Sous-composants ─────────────────────────────────────────────────────────
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
@@ -187,6 +311,150 @@ function Metric({ value, label }: { value: string; label: string }) {
         {value}
       </div>
       <div style={{ fontSize: 11, opacity: 0.75 }}>{label}</div>
+    </div>
+  )
+}
+
+/** Vignette 48×48 avec image GIF ou icône de fallback. */
+function ExThumb({ url }: { url?: string }) {
+  return (
+    <div
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 10,
+        background: 'var(--surface2)',
+        border: '0.5px solid var(--border)',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      {url ? (
+        <img
+          src={url}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => {
+            const img = e.currentTarget
+            img.style.display = 'none'
+            const parent = img.parentElement
+            if (parent) {
+              const icon = document.createElement('span')
+              icon.textContent = '💪'
+              icon.style.fontSize = '20px'
+              parent.appendChild(icon)
+            }
+          }}
+        />
+      ) : (
+        <Icon name="dumbbell" size={20} />
+      )}
+    </div>
+  )
+}
+
+type WetInfo = {
+  wet: import('../../types').WorkoutExerciseTemplate
+  ex: import('../../types').Exercise | undefined
+}
+
+/** Liste complète des exercices dans le bottom sheet, groupée par type. */
+function ExercisePreviewList({ infos }: { infos: WetInfo[] }) {
+  const warmup = infos.filter(({ wet }) => wet.isWarmup)
+  const abs = infos.filter(({ wet }) => wet.isAb)
+  const main = infos.filter(({ wet }) => !wet.isWarmup && !wet.isAb)
+
+  return (
+    <div>
+      {warmup.length > 0 && (
+        <>
+          <SectionLabel>Échauffement</SectionLabel>
+          {warmup.map((info) => <ExRow key={info.wet.id} info={info} />)}
+        </>
+      )}
+      {main.length > 0 && (
+        <>
+          <SectionLabel>Principal</SectionLabel>
+          {main.map((info) => <ExRow key={info.wet.id} info={info} />)}
+        </>
+      )}
+      {abs.length > 0 && (
+        <>
+          <SectionLabel>Abdominaux</SectionLabel>
+          {abs.map((info) => <ExRow key={info.wet.id} info={info} />)}
+        </>
+      )}
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <div
+      className="t-eyebrow"
+      style={{ padding: '10px 20px 4px', color: 'var(--dim)' }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ExRow({ info: { wet, ex } }: { info: WetInfo }) {
+  const setsLabel = fmtSets(
+    wet.targetSets,
+    wet.targetRepsMin,
+    wet.targetRepsMax,
+    wet.targetDurationSec,
+  )
+  const hasSupersetBadge = wet.supersetGroup != null
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '8px 20px',
+        borderBottom: '0.5px solid var(--border)',
+      }}
+    >
+      <ExThumb url={ex?.media?.url} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--ink)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {ex?.name ?? '—'}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1 }}>
+          {setsLabel}
+          {hasSupersetBadge && (
+            <span
+              style={{
+                marginLeft: 6,
+                padding: '1px 5px',
+                borderRadius: 4,
+                background: 'var(--surface2)',
+                fontSize: 9,
+                fontWeight: 700,
+                color: 'var(--accent)',
+                textTransform: 'uppercase',
+              }}
+            >
+              SS
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
