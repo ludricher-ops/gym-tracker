@@ -318,47 +318,66 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           </Card>
         ) : (
           <>
-            <div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                <Pill variant="surface2">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
-                <span className="t-eyebrow">
-                  {supersetGroup
-                    ? `Superset ${supersetGroup}`
-                    : currentSection !== 'main'
-                      ? SECTION_LABEL[currentSection]
-                      : `Ex ${sectionIdx + 1}/${sectionCount}`}
-                </span>
-              </div>
-              <p className="t-title">{currentExercise.name}</p>
-              {isInSuperset && (
-                <div className="gt-chips" style={{ marginTop: 8 }}>
-                  {supersetPeers.map((peer) => {
-                    const peerIdx = act.exercises.findIndex((e) => e.se.id === peer.se.id)
-                    const isActive = peerIdx === act.exIndex
-                    const allDone =
-                      peer.sets.length > 0 && peer.sets.every((s) => s.completedAt != null)
-                    return (
-                      <button
-                        key={peer.se.id}
-                        type="button"
-                        className={`gt-chip ${isActive ? 'gt-chip--active' : ''}`}
-                        style={allDone && !isActive ? { opacity: 0.55 } : undefined}
-                        onClick={() => act.goToExercise(peerIdx)}
-                      >
-                        {allDone && !isActive ? '✓ ' : ''}{peer.exercise?.name ?? 'Exercice'}
-                      </button>
-                    )
-                  })}
+            {/* Hero compact : image 72×72 + infos */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              {currentExercise.media && (
+                <div
+                  style={{
+                    width: 72, height: 72, borderRadius: 14, overflow: 'hidden',
+                    flexShrink: 0, background: 'var(--surface2)',
+                    border: '0.5px solid var(--border)',
+                  }}
+                >
+                  <MediaImage
+                    blobId={currentExercise.media.blobId}
+                    url={currentExercise.media.url}
+                    alt=""
+                    aspectRatio={1}
+                  />
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-                <span className="t-caption">
-                  Précédent :{' '}
-                  {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
-                </span>
-                <span className="t-caption">
-                  PR : {exercisePR ? `${exercisePR.estimated1RM.toFixed(1)} kg` : '—'}
-                </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                  <Pill variant="surface2">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
+                  <span className="t-eyebrow">
+                    {supersetGroup
+                      ? `Superset ${supersetGroup}`
+                      : currentSection !== 'main'
+                        ? SECTION_LABEL[currentSection]
+                        : `Ex ${sectionIdx + 1}/${sectionCount}`}
+                  </span>
+                </div>
+                <p className="t-title">{currentExercise.name}</p>
+                {isInSuperset && (
+                  <div className="gt-chips" style={{ marginTop: 8 }}>
+                    {supersetPeers.map((peer) => {
+                      const peerIdx = act.exercises.findIndex((e) => e.se.id === peer.se.id)
+                      const isActive = peerIdx === act.exIndex
+                      const allDone =
+                        peer.sets.length > 0 && peer.sets.every((s) => s.completedAt != null)
+                      return (
+                        <button
+                          key={peer.se.id}
+                          type="button"
+                          className={`gt-chip ${isActive ? 'gt-chip--active' : ''}`}
+                          style={allDone && !isActive ? { opacity: 0.55 } : undefined}
+                          onClick={() => act.goToExercise(peerIdx)}
+                        >
+                          {allDone && !isActive ? '✓ ' : ''}{peer.exercise?.name ?? 'Exercice'}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+                  <span className="t-caption">
+                    Précédent :{' '}
+                    {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
+                  </span>
+                  <span className="t-caption">
+                    PR : {exercisePR ? `${exercisePR.estimated1RM.toFixed(1)} kg` : '—'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -371,21 +390,25 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               onValidate={validate}
             />
 
-            {currentExercise.media && (
-              <MediaImage
-                blobId={currentExercise.media.blobId}
-                url={currentExercise.media.url}
-                alt={`Démo : ${currentExercise.name}`}
-                aspectRatio={currentExercise.media.aspectRatio}
-              />
-            )}
-
             {nextExercise && (
               <Card onClick={goNext}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className="t-num" style={{ fontSize: 18, color: 'var(--muted)' }}>
-                    {act.exIndex + 2}
-                  </span>
+                  {nextExercise.exercise?.media && (
+                    <div
+                      style={{
+                        width: 44, height: 44, borderRadius: 10, overflow: 'hidden',
+                        flexShrink: 0, background: 'var(--surface2)',
+                        border: '0.5px solid var(--border)',
+                      }}
+                    >
+                      <MediaImage
+                        blobId={nextExercise.exercise.media.blobId}
+                        url={nextExercise.exercise.media.url}
+                        alt=""
+                        aspectRatio={1}
+                      />
+                    </div>
+                  )}
                   <div style={{ flex: 1, textAlign: 'left' }}>
                     <div className="t-eyebrow">
                       {isNewSection
@@ -498,9 +521,12 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                 </div>
               )}
 
-              <Button onClick={validate} disabled={!canValidate} icon="check">
-                Valider la série
-              </Button>
+              {/* Pour les exercices en mode temps, la validation passe par le timer — pas de bouton redondant */}
+              {trackingType !== 'time' && (
+                <Button onClick={validate} disabled={!canValidate} icon="check">
+                  Valider la série
+                </Button>
+              )}
             </div>
           )
         )}
