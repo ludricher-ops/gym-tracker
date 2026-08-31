@@ -520,10 +520,15 @@ export function DashboardScreen() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recent.map((s) => {
-                const wt = s.workoutTemplateId
+                // Lookup par ID direct, puis fallback par nom si le template source
+                // avait son icône mise à jour (l'icon est défini sur le template mais
+                // la session pointe vers un clone avec un ID différent)
+                const byId = s.workoutTemplateId
                   ? store.workoutTemplates.find((w) => w.id === s.workoutTemplateId)
                   : undefined
-                const sessionIcon = wt?.icon
+                const sessionIcon =
+                  byId?.icon ??
+                  store.workoutTemplates.find((w) => w.name === s.name && w.icon)?.icon
                 return (
                   <Row
                     key={s.id}

@@ -30,9 +30,17 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   const [editingIconFor, setEditingIconFor] = useState<string | null>(null)
 
   const handleSaveIcon = useCallback(async (wt: WorkoutTemplate, emoji: string | null) => {
-    await store.workoutTemplate.save({ ...wt, icon: emoji ?? undefined })
+    const icon = emoji ?? undefined
+    await store.workoutTemplate.save({ ...wt, icon })
+    // Si on édite un template, propager l'icône aux clones actifs portant le même nom
+    if (program?.isTemplate) {
+      const clones = store.workoutTemplates.filter(
+        (w) => w.name === wt.name && w.id !== wt.id && !w.deleted,
+      )
+      await Promise.all(clones.map((c) => store.workoutTemplate.save({ ...c, icon })))
+    }
     setEditingIconFor(null)
-  }, [store])
+  }, [store, program])
 
   if (!program) {
     return (
