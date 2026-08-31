@@ -152,8 +152,6 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
         <p className="t-eyebrow">Séances</p>
         {workoutsWithDay.map(({ wt: w, day }) => {
           const infos = wetInfos(w.id)
-          const thumbs = infos.slice(0, 4)
-          const extra = infos.length - thumbs.length
           const dayLabel = day ? WEEKDAY_LABEL[day as keyof typeof WEEKDAY_LABEL] : undefined
           return (
             <Card key={w.id} style={{ padding: 0, overflow: 'hidden' }}>
@@ -185,8 +183,8 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                 <Icon name="chevron-right" size={16} />
               </button>
 
-              {/* Strip de miniatures */}
-              {thumbs.length > 0 && (
+              {/* Strip de miniatures — tous les exercices */}
+              {infos.length > 0 && (
                 <div
                   style={{
                     display: 'flex',
@@ -196,7 +194,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                     scrollbarWidth: 'none',
                   }}
                 >
-                  {thumbs.map(({ wet, ex }) => (
+                  {infos.map(({ wet, ex }) => (
                     <button
                       key={wet.id}
                       onClick={() => setPreviewWorkout(w)}
@@ -231,26 +229,6 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                       </span>
                     </button>
                   ))}
-                  {extra > 0 && (
-                    <button
-                      onClick={() => setPreviewWorkout(w)}
-                      style={{
-                        flexShrink: 0,
-                        width: 60,
-                        height: 60,
-                        borderRadius: 12,
-                        background: 'var(--surface2)',
-                        border: '1px dashed var(--border)',
-                        cursor: 'pointer',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: 'var(--dim)',
-                      }}
-                      aria-label={`${extra} autres exercices`}
-                    >
-                      +{extra}
-                    </button>
-                  )}
                 </div>
               )}
             </Card>
