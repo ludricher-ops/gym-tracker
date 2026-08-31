@@ -6,7 +6,7 @@ import {
 } from '../../utils/sessionOps'
 import { computeStreak } from '../../utils/streak'
 import { statsForWeek, statsForPreviousWeek, weekDeltas } from '../../utils/stats'
-import { localDayKey } from '../../utils/dates'
+import { localDayKey, startOfLocalDay } from '../../utils/dates'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
@@ -69,6 +69,8 @@ export function DashboardScreen() {
   // ── Progression du programme ─────────────────────────────────────────
   const ignoredBefore = activeProgram?.catchupIgnoredBefore ?? 0
   const now = Date.now()
+  // Début du jour courant — les séances planifiées aujourd'hui ne sont jamais "ignorées"
+  const startOfToday = startOfLocalDay(now).getTime()
 
   const progressCells = useMemo(() => {
     return schedule.map((s) => {
@@ -79,11 +81,11 @@ export function DashboardScreen() {
             cs.workoutTemplateId === s.workoutTemplateId &&
             localDayKey(cs.startedAt) === localDayKey(s.date),
         )
-      const past = s.date.getTime() < now
-      const ignored = !done && past && ignoredBefore > 0 && s.date.getTime() < ignoredBefore
+      // Une séance est "ignorée" seulement si elle est strictement avant aujourd'hui
+      const ignored = !done && s.date.getTime() < startOfToday && ignoredBefore > 0 && s.date.getTime() < ignoredBefore
       return { label: s.label, workoutName: s.workoutName, date: s.date, done, ignored }
     })
-  }, [schedule, programSessions, ignoredBefore, now])
+  }, [schedule, programSessions, ignoredBefore, startOfToday])
 
   const progressDoneCount = useMemo(
     () => progressCells.filter((c) => c.done).length,
@@ -98,9 +100,16 @@ export function DashboardScreen() {
 
   const handleIgnoreCatchups = useCallback(async () => {
     if (!activeProgram) return
-    await store.program.save({ ...activeProgram, catchupIgnoredBefore: now })
+    await store.program.save({ ...activeProgram, catchupIgnoredBefore: startOfToday })
     setSelectedCell(null)
-  }, [activeProgram, store, now])
+  }, [activeProgram, store, startOfToday])
+
+  // Restaure une séance ignorée (et toutes les suivantes) en reculant catchupIgnoredBefore
+  const handleRestoreCell = useCallback(async (cell: typeof progressCells[0]) => {
+    if (!activeProgram) return
+    await store.program.save({ ...activeProgram, catchupIgnoredBefore: cell.date.getTime() })
+    setSelectedCell(null)
+  }, [activeProgram, store])
 
 
   const { current, deltas } = useMemo(() => {
@@ -443,8 +452,8 @@ export function DashboardScreen() {
                 background: 'var(--surface2)',
                 fontSize: 13,
               }}>
-                <div>
-                  <span style={{ fontWeight: 700, color: 'var(--fg, #1a1a1a)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontWeight: 700 }}>
                     {selectedCell.workoutName}
                   </span>
                   <span style={{ color: 'var(--muted)', marginLeft: 6 }}>
@@ -456,11 +465,30 @@ export function DashboardScreen() {
                   <span style={{ marginLeft: 6, color: selectedCell.done ? 'var(--accent)' : selectedCell.ignored ? 'var(--muted)' : 'var(--dim)' }}>
                     {selectedCell.done ? '✓ Faite' : selectedCell.ignored ? 'Ignorée' : 'À venir'}
                   </span>
+                  {selectedCell.ignored && (
+                    <button
+                      type="button"
+                      onClick={() => handleRestoreCell(selectedCell)}
+                      style={{
+                        marginLeft: 8,
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent)',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: 0,
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      Restaurer
+                    </button>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedCell(null)}
-                  style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 16, padding: '0 2px' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 16, padding: '0 2px', flexShrink: 0 }}
                   aria-label="Fermer"
                 >×</button>
               </div>
