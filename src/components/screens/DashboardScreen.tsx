@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import {
@@ -67,6 +67,9 @@ export function DashboardScreen() {
   )
 
   // ── Progression du programme ─────────────────────────────────────────
+  const ignoredBefore = activeProgram?.catchupIgnoredBefore ?? 0
+  const now = Date.now()
+
   const progressCells = useMemo(() => {
     return schedule.map((s) => {
       const done =
@@ -76,14 +79,28 @@ export function DashboardScreen() {
             cs.workoutTemplateId === s.workoutTemplateId &&
             localDayKey(cs.startedAt) === localDayKey(s.date),
         )
-      return { label: s.label, workoutName: s.workoutName, done }
+      const past = s.date.getTime() < now
+      const ignored = !done && past && ignoredBefore > 0 && s.date.getTime() < ignoredBefore
+      return { label: s.label, workoutName: s.workoutName, date: s.date, done, ignored }
     })
-  }, [schedule, programSessions])
+  }, [schedule, programSessions, ignoredBefore, now])
 
   const progressDoneCount = useMemo(
     () => progressCells.filter((c) => c.done).length,
     [progressCells],
   )
+
+  const [selectedCell, setSelectedCell] = useState<typeof progressCells[0] | null>(null)
+
+  const handleCellClick = useCallback((cell: typeof progressCells[0]) => {
+    setSelectedCell((prev) => (prev?.label === cell.label ? null : cell))
+  }, [])
+
+  const handleIgnoreCatchups = useCallback(async () => {
+    if (!activeProgram) return
+    await store.program.save({ ...activeProgram, catchupIgnoredBefore: now })
+    setSelectedCell(null)
+  }, [activeProgram, store, now])
 
 
   const { current, deltas } = useMemo(() => {
@@ -113,6 +130,13 @@ export function DashboardScreen() {
       .map((id) => store.workoutTemplates.find((w) => w.id === id && !w.deleted))
       .filter((w): w is NonNullable<typeof w> => w != null)
   }, [activeProgram, store.workoutTemplates])
+
+  // Filtre les rattrapages déjà ignorés
+  const visibleMissed = useMemo(
+    () => card.missedSessions.filter((s) => s.date.getTime() >= ignoredBefore),
+    [card.missedSessions, ignoredBefore],
+  )
+  const hasMissedToIgnore = visibleMissed.length > 0
 
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false)
 
@@ -191,11 +215,16 @@ export function DashboardScreen() {
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
               </Button>
-              {card.missedSessions.map((s) => (
+              {visibleMissed.map((s) => (
                 <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
-                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
+                  {`Rattraper : ${s.workoutName}${visibleMissed.length > 1 ? ` · ${s.label}` : ''}`}
                 </Button>
               ))}
+              {hasMissedToIgnore && (
+                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
+                  Ignorer les rattrapages antérieurs
+                </Button>
+              )}
             </div>
           </Card>
         )}
@@ -244,11 +273,16 @@ export function DashboardScreen() {
               <Button icon="bolt" onClick={() => startScheduled(card.todaySession!)}>
                 Commencer la séance
               </Button>
-              {card.missedSessions.map((s) => (
+              {visibleMissed.map((s) => (
                 <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
-                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
+                  {`Rattraper : ${s.workoutName}${visibleMissed.length > 1 ? ` · ${s.label}` : ''}`}
                 </Button>
               ))}
+              {hasMissedToIgnore && (
+                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
+                  Ignorer les rattrapages antérieurs
+                </Button>
+              )}
             </div>
           </Card>
         )}
@@ -370,20 +404,67 @@ export function DashboardScreen() {
               </span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {progressCells.map((cell) => (
-                <div
-                  key={cell.label}
-                  title={`${cell.label} — ${cell.workoutName}`}
-                  style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: 4,
-                    background: cell.done ? 'var(--accent)' : 'var(--surface2)',
-                    flexShrink: 0,
-                  }}
-                />
-              ))}
+              {progressCells.map((cell) => {
+                const isSelected = selectedCell?.label === cell.label
+                let bg: string
+                if (cell.done) bg = 'var(--accent)'
+                else if (cell.ignored) bg = 'var(--border)'
+                else bg = 'var(--surface2)'
+                return (
+                  <button
+                    key={cell.label}
+                    type="button"
+                    aria-label={`${cell.label} — ${cell.workoutName}`}
+                    onClick={() => handleCellClick(cell)}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      background: bg,
+                      flexShrink: 0,
+                      border: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+                      padding: 0,
+                      cursor: 'pointer',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                )
+              })}
             </div>
+            {selectedCell && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+                padding: '8px 12px',
+                borderRadius: 8,
+                background: 'var(--surface2)',
+                fontSize: 13,
+              }}>
+                <div>
+                  <span style={{ fontWeight: 700, color: 'var(--fg, #1a1a1a)' }}>
+                    {selectedCell.workoutName}
+                  </span>
+                  <span style={{ color: 'var(--muted)', marginLeft: 6 }}>
+                    · {selectedCell.label}
+                  </span>
+                  <span style={{ color: 'var(--muted)', marginLeft: 6 }}>
+                    · {selectedCell.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                  </span>
+                  <span style={{ marginLeft: 6, color: selectedCell.done ? 'var(--accent)' : selectedCell.ignored ? 'var(--muted)' : 'var(--dim)' }}>
+                    {selectedCell.done ? '✓ Faite' : selectedCell.ignored ? 'Ignorée' : 'À venir'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCell(null)}
+                  style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 16, padding: '0 2px' }}
+                  aria-label="Fermer"
+                >×</button>
+              </div>
+            )}
           </>
         )}
 

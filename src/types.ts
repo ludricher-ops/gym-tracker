@@ -153,6 +153,8 @@ export interface Program extends Syncable {
   archivedAt?: number
   weekTemplate: WeeklyTemplate
   createdAt: number
+  /** Timestamp — les séances planifiées avant cette date sont masquées des rattrapages. */
+  catchupIgnoredBefore?: number
 }
 
 export interface WorkoutTemplate extends Syncable {
