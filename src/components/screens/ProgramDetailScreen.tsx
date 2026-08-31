@@ -163,7 +163,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           const infos = wetInfos(w.id)
           const dayLabel = day ? WEEKDAY_LABEL[day as keyof typeof WEEKDAY_LABEL] : undefined
           return (
-            <Card key={w.id} style={{ padding: 0, overflow: 'hidden' }}>
+            <Card key={w.id} style={{ padding: 0, overflow: 'clip' }}>
               {/* En-tête cliquable → ouvre le sheet de prévisualisation */}
               <div
                 style={{
