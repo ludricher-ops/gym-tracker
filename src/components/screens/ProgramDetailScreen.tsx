@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
@@ -27,6 +27,12 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   )
   const [sheet, setSheet] = useState(false)
   const [previewWorkout, setPreviewWorkout] = useState<WorkoutTemplate | null>(null)
+  const [editingIconFor, setEditingIconFor] = useState<string | null>(null)
+
+  const handleSaveIcon = useCallback(async (wt: WorkoutTemplate, emoji: string | null) => {
+    await store.workoutTemplate.save({ ...wt, icon: emoji ?? undefined })
+    setEditingIconFor(null)
+  }, [store])
 
   if (!program) {
     return (
@@ -140,7 +146,10 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                   }}
                 >
                   <div style={{ fontSize: 10, fontWeight: 700 }}>{WEEKDAY_LABEL[day]}</div>
-                  <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2 }}>
+                  {wt?.icon && (
+                    <div style={{ fontSize: 14, lineHeight: 1, marginTop: 2 }}>{wt.icon}</div>
+                  )}
+                  <div style={{ fontSize: 9, fontWeight: 600, marginTop: wt?.icon ? 1 : 2 }}>
                     {wt ? (wt.type === 'custom' ? wt.name : WORKOUT_TYPE_LABEL[wt.type]) : '—'}
                   </div>
                 </div>
@@ -156,32 +165,51 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           return (
             <Card key={w.id} style={{ padding: 0, overflow: 'hidden' }}>
               {/* En-tête cliquable → ouvre le sheet de prévisualisation */}
-              <button
-                onClick={() => setPreviewWorkout(w)}
+              <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  width: '100%',
                   padding: '12px 14px 8px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
                 }}
-                aria-label={`Voir les exercices de ${w.name}`}
               >
-                <div>
-                  {dayLabel && (
-                    <div className="t-eyebrow" style={{ marginBottom: 2 }}>{dayLabel}</div>
-                  )}
-                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{w.name}</div>
-                  <div className="t-caption" style={{ marginTop: 2, color: 'var(--dim)' }}>
-                    {infos.length} exercice{infos.length > 1 ? 's' : ''} · Voir les images
+                {/* Bouton emoji — ouvre le picker si canEdit */}
+                <button
+                  type="button"
+                  onClick={() => canEdit ? setEditingIconFor(w.id) : undefined}
+                  style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: 'var(--surface2)', border: '0.5px solid var(--border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, cursor: canEdit ? 'pointer' : 'default',
+                    fontSize: 22, marginRight: 12,
+                  }}
+                  aria-label="Changer l'icône"
+                >
+                  {w.icon ?? '💪'}
+                </button>
+                {/* Nom + infos — clique pour ouvrir le sheet d'exercices */}
+                <button
+                  type="button"
+                  onClick={() => setPreviewWorkout(w)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0,
+                  }}
+                  aria-label={`Voir les exercices de ${w.name}`}
+                >
+                  <div>
+                    {dayLabel && (
+                      <div className="t-eyebrow" style={{ marginBottom: 2 }}>{dayLabel}</div>
+                    )}
+                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{w.name}</div>
+                    <div className="t-caption" style={{ marginTop: 2, color: 'var(--dim)' }}>
+                      {infos.length} exercice{infos.length > 1 ? 's' : ''} · Voir les images
+                    </div>
                   </div>
-                </div>
-                <Icon name="chevron-right" size={16} />
-              </button>
+                  <Icon name="chevron-right" size={16} />
+                </button>
+              </div>
 
               {/* Strip de miniatures — tous les exercices */}
               {infos.length > 0 && (
@@ -294,6 +322,20 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           <ExercisePreviewList infos={previewInfos} />
         </Sheet>
       )}
+
+      {/* Sheet picker icône séance */}
+      {editingIconFor && (() => {
+        const targetWt = workouts.find((w) => w.id === editingIconFor)
+        if (!targetWt) return null
+        return (
+          <Sheet title="Icône de la séance" onClose={() => setEditingIconFor(null)}>
+            <EmojiPicker
+              current={targetWt.icon}
+              onSelect={(e) => void handleSaveIcon(targetWt, e)}
+            />
+          </Sheet>
+        )
+      })()}
     </div>
   )
 }
@@ -395,6 +437,74 @@ function SectionLabel({ children }: { children: string }) {
       style={{ padding: '10px 20px 4px', color: 'var(--dim)' }}
     >
       {children}
+    </div>
+  )
+}
+
+// ─── Picker d'icône emoji ─────────────────────────────────────────────────────
+
+const EMOJI_OPTIONS = [
+  '💪', '🏋️', '🏃', '🚴', '🤸', '🏊', '🧘',
+  '⚽', '🏀', '🎾', '🥊', '🏈', '🏐', '🎿',
+  '🔥', '⚡', '🎯', '🦵', '🤼', '🧗', '🏇',
+  '🎽', '🥅', '🏋️‍♀️',
+]
+
+function EmojiPicker({
+  current,
+  onSelect,
+}: {
+  current?: string
+  onSelect: (emoji: string | null) => void
+}) {
+  return (
+    <div style={{ padding: '8px 16px 24px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: 8,
+        }}
+      >
+        {EMOJI_OPTIONS.map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => onSelect(e)}
+            style={{
+              fontSize: 26,
+              lineHeight: 1,
+              padding: '10px 0',
+              borderRadius: 12,
+              background: e === current ? 'var(--accent)' : 'var(--surface2)',
+              border: '0.5px solid var(--border)',
+              cursor: 'pointer',
+            }}
+            aria-label={e}
+          >
+            {e}
+          </button>
+        ))}
+      </div>
+      {current && (
+        <button
+          type="button"
+          onClick={() => onSelect(null)}
+          style={{
+            marginTop: 16,
+            width: '100%',
+            padding: '10px 0',
+            borderRadius: 10,
+            background: 'none',
+            border: '0.5px solid var(--border)',
+            color: 'var(--dim)',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Supprimer l'icône
+        </button>
+      )}
     </div>
   )
 }

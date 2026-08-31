@@ -393,7 +393,18 @@ export function DashboardScreen() {
                 {programWorkouts.map((wt) => (
                   <Row
                     key={wt.id}
-                    icon="dumbbell"
+                    leading={
+                      <span
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          background: 'var(--surface2)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 20, flexShrink: 0,
+                        }}
+                      >
+                        {wt.icon ?? '💪'}
+                      </span>
+                    }
                     label={wt.name}
                     chevron
                     onClick={() => startFromWorkout(wt.id)}
@@ -516,21 +527,38 @@ export function DashboardScreen() {
               Séances récentes
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recent.map((s) => (
-                <Row
-                  key={s.id}
-                  icon="dumbbell"
-                  label={s.name}
-                  sub={new Date(s.startedAt).toLocaleDateString('fr-FR', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                  value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
-                  chevron
-                  onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
-                />
-              ))}
+              {recent.map((s) => {
+                const wt = s.workoutTemplateId
+                  ? store.workoutTemplates.find((w) => w.id === s.workoutTemplateId)
+                  : undefined
+                const sessionIcon = wt?.icon
+                return (
+                  <Row
+                    key={s.id}
+                    leading={
+                      <span
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          background: 'var(--surface2)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 20, flexShrink: 0,
+                        }}
+                      >
+                        {sessionIcon ?? '💪'}
+                      </span>
+                    }
+                    label={s.name}
+                    sub={new Date(s.startedAt).toLocaleDateString('fr-FR', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                    value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
+                    chevron
+                    onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
+                  />
+                )
+              })}
             </div>
           </>
         )}

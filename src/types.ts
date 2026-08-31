@@ -162,6 +162,8 @@ export interface WorkoutTemplate extends Syncable {
   name: string
   type: WorkoutType
   muscleGroups: MuscleGroup[]
+  /** Emoji affiché à gauche du nom de la séance (ex. : "⚽", "💪"). */
+  icon?: string
 }
 
 export interface WorkoutExerciseTemplate extends Syncable {
