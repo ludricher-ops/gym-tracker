@@ -131,7 +131,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                 >
                   <div style={{ fontSize: 10, fontWeight: 700 }}>{WEEKDAY_LABEL[day]}</div>
                   <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2 }}>
-                    {wt ? WORKOUT_TYPE_LABEL[wt.type] : '—'}
+                    {wt ? (wt.type === 'custom' ? wt.name : WORKOUT_TYPE_LABEL[wt.type]) : '—'}
                   </div>
                 </div>
               )
