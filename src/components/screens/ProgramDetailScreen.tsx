@@ -45,12 +45,22 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   }
 
   const summary = programSummary(program, store)
-  const workouts = useMemo(() => {
+  // Associe chaque workoutTemplate à son jour de semaine pour le tri et l'affichage
+  const workoutsWithDay = useMemo(() => {
     const assignedIds = new Set(Object.values(program.weekTemplate).filter(Boolean) as string[])
+    const dayOrder = Object.fromEntries(WEEKDAYS.map((d, i) => [d, i]))
+    // wtId → premier jour de la semaine où cette séance apparaît
+    const wtDay: Record<string, string> = {}
+    for (const [day, wtId] of Object.entries(program.weekTemplate)) {
+      if (wtId && !(wtId in wtDay)) wtDay[wtId] = day
+    }
     return store.workoutTemplates
       .filter((w) => w.programId === program.id && assignedIds.has(w.id))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+      .map((w) => ({ wt: w, day: wtDay[w.id] ?? '' }))
+      .sort((a, b) => (dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99))
   }, [store.workoutTemplates, program.id, program.weekTemplate])
+
+  const workouts = useMemo(() => workoutsWithDay.map((x) => x.wt), [workoutsWithDay])
 
   const canEdit = !program.isTemplate || store.isAdmin
 
@@ -140,10 +150,11 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
         </div>
 
         <p className="t-eyebrow">Séances</p>
-        {workouts.map((w) => {
+        {workoutsWithDay.map(({ wt: w, day }) => {
           const infos = wetInfos(w.id)
           const thumbs = infos.slice(0, 4)
           const extra = infos.length - thumbs.length
+          const dayLabel = day ? WEEKDAY_LABEL[day as keyof typeof WEEKDAY_LABEL] : undefined
           return (
             <Card key={w.id} style={{ padding: 0, overflow: 'hidden' }}>
               {/* En-tête cliquable → ouvre le sheet de prévisualisation */}
@@ -163,6 +174,9 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                 aria-label={`Voir les exercices de ${w.name}`}
               >
                 <div>
+                  {dayLabel && (
+                    <div className="t-eyebrow" style={{ marginBottom: 2 }}>{dayLabel}</div>
+                  )}
                   <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{w.name}</div>
                   <div className="t-caption" style={{ marginTop: 2, color: 'var(--dim)' }}>
                     {infos.length} exercice{infos.length > 1 ? 's' : ''} · Voir les images
