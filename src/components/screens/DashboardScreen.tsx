@@ -393,18 +393,10 @@ export function DashboardScreen() {
                 {programWorkouts.map((wt) => (
                   <Row
                     key={wt.id}
-                    leading={
-                      <span
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          background: 'var(--surface2)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 20, flexShrink: 0,
-                        }}
-                      >
-                        {wt.icon ?? '💪'}
-                      </span>
-                    }
+                    leading={wt.icon
+                      ? <SessionEmoji emoji={wt.icon} />
+                      : undefined}
+                    icon={wt.icon ? undefined : 'dumbbell'}
                     label={wt.name}
                     chevron
                     onClick={() => startFromWorkout(wt.id)}
@@ -535,18 +527,8 @@ export function DashboardScreen() {
                 return (
                   <Row
                     key={s.id}
-                    leading={
-                      <span
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          background: 'var(--surface2)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 20, flexShrink: 0,
-                        }}
-                      >
-                        {sessionIcon ?? '💪'}
-                      </span>
-                    }
+                    leading={sessionIcon ? <SessionEmoji emoji={sessionIcon} /> : undefined}
+                    icon={sessionIcon ? undefined : 'dumbbell'}
                     label={s.name}
                     sub={new Date(s.startedAt).toLocaleDateString('fr-FR', {
                       weekday: 'short',
@@ -564,5 +546,19 @@ export function DashboardScreen() {
         )}
       </div>
     </div>
+  )
+}
+
+// ─── Sous-composants ─────────────────────────────────────────────────────────
+
+/** Badge emoji pour remplacer l'icône dumbbell quand une icône custom est définie. */
+function SessionEmoji({ emoji }: { emoji: string }) {
+  return (
+    <span
+      className="gt-row__icon"
+      style={{ fontSize: 20, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      {emoji}
+    </span>
   )
 }

@@ -182,11 +182,13 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
                     background: 'var(--surface2)', border: '0.5px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0, cursor: canEdit ? 'pointer' : 'default',
-                    fontSize: 22, marginRight: 12,
+                    fontSize: w.icon ? 22 : undefined, marginRight: 12,
                   }}
                   aria-label="Changer l'icône"
                 >
-                  {w.icon ?? '💪'}
+                  {w.icon
+                    ? w.icon
+                    : <Icon name="dumbbell" size={20} />}
                 </button>
                 {/* Nom + infos — clique pour ouvrir le sheet d'exercices */}
                 <button
