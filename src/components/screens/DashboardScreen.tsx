@@ -296,7 +296,7 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {!resumable && activeProgram && card.type === 'missed' && card.missedSessions.length > 0 && (
+        {!resumable && activeProgram && card.type === 'missed' && (
           <Card>
             <p className="t-eyebrow">Jour de repos</p>
             <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
@@ -304,16 +304,21 @@ export function DashboardScreen() {
               Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
             </p>
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {card.missedSessions.map((s, i) => (
+              {visibleMissed.map((s, i) => (
                 <Button
                   key={s.label}
                   variant={i === 0 ? 'primary' : 'ghost'}
                   icon="bolt"
                   onClick={() => startScheduled(s)}
                 >
-                  {`Rattraper : ${s.workoutName}${card.missedSessions.length > 1 ? ` · ${s.label}` : ''}`}
+                  {`Rattraper : ${s.workoutName}${visibleMissed.length > 1 ? ` · ${s.label}` : ''}`}
                 </Button>
               ))}
+              {hasMissedToIgnore && (
+                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
+                  Ignorer les rattrapages antérieurs
+                </Button>
+              )}
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>
