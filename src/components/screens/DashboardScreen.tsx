@@ -83,7 +83,7 @@ export function DashboardScreen() {
         )
       // Une séance est "ignorée" seulement si elle est strictement avant aujourd'hui
       const ignored = !done && s.date.getTime() < startOfToday && ignoredBefore > 0 && s.date.getTime() < ignoredBefore
-      return { label: s.label, workoutName: s.workoutName, date: s.date, done, ignored }
+      return { label: s.label, workoutName: s.workoutName, date: s.date, workoutTemplateId: s.workoutTemplateId, done, ignored }
     })
   }, [schedule, programSessions, ignoredBefore, startOfToday])
 
@@ -449,7 +449,20 @@ export function DashboardScreen() {
                 )
               })}
             </div>
-            {selectedCell && (
+            {selectedCell && (() => {
+              // Date réelle : session complétée si dispo, sinon date planifiée
+              const completedSession = selectedCell.done
+                ? (programSessions.find((cs) => cs.programSessionLabel === selectedCell.label) ??
+                   programSessions.find(
+                     (cs) =>
+                       cs.workoutTemplateId === selectedCell.workoutTemplateId &&
+                       localDayKey(cs.startedAt) === localDayKey(selectedCell.date.getTime()),
+                   ))
+                : null
+              const displayDate = completedSession
+                ? new Date(completedSession.startedAt)
+                : selectedCell.date
+              return (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -468,7 +481,7 @@ export function DashboardScreen() {
                     · {selectedCell.label}
                   </span>
                   <span style={{ color: 'var(--muted)', marginLeft: 6 }}>
-                    · {selectedCell.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    · {displayDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </span>
                   <span style={{ marginLeft: 6, color: selectedCell.done ? 'var(--accent)' : selectedCell.ignored ? 'var(--muted)' : 'var(--dim)' }}>
                     {selectedCell.done ? '✓ Faite' : selectedCell.ignored ? 'Ignorée' : 'À venir'}
@@ -500,7 +513,8 @@ export function DashboardScreen() {
                   aria-label="Fermer"
                 >×</button>
               </div>
-            )}
+              )
+            })()}
           </>
         )}
 
