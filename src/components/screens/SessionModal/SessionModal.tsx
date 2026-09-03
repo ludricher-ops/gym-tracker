@@ -92,13 +92,18 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       : currentSets.find((s) => s.completedAt == null) ?? null
 
   // Synchronise la saisie avec la série active.
+  // Number() requis : les données IDB legacy peuvent stocker weightKg/reps comme strings.
   useEffect(() => {
     if (activeSet) {
-      setInputW(activeSet.weightKg)
+      setInputW(Number(activeSet.weightKg))
       setInputR(
-        activeSet.reps !== 0 ? activeSet.reps : trackingType === 'time' ? targetDurationSec : 0,
+        Number(activeSet.reps) !== 0
+          ? Number(activeSet.reps)
+          : trackingType === 'time'
+            ? targetDurationSec
+            : 0,
       )
-      setInputRpe(activeSet.rpe ?? null)
+      setInputRpe(activeSet.rpe != null ? Number(activeSet.rpe) : null)
       exerciseTimer.skip()
     }
   }, [activeSet?.id]) // eslint-disable-line react-hooks/exhaustive-deps

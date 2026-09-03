@@ -25,8 +25,10 @@ export function Stepper({
   format,
   ariaLabel,
 }: StepperProps) {
+  // Coerce à number : les données IDB peuvent stocker des strings (legacy)
+  const num = Number(value)
   const clamp = (n: number) => Math.max(min, Math.min(max, n))
-  const round = (n: number) => Number(n.toFixed(3))
+  const round = (n: number) => Number(Number(n).toFixed(3))
 
   return (
     <div className="gt-stepper">
@@ -34,21 +36,21 @@ export function Stepper({
         type="button"
         className="gt-stepper__btn"
         aria-label={`${ariaLabel ?? ''} diminuer`}
-        disabled={value <= min}
-        onClick={() => onChange(clamp(round(value - step)))}
+        disabled={num <= min}
+        onClick={() => onChange(clamp(round(num - step)))}
       >
         <Icon name="minus" size={20} />
       </button>
       <span className="gt-stepper__value" aria-label={ariaLabel} aria-live="polite">
-        {format ? format(value) : value.toFixed(decimals)}
+        {format ? format(num) : num.toFixed(decimals)}
         {!format && unit && <span className="gt-stepper__unit"> {unit}</span>}
       </span>
       <button
         type="button"
         className="gt-stepper__btn"
         aria-label={`${ariaLabel ?? ''} augmenter`}
-        disabled={value >= max}
-        onClick={() => onChange(clamp(round(value + step)))}
+        disabled={num >= max}
+        onClick={() => onChange(clamp(round(num + step)))}
       >
         <Icon name="plus" size={20} />
       </button>
