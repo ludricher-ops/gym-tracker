@@ -55,7 +55,7 @@ export function StatsScreen() {
       const wStart = currentWeekStart - offset * 7 * 86_400_000
       const wEnd = wStart + 7 * 86_400_000
       const vol = store.sessions
-        .filter((s) => s.startedAt >= wStart && s.startedAt < wEnd)
+        .filter((s) => s.endedAt != null && s.startedAt >= wStart && s.startedAt < wEnd)
         .reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
       return { vol, offset, isCurrent: offset === 0 }
     })
@@ -118,7 +118,7 @@ export function StatsScreen() {
     const selEnd = selStart + 7 * 86_400_000
 
     const weekSessions = store.sessions.filter(
-      (s) => s.startedAt >= selStart && s.startedAt < selEnd,
+      (s) => s.endedAt != null && s.startedAt >= selStart && s.startedAt < selEnd,
     )
     const weekVolume = weekSessions.reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
     const weekPRCount = store.personalRecords.filter(

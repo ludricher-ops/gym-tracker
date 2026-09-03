@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useTheme } from './hooks/useTheme'
 import { useSync } from './hooks/useSync'
 import { StoreProvider, useStore } from './hooks/useStore'
@@ -9,6 +10,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { SessionModal } from './components/screens/SessionModal/SessionModal'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { LoginScreen } from './components/screens/LoginScreen'
+import { RESUME_WINDOW_MS } from './utils/sessionOps'
 
 export function App() {
   return (
@@ -61,6 +63,24 @@ function AppShell() {
   const store = useStore()
   useTheme(store.settings.preferences.theme, store.settings.preferences.accentColor)
   useSync(store.reload)
+
+  // Nettoyage automatique des sessions orphelines : démarrées mais jamais
+  // terminées et hors de la fenêtre de reprise (> 12 h). Ces sessions
+  // fantômes ne s'affichent pas dans l'historique mais faussent les stats.
+  const cleanedRef = useRef(false)
+  useEffect(() => {
+    if (cleanedRef.current) return
+    cleanedRef.current = true
+    const now = Date.now()
+    const orphans = store.sessions.filter(
+      (s) => s.endedAt == null && now - s.startedAt > RESUME_WINDOW_MS,
+    )
+    for (const s of orphans) {
+      void store.session.remove(s.id)
+    }
+  // On lit store une seule fois au montage — dépendances intentionnellement vides.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const nav = useNavigation()
   const Screen = SCREENS[nav.currentScreen.name]
