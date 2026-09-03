@@ -30,6 +30,11 @@ export function SessionRecapScreen({ params }: ScreenProps) {
   const [editDate, setEditDate] = useState(
     recap ? localDayKey(recap.session.startedAt) : '',
   )
+  const [editTime, setEditTime] = useState(() => {
+    if (!recap) return ''
+    const d = new Date(recap.session.startedAt)
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  })
   const [editDuration, setEditDuration] = useState(
     recap ? Math.round((recap.session.durationSec ?? 0) / 60) : 0,
   )
@@ -70,11 +75,15 @@ export function SessionRecapScreen({ params }: ScreenProps) {
 
   const saveEdit = async () => {
     const [y, m, d] = editDate.split('-').map(Number)
+    const [hh, mm] = editTime.split(':').map(Number)
     let startedAt = session.startedAt
     if (y && m && d) {
       const orig = new Date(session.startedAt)
       startedAt = new Date(
-        y, m - 1, d, orig.getHours(), orig.getMinutes(), orig.getSeconds(),
+        y, m - 1, d,
+        Number.isFinite(hh) ? hh : orig.getHours(),
+        Number.isFinite(mm) ? mm : orig.getMinutes(),
+        0,
       ).getTime()
     }
     const durationSec = Math.max(0, Math.round(editDuration * 60))
@@ -329,6 +338,18 @@ export function SessionRecapScreen({ params }: ScreenProps) {
                 className="gt-input"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="gt-field">
+              <label className="gt-field__label" htmlFor="edit-time">
+                Heure de début
+              </label>
+              <input
+                id="edit-time"
+                type="time"
+                className="gt-input"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
               />
             </div>
             <div className="gt-field">
