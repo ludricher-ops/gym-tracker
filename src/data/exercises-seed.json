@@ -1,103 +1,2192 @@
 [
-  { "id": "seed-bench-barbell", "name": "Développé couché barre", "primaryMuscle": "chest", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-incline-bench-barbell", "name": "Développé incliné barre", "primaryMuscle": "chest_upper", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-decline-bench-barbell", "name": "Développé décliné barre", "primaryMuscle": "chest_lower", "secondaryMuscles": ["triceps"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-bench-dumbbell", "name": "Développé couché haltères", "primaryMuscle": "chest", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-incline-bench-dumbbell", "name": "Développé incliné haltères", "primaryMuscle": "chest_upper", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-fly-dumbbell", "name": "Écarté haltères", "primaryMuscle": "chest", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-fly-cable", "name": "Écarté poulie", "primaryMuscle": "chest", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-pec-deck", "name": "Pec deck", "primaryMuscle": "chest", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-pushup", "name": "Pompes", "primaryMuscle": "chest", "secondaryMuscles": ["triceps", "core"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-dips", "name": "Dips", "primaryMuscle": "chest_lower", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "bodyweight", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-pullup", "name": "Tractions", "primaryMuscle": "back_width", "secondaryMuscles": ["biceps", "forearms"], "equipment": "bodyweight", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-lat-pulldown", "name": "Tirage vertical", "primaryMuscle": "back_width", "secondaryMuscles": ["biceps"], "equipment": "cable", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-row-barbell", "name": "Rowing barre", "primaryMuscle": "back_thickness", "secondaryMuscles": ["biceps", "back_width"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-row-dumbbell", "name": "Rowing haltère", "primaryMuscle": "back_thickness", "secondaryMuscles": ["biceps", "back_width"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-row-cable", "name": "Tirage horizontal poulie", "primaryMuscle": "back_thickness", "secondaryMuscles": ["biceps"], "equipment": "cable", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-row-tbar", "name": "Rowing T-bar", "primaryMuscle": "back_thickness", "secondaryMuscles": ["biceps", "back_width"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-row-machine", "name": "Rowing machine", "primaryMuscle": "back_thickness", "secondaryMuscles": ["biceps"], "equipment": "machine", "category": "compound", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-deadlift", "name": "Soulevé de terre", "primaryMuscle": "back", "secondaryMuscles": ["hamstrings", "glutes", "back_thickness"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-pullover", "name": "Pull-over haltère", "primaryMuscle": "back_width", "secondaryMuscles": ["chest"], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-shrug", "name": "Haussements d'épaules", "primaryMuscle": "back", "secondaryMuscles": ["forearms"], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-ohp-barbell", "name": "Développé militaire barre", "primaryMuscle": "shoulders", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-shoulder-press-dumbbell", "name": "Développé épaules haltères", "primaryMuscle": "shoulders", "secondaryMuscles": ["triceps"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-arnold-press", "name": "Développé Arnold", "primaryMuscle": "shoulders", "secondaryMuscles": ["triceps", "shoulders_front"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-lateral-raise", "name": "Élévations latérales", "primaryMuscle": "shoulders_lateral", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-lateral-raise-cable", "name": "Élévations latérales poulie", "primaryMuscle": "shoulders_lateral", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-front-raise", "name": "Élévations frontales", "primaryMuscle": "shoulders_front", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-rear-delt-fly", "name": "Oiseau (buste penché)", "primaryMuscle": "shoulders_rear", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-face-pull", "name": "Face pull", "primaryMuscle": "shoulders_rear", "secondaryMuscles": ["back_thickness"], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-curl-barbell", "name": "Curl barre", "primaryMuscle": "biceps", "secondaryMuscles": ["forearms"], "equipment": "barbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-curl-dumbbell", "name": "Curl haltères", "primaryMuscle": "biceps", "secondaryMuscles": ["forearms"], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-curl-hammer", "name": "Curl marteau", "primaryMuscle": "biceps", "secondaryMuscles": ["forearms"], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-curl-preacher", "name": "Curl pupitre", "primaryMuscle": "biceps", "secondaryMuscles": [], "equipment": "barbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-curl-cable", "name": "Curl poulie", "primaryMuscle": "biceps", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-curl-incline", "name": "Curl incliné haltères", "primaryMuscle": "biceps", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-curl-concentration", "name": "Curl concentration", "primaryMuscle": "biceps", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-triceps-pushdown", "name": "Extension triceps poulie", "primaryMuscle": "triceps", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-triceps-rope", "name": "Extension triceps corde", "primaryMuscle": "triceps", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-skullcrusher", "name": "Barre au front", "primaryMuscle": "triceps", "secondaryMuscles": [], "equipment": "barbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-triceps-overhead", "name": "Extension triceps nuque", "primaryMuscle": "triceps", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-triceps-kickback", "name": "Kickback triceps", "primaryMuscle": "triceps", "secondaryMuscles": [], "equipment": "dumbbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-close-grip-bench", "name": "Développé couché prise serrée", "primaryMuscle": "triceps", "secondaryMuscles": ["chest"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-triceps-dips", "name": "Dips triceps", "primaryMuscle": "triceps", "secondaryMuscles": ["chest_lower"], "equipment": "bodyweight", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-wrist-curl", "name": "Curl poignets", "primaryMuscle": "forearms", "secondaryMuscles": [], "equipment": "barbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-reverse-wrist-curl", "name": "Extension poignets", "primaryMuscle": "forearms", "secondaryMuscles": [], "equipment": "barbell", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-squat-barbell", "name": "Squat barre", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "hamstrings", "core"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-front-squat", "name": "Squat avant", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "core"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-leg-press", "name": "Presse à cuisses", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "hamstrings"], "equipment": "machine", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-hack-squat", "name": "Hack squat", "primaryMuscle": "quads", "secondaryMuscles": ["glutes"], "equipment": "machine", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-lunges", "name": "Fentes", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "hamstrings"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-bulgarian-split-squat", "name": "Squat bulgare", "primaryMuscle": "quads", "secondaryMuscles": ["glutes"], "equipment": "dumbbell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-goblet-squat", "name": "Goblet squat", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "core"], "equipment": "kettlebell", "category": "compound", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-leg-extension", "name": "Leg extension", "primaryMuscle": "quads", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-romanian-deadlift", "name": "Soulevé de terre jambes tendues", "primaryMuscle": "hamstrings", "secondaryMuscles": ["glutes", "back_thickness"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-leg-curl-lying", "name": "Leg curl allongé", "primaryMuscle": "hamstrings", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-leg-curl-seated", "name": "Leg curl assis", "primaryMuscle": "hamstrings", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-good-morning", "name": "Good morning", "primaryMuscle": "hamstrings", "secondaryMuscles": ["glutes", "back_thickness"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-hip-thrust", "name": "Hip thrust", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings"], "equipment": "barbell", "category": "compound", "trackingType": "weight_reps", "popularity": 3 },
-  { "id": "seed-hip-abduction", "name": "Abduction hanches", "primaryMuscle": "glutes", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-glute-kickback", "name": "Kickback fessier poulie", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings"], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 1 },
-  { "id": "seed-calf-raise-standing", "name": "Mollets debout", "primaryMuscle": "calves", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-calf-raise-seated", "name": "Mollets assis", "primaryMuscle": "calves", "secondaryMuscles": [], "equipment": "machine", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-crunch", "name": "Crunch", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-plank", "name": "Planche", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "time", "popularity": 3 },
-  { "id": "seed-side-plank", "name": "Gainage latéral", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "time", "popularity": 2 },
-  { "id": "seed-leg-raise", "name": "Relevé de jambes", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-russian-twist", "name": "Russian twist", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1 },
-  { "id": "seed-ab-wheel", "name": "Roulette abdominale", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1 },
-  { "id": "seed-cable-crunch", "name": "Crunch à la poulie", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "cable", "category": "isolation", "trackingType": "weight_reps", "popularity": 2 },
-  { "id": "seed-hanging-leg-raise", "name": "Relevé de jambes suspendu", "primaryMuscle": "core", "secondaryMuscles": ["forearms"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-treadmill", "name": "Course (tapis)", "primaryMuscle": "cardio", "secondaryMuscles": [], "equipment": "machine", "category": "compound", "trackingType": "time", "popularity": 2 },
-  { "id": "seed-cycling", "name": "Vélo", "primaryMuscle": "cardio", "secondaryMuscles": [], "equipment": "machine", "category": "compound", "trackingType": "time", "popularity": 2 },
-  { "id": "seed-rowing-erg", "name": "Rameur", "primaryMuscle": "cardio", "secondaryMuscles": ["back_thickness"], "equipment": "machine", "category": "compound", "trackingType": "time", "popularity": 2 },
-  { "id": "seed-jump-rope", "name": "Corde à sauter", "primaryMuscle": "cardio", "secondaryMuscles": ["calves"], "equipment": "bodyweight", "category": "compound", "trackingType": "time", "popularity": 1 },
-  { "id": "seed-elliptical", "name": "Elliptique", "primaryMuscle": "cardio", "secondaryMuscles": [], "equipment": "machine", "category": "compound", "trackingType": "time", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-jumping-jacks", "name": "Jumping jacks", "primaryMuscle": "cardio", "secondaryMuscles": [], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-mountain-climbers", "name": "Mountain climbers", "primaryMuscle": "core", "secondaryMuscles": ["shoulders_front"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-inchworm", "name": "Inchworm", "primaryMuscle": "core", "secondaryMuscles": ["hamstrings", "shoulders_front"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-worlds-greatest-stretch", "name": "World's greatest stretch", "primaryMuscle": "core", "secondaryMuscles": ["quads", "shoulders"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-cat-cow", "name": "Cat-Cow", "primaryMuscle": "back", "secondaryMuscles": ["core"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-thoracic-rotation", "name": "Rotations thoraciques", "primaryMuscle": "back", "secondaryMuscles": ["core"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-superman", "name": "Superman", "primaryMuscle": "back", "secondaryMuscles": ["glutes"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-bird-dog", "name": "Bird dog", "primaryMuscle": "core", "secondaryMuscles": ["back", "glutes"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-dead-bug", "name": "Dead bug", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-glute-bridge", "name": "Glute bridge", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings", "core"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-clamshell", "name": "Clamshell", "primaryMuscle": "glutes", "secondaryMuscles": [], "equipment": "band", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-hip-9090", "name": "Hip 90/90", "primaryMuscle": "glutes", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-leg-swings", "name": "Leg swings", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-walking-lunges", "name": "Fentes marchées", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "hamstrings"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-bodyweight-squat", "name": "Squat poids du corps", "primaryMuscle": "quads", "secondaryMuscles": ["glutes", "core"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-good-morning-bw", "name": "Good morning poids du corps", "primaryMuscle": "hamstrings", "secondaryMuscles": ["glutes", "back"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-band-pull-apart", "name": "Band pull-apart", "primaryMuscle": "shoulders_rear", "secondaryMuscles": ["back_thickness"], "equipment": "band", "category": "isolation", "trackingType": "reps_only", "popularity": 2, "isWarmupExercise": true },
-  { "id": "seed-shoulder-circles", "name": "Cercles d'épaules", "primaryMuscle": "shoulders", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1, "isWarmupExercise": true },
-  { "id": "seed-bicycle-crunch", "name": "Crunch bicyclette", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-scissors", "name": "Ciseaux abdominaux", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1 },
-  { "id": "seed-heel-touch", "name": "Touche talons alternés", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1 },
-  { "id": "seed-vertical-leg-crunch", "name": "Crunch jambes verticales", "primaryMuscle": "core", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 1 },
-  { "id": "seed-donkey-kick", "name": "Donkey kick", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings"], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-fire-hydrant", "name": "Fire hydrant", "primaryMuscle": "glutes", "secondaryMuscles": [], "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-curtsy-lunge", "name": "Fente curtsy", "primaryMuscle": "glutes", "secondaryMuscles": ["quads"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-hip-thrust-bw", "name": "Hip thrust poids du corps", "primaryMuscle": "glutes", "secondaryMuscles": ["hamstrings", "core"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2 },
-  { "id": "seed-burpee", "name": "Burpee", "primaryMuscle": "cardio", "secondaryMuscles": ["chest", "core", "quads"], "equipment": "bodyweight", "category": "compound", "trackingType": "reps_only", "popularity": 2 }
+  {
+    "id": "seed-band-pull-apart",
+    "name": "Band pull-apart",
+    "primaryMuscle": "shoulders_rear",
+    "secondaryMuscles": [
+      "back_thickness"
+    ],
+    "equipment": "band",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Band-pull-apart.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-skullcrusher",
+    "name": "Barre au front",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Skull-Crusher.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bird-dog",
+    "name": "Bird dog",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "back",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/07/Bird-Dog.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-burpees",
+    "name": "Burpees",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [
+      "core",
+      "chest",
+      "quads"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/burpees.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-cat-cow",
+    "name": "Cat-Cow",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/cat-cow.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-shoulder-circles",
+    "name": "Cercles d'épaules",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-scissors",
+    "name": "Ciseaux abdominaux",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/12/Leg-Scissors.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-clamshell",
+    "name": "Clamshell",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [],
+    "equipment": "band",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1
+  },
+  {
+    "id": "seed-jump-rope",
+    "name": "Corde à sauter",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/10/Skip-Jump-Rope.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-treadmill",
+    "name": "Course (tapis)",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Treadmill-.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-crunch",
+    "name": "Crunch",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2015/11/Crunch.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-cable-crunch",
+    "name": "Crunch à la poulie",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Standing-Cable-Crunch.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bicycle-crunch",
+    "name": "Crunch bicyclette",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicycle-Crunch.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-vertical-leg-crunch",
+    "name": "Crunch jambes verticales",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1
+  },
+  {
+    "id": "seed-curl-barbell",
+    "name": "Curl barre",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-concentration",
+    "name": "Curl concentration",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-dumbbell",
+    "name": "Curl haltères",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-incline",
+    "name": "Curl incliné haltères",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Incline-Dumbbell-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-hammer",
+    "name": "Curl marteau",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-wrist-curl",
+    "name": "Curl poignets",
+    "primaryMuscle": "forearms",
+    "secondaryMuscles": [],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell-Wrist-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-cable",
+    "name": "Curl poulie",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/cable-curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curl-preacher",
+    "name": "Curl pupitre",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Preacher-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-dead-bug",
+    "name": "Dead bug",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Dead-Bug.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-arnold-press",
+    "name": "Développé Arnold",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Arnold-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bench-barbell",
+    "name": "Développé couché barre",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bench-dumbbell",
+    "name": "Développé couché haltères",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Press-1.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-close-grip-bench",
+    "name": "Développé couché prise serrée",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Bench-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-decline-bench-barbell",
+    "name": "Développé décliné barre",
+    "primaryMuscle": "chest_lower",
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/03/Decline-Barbell-Bench-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-shoulder-press-dumbbell",
+    "name": "Développé épaules haltères",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-incline-bench-barbell",
+    "name": "Développé incliné barre",
+    "primaryMuscle": "chest_upper",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Barbell-Bench-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-incline-bench-dumbbell",
+    "name": "Développé incliné haltères",
+    "primaryMuscle": "chest_upper",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Dumbbell-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-ohp-barbell",
+    "name": "Développé militaire barre",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/07/Barbell-Standing-Military-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-dips",
+    "name": "Dips",
+    "primaryMuscle": "chest_lower",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Chest-Dips.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-triceps-dips",
+    "name": "Dips triceps",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [
+      "chest_lower"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://www.docteur-fitness.com/wp-content/uploads/2021/09/dips-sur-banc.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-donkey-kick",
+    "name": "Donkey kick",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Donkey-Kicks.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-fly-dumbbell",
+    "name": "Écarté haltères",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Fly.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-fly-cable",
+    "name": "Écarté poulie",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crossover.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-front-raise",
+    "name": "Élévations frontales",
+    "primaryMuscle": "shoulders_front",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Front-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-lateral-raise",
+    "name": "Élévations latérales",
+    "primaryMuscle": "shoulders_lateral",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-lateral-raise-cable",
+    "name": "Élévations latérales poulie",
+    "primaryMuscle": "shoulders_lateral",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-elliptical",
+    "name": "Elliptique",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/10/Elliptical-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-reverse-wrist-curl",
+    "name": "Extension poignets",
+    "primaryMuscle": "forearms",
+    "secondaryMuscles": [],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Wrist-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-triceps-rope",
+    "name": "Extension triceps corde",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Rope-Pushdown.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-triceps-overhead",
+    "name": "Extension triceps nuque",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Seated-Dumbbell-Triceps-Extension.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788127560339,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-triceps-pushdown",
+    "name": "Extension triceps poulie",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pushdown.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-face-pull",
+    "name": "Face pull",
+    "primaryMuscle": "shoulders_rear",
+    "secondaryMuscles": [
+      "back_thickness"
+    ],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-curtsy-lunge",
+    "name": "Fente curtsy",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/09/curtsy-lunge.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-lunges",
+    "name": "Fentes",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/10/Static-Lunge.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-walking-lunges",
+    "name": "Fentes marchées",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/09/bodyweight-walking-lunge.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-fire-hydrant",
+    "name": "Fire hydrant",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Fire-Hydrant.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-football",
+    "name": "Football",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 0
+  },
+  {
+    "id": "seed-side-plank",
+    "name": "Gainage latéral",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Side-Plank-1.png",
+      "mime": "image/png",
+      "type": "photo",
+      "sizeBytes": 0,
+      "importedAt": 1788087708550,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-glute-bridge",
+    "name": "Glute bridge",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge-.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-goblet-squat",
+    "name": "Goblet squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "core"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/01/Dumbbell-Goblet-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-good-morning",
+    "name": "Good morning",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back_thickness"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-good-morning-bw",
+    "name": "Good morning poids du corps",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hack-squat",
+    "name": "Hack squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Sled-Hack-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-shrug",
+    "name": "Haussements d'épaules",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shrug.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-high-knees",
+    "name": "High knees",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [
+      "core",
+      "quads"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Run-in-Place.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hip-9090",
+    "name": "Hip 90/90",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/08/90-90-Hip-Stretch.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hip-thrust",
+    "name": "Hip thrust",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hip-thrust-bw",
+    "name": "Hip thrust poids du corps",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/04/bodyweight-hip-thrust.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-hollow-body",
+    "name": "Hollow body",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/HollowHold.png",
+      "mime": "image/png",
+      "type": "photo",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-inchworm",
+    "name": "Inchworm",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "hamstrings",
+      "shoulders_front"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/01/Inchworm.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-jumping-jacks",
+    "name": "Jumping jacks",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Jumping-jack.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-glute-kickback",
+    "name": "Kickback fessier poulie",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Hip-Extension.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-triceps-kickback",
+    "name": "Kickback triceps",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Kickback.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-curl-lying",
+    "name": "Leg curl allongé",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Leg-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788107894469,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-curl-seated",
+    "name": "Leg curl assis",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Seated-Leg-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-extension",
+    "name": "Leg extension",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/LEG-EXTENSION.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-swings",
+    "name": "Leg swings",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/06/Lateral-Leg-Swings.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hip-abduction",
+    "name": "Machine abducteurs",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/HiP-ABDUCTION-MACHINE.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788108041809,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hip-adduction-machine",
+    "name": "Machine adducteurs",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 0,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/HIP-ADDUCTION-MACHINE.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788106421016,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-calf-raise-seated",
+    "name": "Mollets assis",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Lever-Seated-Calf-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-calf-raise-standing",
+    "name": "Mollets debout",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Calf-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-mountain-climbers",
+    "name": "Mountain climbers",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "shoulders_front"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Mountain-climber.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-rear-delt-fly",
+    "name": "Oiseau (buste penché)",
+    "primaryMuscle": "shoulders_rear",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bent-Over-Lateral-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788127559840,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-pec-deck",
+    "name": "Pec deck",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-pike-pushup",
+    "name": "Pike push-ups",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Pike-Push-up.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-plank",
+    "name": "Planche",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/plank.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-pushup",
+    "name": "Pompes",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-press",
+    "name": "Presse à cuisses",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2015/11/Leg-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-pullover",
+    "name": "Pull-over haltère",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Pullover.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-rowing-erg",
+    "name": "Rameur",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [
+      "back_thickness"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Rowing-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-leg-raise",
+    "name": "Relevé de jambes",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-hanging-leg-raise",
+    "name": "Relevé de jambes suspendu",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Hanging-Leg-Raises.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-thoracic-rotation",
+    "name": "Rotations thoraciques",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1
+  },
+  {
+    "id": "seed-ab-wheel",
+    "name": "Roulette abdominale",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Ab-Wheel-Rollout.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-row-barbell",
+    "name": "Rowing barre",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps",
+      "back_width"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bent-Over-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-row-dumbbell",
+    "name": "Rowing haltère",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps",
+      "back_width"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bent-Over-Dumbbell-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788125313166,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-inverted-row",
+    "name": "Rowing inversé (table)",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-row-machine",
+    "name": "Rowing machine",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Row-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788087708550,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-row-tbar",
+    "name": "Rowing T-bar",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps",
+      "back_width"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/t-bar-rows.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-russian-twist",
+    "name": "Russian twist",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Russian-Twist.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-deadlift",
+    "name": "Soulevé de terre",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "hamstrings",
+      "glutes",
+      "back_thickness"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/souleve-de-terre.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-romanian-deadlift",
+    "name": "Soulevé de terre jambes tendues",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back_thickness"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/souleve-de-terre-jambes-tendues.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-front-squat",
+    "name": "Squat avant",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "core"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/front-squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-squat-barbell",
+    "name": "Squat barre",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings",
+      "core"
+    ],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bulgarian-split-squat",
+    "name": "Squat bulgare",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Bodyweight-Bulgarian-Split-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-bodyweight-squat",
+    "name": "Squat poids du corps",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "core"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/bodyweight-squat-full-version.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-jump-squat",
+    "name": "Squats sautés",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "calves",
+      "cardio"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-superman",
+    "name": "Superman",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Superman-exercise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-row-cable",
+    "name": "Tirage horizontal poulie",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "cable",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Cable-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-lat-pulldown",
+    "name": "Tirage vertical",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "cable",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lat-Pulldown.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-heel-touch",
+    "name": "Touche talons alternés",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Heel-Touch.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-pullup",
+    "name": "Tractions",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-cycling",
+    "name": "Vélo",
+    "primaryMuscle": "cardio",
+    "secondaryMuscles": [],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Bike.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788082176352,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-wall-sit",
+    "name": "Wall sit",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "time",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png",
+      "mime": "image/png",
+      "type": "photo",
+      "sizeBytes": 0,
+      "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-worlds-greatest-stretch",
+    "name": "World's greatest stretch",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "quads",
+      "shoulders"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": true,
+    "popularity": 1
+  }
 ]

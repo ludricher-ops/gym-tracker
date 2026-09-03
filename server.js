@@ -193,6 +193,28 @@ app.post('/auth/register', async (req, res) => {
     const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' })
     res.cookie(COOKIE_NAME, token, COOKIE_OPTS)
     res.status(201).json({ id: userId, email: emailClean })
+
+    // Seed best-effort : copie les exercices de l'admin vers le nouvel utilisateur
+    // (updated_at=1 → remplaçable si l'utilisateur modifie sa propre copie).
+    // Non attendu — la réponse est déjà envoyée.
+    const ADMIN_ID = 1
+    if (pool && userId !== ADMIN_ID) {
+      pool.query(
+        `INSERT INTO sync_records (user_id, store, id, data, updated_at)
+         SELECT $1, store, id,
+                jsonb_set(data, '{updatedAt}', '1'::jsonb) || '{"dirty":true}'::jsonb,
+                1
+           FROM sync_records
+          WHERE user_id = $2
+            AND store = 'exercises'
+            AND (data->>'deleted')::boolean IS NOT TRUE
+         ON CONFLICT (user_id, store, id) DO NOTHING`,
+        [userId, ADMIN_ID],
+      ).then(r => {
+        if (r.rowCount > 0)
+          console.log(`[register] ${r.rowCount} exercice(s) seedé(s) → user ${userId}`)
+      }).catch(err => console.error('[register] seed exercises:', err.message))
+    }
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email déjà utilisé' })
     console.error('auth/register:', err.message)
