@@ -27,7 +27,10 @@ export function ProgramsLibraryScreen() {
     [store.programs, match],
   )
   const templates = useMemo(
-    () => store.programs.filter((p) => p.isTemplate && match(p.name, p.goal)),
+    () =>
+      store.programs
+        .filter((p) => p.isTemplate && match(p.name, p.goal))
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
     [store.programs, match],
   )
 
