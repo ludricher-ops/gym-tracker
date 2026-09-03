@@ -29,7 +29,7 @@ export function buildExerciseStats(exerciseId: string, store: StoreApi): Exercis
   const bestPR =
     store.personalRecords
       .filter((p) => p.exerciseId === exerciseId && p.type === '1rm')
-      .sort((a, b) => b.estimated1RM - a.estimated1RM)[0] ?? null
+      .sort((a, b) => Number(b.estimated1RM) - Number(a.estimated1RM))[0] ?? null
 
   // Pré-indexage pour éviter l'itération O(sessions × sessionExercises × sets).
   // seBySession : sessionId → SessionExercise (premier match pour cet exercice)

@@ -51,7 +51,7 @@ export function ExerciseDetailScreen({ params }: ScreenProps) {
         {stats.bestPR && (
           <Card variant="accent">
             <p className="t-eyebrow" style={{ color: 'var(--accent-ink)', opacity: 0.7 }}>
-              Record · 1RM estimé {stats.bestPR.estimated1RM.toFixed(1)} kg
+              Record · 1RM estimé {Number(stats.bestPR.estimated1RM).toFixed(1)} kg
             </p>
             <p className="t-num" style={{ fontSize: 28, marginTop: 4 }}>
               {formatWeight(stats.bestPR.weightKg, weightUnit)} × {stats.bestPR.reps}
@@ -82,7 +82,7 @@ export function ExerciseDetailScreen({ params }: ScreenProps) {
                     year: 'numeric',
                   })}
                 </span>
-                <span className="t-caption">1RM {perf.best1RM.toFixed(0)} kg</span>
+                <span className="t-caption">1RM {Number(perf.best1RM).toFixed(0)} kg</span>
               </div>
               <div className="gt-chips" style={{ marginTop: 8 }}>
                 {perf.sets.map((s) => (

@@ -91,7 +91,7 @@ export function StatsScreen() {
                   {formatWeight(stats.bestPR.weightKg, weightUnit)} × {stats.bestPR.reps}
                 </p>
                 <p style={{ fontSize: 13, opacity: 0.85, marginTop: 2 }}>
-                  1RM estimé {stats.bestPR.estimated1RM.toFixed(1)} kg ·{' '}
+                  1RM estimé {Number(stats.bestPR.estimated1RM).toFixed(1)} kg ·{' '}
                   {new Date(stats.bestPR.achievedAt).toLocaleDateString('fr-FR')}
                 </p>
               </Card>
@@ -141,7 +141,7 @@ export function StatsScreen() {
                     day: 'numeric',
                     month: 'short',
                   })}
-                  value={`1RM ${perf.best1RM.toFixed(0)}`}
+                  value={`1RM ${Number(perf.best1RM).toFixed(0)}`}
                 />
               ))}
             </div>

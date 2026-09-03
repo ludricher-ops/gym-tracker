@@ -165,7 +165,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const exercisePR = currentSE
     ? store.personalRecords
         .filter((p) => p.exerciseId === currentSE.exerciseId && p.type === '1rm')
-        .sort((a, b) => b.estimated1RM - a.estimated1RM)[0]
+        .sort((a, b) => Number(b.estimated1RM) - Number(a.estimated1RM))[0]
     : undefined
 
   const canValidate = isValidSet(showWeight ? inputW : 0, inputR)
@@ -389,7 +389,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
                   </span>
                   <span className="t-caption">
-                    PR : {exercisePR ? `${exercisePR.estimated1RM.toFixed(1)} kg` : '—'}
+                    PR : {exercisePR ? `${Number(exercisePR.estimated1RM).toFixed(1)} kg` : '—'}
                   </span>
                 </div>
               </div>
