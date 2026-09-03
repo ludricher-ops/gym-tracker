@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { exercisesWithHistory, buildExerciseStats } from '../../utils/exerciseStats'
@@ -16,6 +16,14 @@ function startOfWeek(ts: number): number {
   d.setDate(d.getDate() + diff)
   d.setHours(0, 0, 0, 0)
   return d.getTime()
+}
+
+/** Label court pour une semaine passée (offset 0 = cette semaine). */
+function weekLabel(offset: number, weekStart: number): string {
+  if (offset === 0) return 'Cette semaine'
+  if (offset === 1) return 'Semaine dernière'
+  const d = new Date(weekStart - offset * 7 * 86_400_000)
+  return `Sem. du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
 }
 
 const MUSCLE_DISPLAY: { key: string; label: string; groups: MuscleGroup[] }[] = [
@@ -36,44 +44,26 @@ export function StatsScreen() {
   const store = useStore()
   const nav = useNavigation()
 
+  // 0 = semaine courante, 7 = il y a 7 semaines
+  const [weekOffset, setWeekOffset] = useState(0)
+
   const data = useMemo(() => {
     const now = Date.now()
-    const weekStart = startOfWeek(now)
-    const cutoff30 = now - 30 * 86_400_000
+    const currentWeekStart = startOfWeek(now)
 
-    // ── Cette semaine ────────────────────────────────────────────────────
-    const weekSessions = store.sessions.filter((s) => s.startedAt >= weekStart)
-    const weekVolume = weekSessions.reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
-    const weekPRCount = store.personalRecords.filter(
-      (p) => p.achievedAt >= weekStart && p.type === '1rm',
-    ).length
-
-    // ── Volume hebdo (8 semaines glissantes) ─────────────────────────────
+    // ── Volume 8 semaines (fixe, toujours les 8 dernières) ───────────────
     const weeklyVols = Array.from({ length: 8 }, (_, i) => {
-      const offset = 7 - i // offset en semaines depuis le début de semaine courant
-      const wStart = weekStart - offset * 7 * 86_400_000
+      const offset = 7 - i // 7 semaines ago → courant
+      const wStart = currentWeekStart - offset * 7 * 86_400_000
       const wEnd = wStart + 7 * 86_400_000
       const vol = store.sessions
         .filter((s) => s.startedAt >= wStart && s.startedAt < wEnd)
         .reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
-      return { vol, isCurrent: offset === 0 }
+      return { vol, offset, isCurrent: offset === 0 }
     })
     const maxVol = Math.max(...weeklyVols.map((w) => w.vol), 1)
 
-    // ── Muscles travaillés cette semaine ─────────────────────────────────
-    const weekSessionIds = new Set(weekSessions.map((s) => s.id))
-    const weekExerciseIds = new Set(
-      store.sessionExercises
-        .filter((se) => weekSessionIds.has(se.sessionId) && !se.isWarmup && !se.isAb)
-        .map((se) => se.exerciseId),
-    )
-    const hitMuscles = new Set<string>()
-    for (const exId of weekExerciseIds) {
-      const ex = store.exercises.find((e) => e.id === exId)
-      if (ex) hitMuscles.add(ex.primaryMuscle)
-    }
-
-    // ── Records récents (toutes exercices) ───────────────────────────────
+    // ── Records récents (fixe, toutes semaines) ───────────────────────────
     const recentPRs = [...store.personalRecords]
       .filter((p) => p.type === '1rm')
       .sort((a, b) => b.achievedAt - a.achievedAt)
@@ -82,13 +72,12 @@ export function StatsScreen() {
         id: pr.id,
         exerciseName: store.exercises.find((e) => e.id === pr.exerciseId)?.name ?? '?',
         estimated1RM: Number(pr.estimated1RM),
-        weightKg: pr.weightKg,
-        reps: pr.reps,
         achievedAt: pr.achievedAt,
         exerciseId: pr.exerciseId,
       }))
 
-    // ── Progression 30 jours ─────────────────────────────────────────────
+    // ── Progression 30 jours (fixe, toujours depuis aujourd'hui) ─────────
+    const cutoff30 = now - 30 * 86_400_000
     const historyIds = exercisesWithHistory(store)
     const recentSessionIds = new Set(
       store.sessions.filter((s) => s.startedAt >= cutoff30).map((s) => s.id),
@@ -102,7 +91,6 @@ export function StatsScreen() {
         )
         .map((se) => se.exerciseId),
     )
-
     const progressions = [...recentExerciseIds]
       .map((exId) => {
         const stats = buildExerciseStats(exId, store)
@@ -122,17 +110,37 @@ export function StatsScreen() {
       .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0))
       .slice(0, 5)
 
-    return {
-      weekSessions,
-      weekVolume,
-      weekPRCount,
-      weeklyVols,
-      maxVol,
-      hitMuscles,
-      recentPRs,
-      progressions,
-    }
+    return { currentWeekStart, weeklyVols, maxVol, recentPRs, progressions }
   }, [store])
+
+  // ── Stats de la semaine sélectionnée (réactif à weekOffset) ──────────────
+  const weekStats = useMemo(() => {
+    const { currentWeekStart } = data
+    const selStart = currentWeekStart - weekOffset * 7 * 86_400_000
+    const selEnd = selStart + 7 * 86_400_000
+
+    const weekSessions = store.sessions.filter(
+      (s) => s.startedAt >= selStart && s.startedAt < selEnd,
+    )
+    const weekVolume = weekSessions.reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
+    const weekPRCount = store.personalRecords.filter(
+      (p) => p.achievedAt >= selStart && p.achievedAt < selEnd && p.type === '1rm',
+    ).length
+
+    const weekSessionIds = new Set(weekSessions.map((s) => s.id))
+    const weekExerciseIds = new Set(
+      store.sessionExercises
+        .filter((se) => weekSessionIds.has(se.sessionId) && !se.isWarmup && !se.isAb)
+        .map((se) => se.exerciseId),
+    )
+    const hitMuscles = new Set<string>()
+    for (const exId of weekExerciseIds) {
+      const ex = store.exercises.find((e) => e.id === exId)
+      if (ex) hitMuscles.add(ex.primaryMuscle)
+    }
+
+    return { weekSessions, weekVolume, weekPRCount, hitMuscles }
+  }, [store, data, weekOffset])
 
   // ── État vide ──────────────────────────────────────────────────────────────
   if (store.sessions.length === 0) {
@@ -152,8 +160,8 @@ export function StatsScreen() {
     )
   }
 
-  const { weekSessions, weekVolume, weekPRCount, weeklyVols, maxVol, hitMuscles, recentPRs, progressions } =
-    data
+  const { currentWeekStart, weeklyVols, maxVol, recentPRs, progressions } = data
+  const { weekSessions, weekVolume, weekPRCount, hitMuscles } = weekStats
 
   return (
     <div className="gt-screen">
@@ -163,58 +171,78 @@ export function StatsScreen() {
 
       <div className="gt-screen__scroll">
 
-        {/* ── Cette semaine ─────────────────────────────────────────────── */}
-        <p className="t-eyebrow" style={{ marginBottom: 8 }}>Cette semaine</p>
+        {/* ── Stats de la semaine sélectionnée ────────────────────────── */}
+        <p className="t-eyebrow" style={{ marginBottom: 8 }}>
+          {weekLabel(weekOffset, currentWeekStart)}
+        </p>
         <div className="gt-statrow">
           <StatTile label="Séances" value={String(weekSessions.length)} />
           <StatTile label="Volume" value={`${formatVolume(weekVolume)} kg`} />
           <StatTile label="Records" value={String(weekPRCount)} />
         </div>
 
-        {/* ── Volume 8 semaines ─────────────────────────────────────────── */}
+        {/* ── Volume 8 semaines — barres cliquables ─────────────────── */}
         <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Volume hebdomadaire</p>
         <Card style={{ padding: '12px 14px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 64 }}>
-            {weeklyVols.map((w, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 5,
-                  alignSelf: 'stretch',
-                  justifyContent: 'flex-end',
-                }}
-              >
-                <div
+            {weeklyVols.map((w, i) => {
+              const isSelected = w.offset === weekOffset
+              return (
+                <button
+                  key={i}
+                  type="button"
                   style={{
-                    width: '100%',
-                    borderRadius: '3px 3px 0 0',
-                    height: `${Math.max(3, Math.round((w.vol / maxVol) * 48))}px`,
-                    background: w.isCurrent ? 'var(--accent)' : 'var(--surface2)',
-                    transition: 'height 0.3s',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 5,
+                    alignSelf: 'stretch',
+                    justifyContent: 'flex-end',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    borderRadius: 4,
                   }}
-                />
-                <span
-                  style={{
-                    fontSize: 9,
-                    lineHeight: 1,
-                    color: w.isCurrent ? 'var(--accent)' : 'var(--dim)',
-                    fontWeight: w.isCurrent ? 700 : 400,
-                    flexShrink: 0,
-                  }}
+                  onClick={() => setWeekOffset(w.offset)}
+                  aria-label={weekLabel(w.offset, currentWeekStart)}
+                  aria-pressed={isSelected}
                 >
-                  {`S${i + 1}`}
-                </span>
-              </div>
-            ))}
+                  <div
+                    style={{
+                      width: '100%',
+                      borderRadius: '3px 3px 0 0',
+                      height: `${Math.max(3, Math.round((w.vol / maxVol) * 48))}px`,
+                      background: isSelected ? 'var(--accent)' : w.isCurrent ? 'var(--accent)' : 'var(--surface2)',
+                      opacity: isSelected ? 1 : w.isCurrent ? 0.45 : 0.7,
+                      outline: isSelected ? '2px solid var(--accent)' : 'none',
+                      outlineOffset: 2,
+                      transition: 'opacity 0.15s',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 9,
+                      lineHeight: 1,
+                      color: isSelected ? 'var(--accent)' : 'var(--dim)',
+                      fontWeight: isSelected ? 700 : 400,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {`S${i + 1}`}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </Card>
 
-        {/* ── Muscles cette semaine ─────────────────────────────────────── */}
-        <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Muscles travaillés cette semaine</p>
+        {/* ── Muscles de la semaine sélectionnée ───────────────────────── */}
+        <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>
+          Muscles travaillés
+        </p>
         <div className="gt-chips">
           {MUSCLE_DISPLAY.map((m) => {
             const hit = m.groups.some((g) => hitMuscles.has(g))
@@ -230,7 +258,7 @@ export function StatsScreen() {
           })}
         </div>
 
-        {/* ── Records récents ───────────────────────────────────────────── */}
+        {/* ── Records récents (tous temps) ─────────────────────────────── */}
         {recentPRs.length > 0 && (
           <>
             <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Records récents</p>
@@ -284,7 +312,7 @@ export function StatsScreen() {
           </>
         )}
 
-        {/* ── Progression 30 jours ──────────────────────────────────────── */}
+        {/* ── Progression 30 jours (fixe) ───────────────────────────────── */}
         {progressions.length > 0 && (
           <>
             <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Progression — 30 jours</p>
@@ -322,9 +350,7 @@ export function StatsScreen() {
                           padding: '4px 10px',
                           borderRadius: 20,
                           flexShrink: 0,
-                          background: isUp
-                            ? 'var(--accent)'
-                            : 'var(--surface2)',
+                          background: isUp ? 'var(--accent)' : 'var(--surface2)',
                           color: isUp
                             ? 'var(--accent-ink)'
                             : isNew
