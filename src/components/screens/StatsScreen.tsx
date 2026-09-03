@@ -3,19 +3,15 @@ import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { exercisesWithHistory, buildExerciseStats } from '../../utils/exerciseStats'
 import { formatVolume } from '../../utils/format'
+import { weekRange } from '../../utils/dates'
 import { Card, EmptyState, StatTile } from '../ui'
-import type { MuscleGroup } from '../../types'
+import type { MuscleGroup, WeekStart } from '../../types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Retourne le timestamp du lundi de la semaine contenant `ts`. */
-function startOfWeek(ts: number): number {
-  const d = new Date(ts)
-  const day = d.getDay() // 0 = dimanche
-  const diff = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
+/** Retourne le timestamp du début de la semaine contenant `ts`, selon la préférence utilisateur. */
+function startOfWeekPref(ts: number, pref: WeekStart): number {
+  return weekRange(ts, pref).start.getTime()
 }
 
 /** Label court pour une semaine passée (offset 0 = cette semaine). */
@@ -47,9 +43,11 @@ export function StatsScreen() {
   // 0 = semaine courante, 7 = il y a 7 semaines
   const [weekOffset, setWeekOffset] = useState(0)
 
+  const weekStartPref = store.settings.preferences.weekStart
+
   const data = useMemo(() => {
     const now = Date.now()
-    const currentWeekStart = startOfWeek(now)
+    const currentWeekStart = startOfWeekPref(now, weekStartPref)
 
     // ── Volume 8 semaines (fixe, toujours les 8 dernières) ───────────────
     const weeklyVols = Array.from({ length: 8 }, (_, i) => {
@@ -111,7 +109,7 @@ export function StatsScreen() {
       .slice(0, 5)
 
     return { currentWeekStart, weeklyVols, maxVol, recentPRs, progressions }
-  }, [store])
+  }, [store, weekStartPref])
 
   // ── Stats de la semaine sélectionnée (réactif à weekOffset) ──────────────
   const weekStats = useMemo(() => {
