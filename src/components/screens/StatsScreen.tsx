@@ -130,7 +130,7 @@ export function StatsScreen() {
     const weekSessionIds = new Set(weekSessions.map((s) => s.id))
     const weekExerciseIds = new Set(
       store.sessionExercises
-        .filter((se) => weekSessionIds.has(se.sessionId) && !se.isWarmup && !se.isAb)
+        .filter((se) => weekSessionIds.has(se.sessionId) && !se.isWarmup)
         .map((se) => se.exerciseId),
     )
     const hitMuscles = new Set<string>()
