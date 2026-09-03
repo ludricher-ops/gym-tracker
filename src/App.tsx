@@ -5,6 +5,7 @@ import { NavProvider, useNavigation } from './nav/useNavigation'
 import { TABS } from './nav/navigation'
 import { SCREENS } from './nav/screenRegistry'
 import { TabBar, EmptyState, UpdateBanner, ChromeGate } from './components/ui'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { SessionModal } from './components/screens/SessionModal/SessionModal'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { LoginScreen } from './components/screens/LoginScreen'
@@ -67,25 +68,29 @@ function AppShell() {
   return (
     <div className="gt-app">
       <div className="gt-app__screen">
-        {Screen ? (
-          <Screen params={nav.currentScreen.params} />
-        ) : (
-          <div className="gt-screen">
-            <div className="gt-screen__scroll">
-              <EmptyState
-                icon="info"
-                title="Écran à venir"
-                sub={`« ${nav.currentScreen.name} » sera disponible dans un prochain jalon.`}
-              />
+        <ErrorBoundary>
+          {Screen ? (
+            <Screen params={nav.currentScreen.params} />
+          ) : (
+            <div className="gt-screen">
+              <div className="gt-screen__scroll">
+                <EmptyState
+                  icon="info"
+                  title="Écran à venir"
+                  sub={`« ${nav.currentScreen.name} » sera disponible dans un prochain jalon.`}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </ErrorBoundary>
       </div>
       {!nav.modal && (
         <TabBar tabs={TABS} active={nav.activeTab} onSelect={nav.switchTab} />
       )}
       {nav.modal?.name === 'session' && typeof nav.modal.params?.sessionId === 'string' && (
-        <SessionModal sessionId={nav.modal.params.sessionId} />
+        <ErrorBoundary>
+          <SessionModal sessionId={nav.modal.params.sessionId} />
+        </ErrorBoundary>
       )}
       <UpdateBanner />
     </div>
