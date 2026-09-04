@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 interface StatTileProps {
   label: string
   value: string
@@ -5,11 +7,13 @@ interface StatTileProps {
   delta?: number
   /** Suffixe du delta, ex. " séances". */
   deltaUnit?: string
+  /** Surcharge de style inline (ex. fond teinté sur carte accent). */
+  style?: CSSProperties
 }
 
-export function StatTile({ label, value, delta, deltaUnit }: StatTileProps) {
+export function StatTile({ label, value, delta, deltaUnit, style }: StatTileProps) {
   return (
-    <div className="gt-stat">
+    <div className="gt-stat" style={style}>
       <div className="gt-stat__value">{value}</div>
       <div className="gt-stat__label">{label}</div>
       {delta != null && delta !== 0 && (

@@ -178,25 +178,28 @@ export function SessionRecapScreen({ params }: ScreenProps) {
               Semaine {session.programWeek}
             </p>
           )}
-          <div className="gt-statrow" style={{ marginTop: 12 }}>
+          <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
             <StatTile
               label="Volume"
               value={`${formatVolume(recap.totalVolumeKg)} kg`}
               delta={previous ? Math.round(recap.totalVolumeKg - previous.volumeKg) : undefined}
+              style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
             />
             <StatTile
               label="Durée"
-              value={formatDuration(recap.durationSec)}
+              value={formatDuration(recap.durationSec).replace(/:\d{2}$/, '')}
               delta={
                 previous
                   ? Math.round((recap.durationSec - previous.durationSec) / 60)
                   : undefined
               }
               deltaUnit=" min"
+              style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
             />
             <StatTile
               label="RPE moyen"
               value={recap.avgRPE != null ? recap.avgRPE.toFixed(1) : '—'}
+              style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
             />
           </div>
         </Card>

@@ -249,17 +249,19 @@ export function DashboardScreen() {
           </h1>
         </div>
         {streak > 0 && (
+          /* Tuile streak : fond surface, layout horizontal icône + valeur/label */
           <div
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, color: 'var(--accent)' }}
+            className="gt-stat"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 'var(--gap-tile)', flex: 'none', border: 'none' }}
             title="Jours consécutifs"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Icon name="trend" size={18} />
-              <span className="t-num" style={{ fontSize: 'var(--fs-title)', lineHeight: 1 }}>
-                {streak}
-              </span>
+            <div style={{ color: 'var(--accent)', flexShrink: 0, display: 'flex' }}>
+              <Icon name="flame" size={20} />
             </div>
-            <span className="t-eyebrow" style={{ color: 'var(--accent)', opacity: 0.8 }}>jours</span>
+            <div>
+              <div className="gt-stat__value">{streak}</div>
+              <div className="gt-stat__label">JOURS</div>
+            </div>
           </div>
         )}
       </div>
@@ -291,15 +293,15 @@ export function DashboardScreen() {
               <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
                 {/* 75 % accent + 25 % accent-ink → vert olive assorti, légèrement plus sombre */}
                 <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>{scheduledExos}</div>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>{scheduledExos}</div>
                   <div className="gt-stat__label">EXOS</div>
                 </div>
                 <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>{scheduledSeries}</div>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>{scheduledSeries}</div>
                   <div className="gt-stat__label">SÉRIES</div>
                 </div>
                 <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>~{scheduledDurMin}&apos;</div>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>~{scheduledDurMin}&apos;</div>
                   <div className="gt-stat__label">DURÉE</div>
                 </div>
               </div>
@@ -681,7 +683,7 @@ export function DashboardScreen() {
             label="Volume kg"
             value={abbrevVol(current.volumeKg)}
           />
-          <StatTile label="Temps" value={formatDuration(current.timeSec)} />
+          <StatTile label="Temps" value={formatDuration(current.timeSec).replace(/:\d{2}$/, '')} />
         </div>
 
         {/* ── Séances récentes ─────────────────────────────────────────── */}
