@@ -182,6 +182,12 @@ const PROGRAM_NAMES: Record<ProgramGoal, string> = {
   fat_loss:    'Remise en forme',
 }
 
+const LEVEL_SUFFIX: Record<ProgramLevel, string> = {
+  beginner:     'Débutant',
+  intermediate: 'Intermédiaire',
+  advanced:     'Confirmé',
+}
+
 const GOAL_COLOR_INDEX: Record<ProgramGoal, number> = {
   hypertrophy: 0, // #c8f000
   strength:    1, // #ff8a3d
@@ -202,6 +208,7 @@ function pickExercise(
   available: Exercise[],
   usedInWorkout: Set<string>,
   usedGlobally: Set<string>,
+  level: ProgramLevel,
 ): Exercise | null {
   // Filtrer par muscle cible
   let candidates = available.filter(
@@ -227,7 +234,11 @@ function pickExercise(
     return (b.popularity ?? 0) - (a.popularity ?? 0)
   })
 
-  return candidates[0] ?? null
+  // Débutants : toujours le mouvement le plus canonique (popularité max).
+  // Intermédiaires / Confirmés : variation dans le top-3 pour plus de diversité.
+  if (level === 'beginner') return candidates[0] ?? null
+  const pool = candidates.slice(0, 3)
+  return pool[Math.floor(Math.random() * pool.length)] ?? null
 }
 
 // ── DraftWE depuis un exercice + spec ─────────────────────────────────────────
@@ -287,7 +298,7 @@ export function generateProgramDraft(
 
     for (const slot of slots) {
       const spec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
-      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally)
+      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level)
       if (!ex) continue
 
       usedInWorkout.add(ex.id)
@@ -318,7 +329,7 @@ export function generateProgramDraft(
   }
 
   return {
-    name: PROGRAM_NAMES[goal]!,
+    name: `${PROGRAM_NAMES[goal]!} · ${LEVEL_SUFFIX[level]}`,
     goal,
     level,
     durationWeeks: DURATION_WEEKS[level]!,
