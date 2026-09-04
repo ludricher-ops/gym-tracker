@@ -3,7 +3,7 @@ import type { Session } from '../../../types'
 import type { StoreApi } from '../../../hooks/useStore'
 import { useSessionTimer } from '../../../hooks/useSessionTimer'
 import { formatDuration, formatVolume } from '../../../utils/format'
-import { Sheet, Button, Icon } from '../../ui'
+import { Button, Icon, SectionHeader, Sheet } from '../../ui'
 
 interface SessionOverviewSheetProps {
   session: Session
@@ -75,15 +75,9 @@ export function SessionOverviewSheet({
             const showAbLabel = r.se.isAb && !prev?.isAb
             return (
               <div key={r.se.id}>
-                {showWarmupLabel && (
-                  <p className="t-eyebrow" style={{ marginBottom: 4 }}>Échauffement</p>
-                )}
-                {showWorkLabel && (
-                  <p className="t-eyebrow" style={{ margin: '8px 0 4px' }}>Exercices</p>
-                )}
-                {showAbLabel && (
-                  <p className="t-eyebrow" style={{ margin: '8px 0 4px' }}>Abdominaux</p>
-                )}
+                {showWarmupLabel && <SectionHeader label="Échauffement" />}
+                {showWorkLabel && <SectionHeader label="Exercices" />}
+                {showAbLabel && <SectionHeader label="Abdominaux" />}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <button
                     type="button"
@@ -181,7 +175,7 @@ export function SessionOverviewSheet({
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="gt-stat">
-      <div className="gt-stat__value" style={{ fontSize: 19 }}>
+      <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
         {value}
       </div>
       <div className="gt-stat__label">{label}</div>

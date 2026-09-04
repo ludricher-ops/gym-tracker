@@ -72,7 +72,7 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
       <p className="t-eyebrow" style={{ color: 'var(--accent)' }}>
         Nouveau record
       </p>
-      <p className="t-title" style={{ fontSize: 22 }}>
+      <p className="t-title" style={{ fontSize: 'var(--fs-title)' }}>
         {pr.exerciseName}
       </p>
 
@@ -82,7 +82,7 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
 
       <div className="gt-statrow" style={{ width: '100%', maxWidth: 320 }}>
         <div className="gt-stat">
-          <div className="gt-stat__value" style={{ fontSize: 19 }}>
+          <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
             {isFirst ? '—' : `${pr.previousBest1RM.toFixed(1)}`}
           </div>
           <div className="gt-stat__label">1RM précédent</div>

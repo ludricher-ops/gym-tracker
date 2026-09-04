@@ -83,7 +83,7 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
         {streak > 0 && (
           <Card variant="flat" style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
-              <Icon name="flame" size={20} />
+              <Icon name="trend" size={20} />
               <span style={{ fontWeight: 600 }}>
                 Streak de {streak} jour{streak > 1 ? 's' : ''}
               </span>

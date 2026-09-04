@@ -12,7 +12,7 @@ import { shareOrCopy } from '../../utils/feedback'
 import { formatClock, formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
 import { uuid } from '../../utils/uuid'
-import { Button, Card, EmptyState, Icon, Sheet, StatTile } from '../ui'
+import { Button, Card, EmptyState, Icon, SectionHeader, Sheet, StatTile } from '../ui'
 import { SetEditSheet } from './SetEditSheet'
 
 export function SessionRecapScreen({ params }: ScreenProps) {
@@ -168,9 +168,9 @@ export function SessionRecapScreen({ params }: ScreenProps) {
 
       <div className="gt-screen__scroll">
         <Card variant="accent">
-          <p style={{ fontWeight: 700, fontSize: 18 }}>{session.name}</p>
+          <p style={{ fontWeight: 700, fontSize: 'var(--fs-title)' }}>{session.name}</p>
           {session.programWeek != null && (
-            <p style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
+            <p style={{ fontSize: 'var(--fs-caption)', opacity: 0.8, marginTop: 2 }}>
               Semaine {session.programWeek}
             </p>
           )}
@@ -214,9 +214,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
 
         {recap.muscleSlices.length > 0 && (
           <div>
-            <p className="t-eyebrow" style={{ marginBottom: 8 }}>
-              Volume par groupe musculaire
-            </p>
+            <SectionHeader label="Volume par groupe musculaire" />
             <div
               style={{
                 display: 'flex',
@@ -247,7 +245,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           </div>
         )}
 
-        <p className="t-eyebrow">Exercices</p>
+        <SectionHeader label="Exercices" />
         {recap.exercises.map((ex) => (
           <Card key={ex.sessionExerciseId}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
