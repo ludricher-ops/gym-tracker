@@ -290,16 +290,16 @@ export function DashboardScreen() {
             {scheduledExos > 0 && (
               <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
                 {/* 75 % accent + 25 % accent-ink → vert olive assorti, légèrement plus sombre */}
-                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledExos}</div>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>{scheduledExos}</div>
                   <div className="gt-stat__label">EXOS</div>
                 </div>
-                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledSeries}</div>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>{scheduledSeries}</div>
                   <div className="gt-stat__label">SÉRIES</div>
                 </div>
-                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>~{scheduledDurMin}&apos;</div>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>~{scheduledDurMin}&apos;</div>
                   <div className="gt-stat__label">DURÉE</div>
                 </div>
               </div>
