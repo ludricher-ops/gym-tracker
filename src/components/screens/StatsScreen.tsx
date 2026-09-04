@@ -4,17 +4,15 @@ import { useNavigation } from '../../nav/useNavigation'
 import { exercisesWithHistory, buildExerciseStats } from '../../utils/exerciseStats'
 import { formatVolume } from '../../utils/format'
 import { weekRange } from '../../utils/dates'
-import { Card, DeltaPill, EmptyState, SectionHeader, StatTile } from '../ui'
+import { Card, DateBlock, DeltaPill, EmptyState, Row, SectionHeader, StatTile } from '../ui'
 import type { MuscleGroup, WeekStart } from '../../types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Retourne le timestamp du début de la semaine contenant `ts`, selon la préférence utilisateur. */
 function startOfWeekPref(ts: number, pref: WeekStart): number {
   return weekRange(ts, pref).start.getTime()
 }
 
-/** Label court pour une semaine passée (offset 0 = cette semaine). */
 function weekLabel(offset: number, weekStart: number): string {
   if (offset === 0) return 'Cette semaine'
   if (offset === 1) return 'Semaine dernière'
@@ -40,7 +38,6 @@ export function StatsScreen() {
   const store = useStore()
   const nav = useNavigation()
 
-  // 0 = semaine courante, 7 = il y a 7 semaines
   const [weekOffset, setWeekOffset] = useState(0)
 
   const weekStartPref = store.settings.preferences.weekStart
@@ -51,7 +48,7 @@ export function StatsScreen() {
 
     // ── Volume 8 semaines (fixe, toujours les 8 dernières) ───────────────
     const weeklyVols = Array.from({ length: 8 }, (_, i) => {
-      const offset = 7 - i // 7 semaines ago → courant
+      const offset = 7 - i
       const wStart = currentWeekStart - offset * 7 * 86_400_000
       const wEnd = wStart + 7 * 86_400_000
       const vol = store.sessions
@@ -161,6 +158,10 @@ export function StatsScreen() {
   const { currentWeekStart, weeklyVols, maxVol, recentPRs, progressions } = data
   const { weekSessions, weekVolume, weekPRCount, hitMuscles } = weekStats
 
+  // Muscles touchés en premier, non touchés en second (atténués)
+  const hitMuscleDisplay = MUSCLE_DISPLAY.filter((m) => m.groups.some((g) => hitMuscles.has(g)))
+  const unhitMuscleDisplay = MUSCLE_DISPLAY.filter((m) => !m.groups.some((g) => hitMuscles.has(g)))
+
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
@@ -235,74 +236,49 @@ export function StatsScreen() {
           </div>
         </Card>
 
-        {/* ── Muscles de la semaine sélectionnée ───────────────────────── */}
+        {/* ── Muscles de la semaine — touchés en accent, non touchés atténués */}
         <SectionHeader label="Muscles travaillés" />
         <div className="gt-chips">
-          {MUSCLE_DISPLAY.map((m) => {
-            const hit = m.groups.some((g) => hitMuscles.has(g))
-            return (
-              <span
-                key={m.key}
-                className={`gt-chip${hit ? ' gt-chip--active' : ''}`}
-                style={{ fontSize: 'var(--fs-caption)', padding: '5px 12px', minHeight: 'unset' }}
-              >
-                {m.label}
-              </span>
-            )
-          })}
+          {hitMuscleDisplay.map((m) => (
+            <span
+              key={m.key}
+              className="gt-chip gt-chip--active"
+              style={{ fontSize: 'var(--fs-caption)', padding: '5px 12px', minHeight: 'unset' }}
+            >
+              {m.label}
+            </span>
+          ))}
+          {unhitMuscleDisplay.map((m) => (
+            <span
+              key={m.key}
+              className="gt-chip"
+              style={{ fontSize: 'var(--fs-caption)', padding: '5px 12px', minHeight: 'unset', opacity: 0.45 }}
+            >
+              {m.label}
+            </span>
+          ))}
         </div>
 
-        {/* ── Records récents (tous temps) ─────────────────────────────── */}
+        {/* ── Records récents — lignes avec DateBlock ───────────────────── */}
         {recentPRs.length > 0 && (
           <>
             <SectionHeader label="Records récents" />
-            <Card>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {recentPRs.map((pr, i) => (
-                  <button
-                    key={pr.id}
-                    type="button"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      color: 'inherit',
-                      textAlign: 'left',
-                    }}
-                    onClick={() => nav.navigate('exerciseDetail', { exerciseId: pr.exerciseId })}
-                  >
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: i === 0 ? 'var(--accent)' : 'var(--surface2)',
-                        border: i === 0 ? 'none' : '1.5px solid var(--dim)',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)' }}>
-                      {pr.exerciseName}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {recentPRs.map((pr) => (
+                <Row
+                  key={pr.id}
+                  leading={<DateBlock date={pr.achievedAt} />}
+                  label={pr.exerciseName}
+                  value={
+                    <span className="t-num" style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                      {pr.estimated1RM.toFixed(1)} kg
                     </span>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--accent)' }}>
-                        {pr.estimated1RM.toFixed(1)} kg 1RM
-                      </div>
-                      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', marginTop: 1 }}>
-                        {new Date(pr.achievedAt).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </Card>
+                  }
+                  chevron
+                  onClick={() => nav.navigate('exerciseDetail', { exerciseId: pr.exerciseId })}
+                />
+              ))}
+            </div>
           </>
         )}
 

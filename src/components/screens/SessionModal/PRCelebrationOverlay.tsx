@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react'
 import type { WeightUnit } from '../../../types'
 import { formatWeight } from '../../../utils/units'
 import { shareOrCopy } from '../../../utils/feedback'
-import { ACCENTS } from '../../../theme/accents'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import { Button, Icon } from '../../ui'
 
@@ -20,7 +19,8 @@ interface PRCelebrationOverlayProps {
   onContinue: () => void
 }
 
-const CONFETTI_COLORS = [...ACCENTS.map((a) => a.accent), '#ffffff']
+// Confettis : accent courant + blanc uniquement.
+const CONFETTI_COLORS = ['var(--accent)', '#ffffff']
 
 export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrationOverlayProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -32,7 +32,7 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
       Array.from({ length: 18 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length]!,
         duration: 2 + Math.random() * 1.8,
         delay: Math.random() * 1.5,
       })),
@@ -80,22 +80,33 @@ export function PRCelebrationOverlay({ pr, weightUnit, onContinue }: PRCelebrati
         {formatWeight(pr.weightKg, weightUnit)} × {pr.reps}
       </div>
 
-      <div className="gt-statrow" style={{ width: '100%', maxWidth: 320 }}>
-        <div className="gt-stat">
-          <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
-            {isFirst ? '—' : `${pr.previousBest1RM.toFixed(1)}`}
+      {/* Bloc avant → après avec delta accent */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, width: '100%', maxWidth: 320, justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="t-eyebrow" style={{ color: 'var(--muted)', marginBottom: 4 }}>Avant</div>
+          <div className="t-num" style={{ fontSize: 'var(--fs-title)' }}>
+            {isFirst ? '—' : pr.previousBest1RM.toFixed(1)}
           </div>
-          <div className="gt-stat__label">1RM précédent</div>
+          <div className="t-caption" style={{ color: 'var(--muted)' }}>1RM kg</div>
         </div>
-        <div className="gt-stat">
-          <div className="gt-stat__value" style={{ fontSize: 19, color: 'var(--accent)' }}>
+
+        <div style={{ color: 'var(--muted)', fontSize: 'var(--fs-title)' }}>→</div>
+
+        <div style={{ textAlign: 'center' }}>
+          <div className="t-eyebrow" style={{ color: 'var(--muted)', marginBottom: 4 }}>Après</div>
+          <div className="t-num" style={{ fontSize: 'var(--fs-title)', color: 'var(--accent)' }}>
             {pr.estimated1RM.toFixed(1)}
           </div>
-          <div className="gt-stat__label">
-            1RM estimé{!isFirst && delta > 0 ? ` (+${delta.toFixed(1)})` : ''}
-          </div>
+          <div className="t-caption" style={{ color: 'var(--muted)' }}>1RM kg</div>
         </div>
       </div>
+
+      {/* Delta mis en avant à var(--fs-title) en accent */}
+      {!isFirst && delta > 0 && (
+        <div className="t-num" style={{ fontSize: 'var(--fs-title)', color: 'var(--accent)', fontWeight: 700 }}>
+          +{delta.toFixed(1)} kg
+        </div>
+      )}
 
       <p className="t-caption" style={{ maxWidth: 280 }}>
         {isFirst

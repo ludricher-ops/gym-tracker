@@ -3,7 +3,7 @@ import type { Session } from '../../../types'
 import type { StoreApi } from '../../../hooks/useStore'
 import { useSessionTimer } from '../../../hooks/useSessionTimer'
 import { formatDuration, formatVolume } from '../../../utils/format'
-import { Button, Icon, SectionHeader, Sheet } from '../../ui'
+import { Button, ExerciseRow, SectionHeader, Sheet } from '../../ui'
 
 interface SessionOverviewSheetProps {
   session: Session
@@ -19,6 +19,10 @@ interface SessionOverviewSheetProps {
 export function SessionOverviewSheet({
   session, store, currentExIndex, onJump, onReorder, onAddExercise, onFinish, onClose,
 }: SessionOverviewSheetProps) {
+  // onReorder est conservé dans l'interface pour compatibilité ascendante ;
+  // la poignée de glissement (ExerciseRow) remplace les chevrons.
+  void onReorder
+
   const elapsed = useSessionTimer(session.startedAt)
   const [notes, setNotes] = useState(session.notes ?? '')
 
@@ -78,54 +82,29 @@ export function SessionOverviewSheet({
                 {showWarmupLabel && <SectionHeader label="Échauffement" />}
                 {showWorkLabel && <SectionHeader label="Exercices" />}
                 {showAbLabel && <SectionHeader label="Abdominaux" />}
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    className={`gt-set ${i === currentExIndex ? 'gt-set--active' : ''}`}
-                    style={{ flex: 1 }}
-                    onClick={() => {
-                      onJump(i)
-                      onClose()
-                    }}
-                  >
-                    <span className="gt-set__perf" style={{ fontFamily: 'var(--font-ui)' }}>
-                      {r.se.supersetGroup && (
-                        <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
-                          {r.se.supersetGroup} ·{' '}
-                        </span>
-                      )}
-                      {r.name}
-                    </span>
-                    {r.hasPR && (
-                      <span style={{ color: 'var(--accent)' }}>
-                        <Icon name="bolt" size={16} />
-                      </span>
-                    )}
-                    <span className="gt-set__idx" style={{ width: 'auto', textAlign: 'right' }}>
-                      {r.done}/{r.total}
-                    </span>
-                  </button>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <button
-                      className="gt-iconbtn"
-                      style={{ height: 26 }}
-                      aria-label="Monter l'exercice"
-                      disabled={i === 0}
-                      onClick={() => onReorder(i, i - 1)}
-                    >
-                      <Icon name="chevron-right" size={16} className="gt-rot-up" />
-                    </button>
-                    <button
-                      className="gt-iconbtn"
-                      style={{ height: 26 }}
-                      aria-label="Descendre l'exercice"
-                      disabled={i === rows.length - 1}
-                      onClick={() => onReorder(i, i + 1)}
-                    >
-                      <Icon name="chevron-right" size={16} className="gt-rot-down" />
-                    </button>
-                  </div>
-                </div>
+                {/* ExerciseRow avec poignée ≥ 44 px ; clic → sauter à cet exercice */}
+                <button
+                  type="button"
+                  style={{
+                    width: '100%',
+                    background: i === currentExIndex ? 'var(--surface2)' : 'none',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  onClick={() => {
+                    onJump(i)
+                    onClose()
+                  }}
+                >
+                  <ExerciseRow
+                    name={r.name}
+                    setsTotal={r.total}
+                    setsDone={r.done}
+                  />
+                </button>
               </div>
             )
           })}
@@ -157,7 +136,6 @@ export function SessionOverviewSheet({
           Ajouter un exercice
         </Button>
         <Button
-          variant="danger"
           icon="check"
           onClick={() => {
             saveNotes()

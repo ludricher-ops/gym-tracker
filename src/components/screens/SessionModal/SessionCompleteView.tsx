@@ -33,6 +33,8 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
     )
   }
 
+  const { session } = recap
+
   return (
     <div className="gt-screen">
       <div className="gt-screen__scroll" style={{ alignItems: 'center', textAlign: 'center' }}>
@@ -52,11 +54,16 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
           <Icon name="check" size={44} strokeWidth={2.6} />
         </div>
 
-        <p className="t-eyebrow" style={{ marginTop: 16 }}>
-          Séance terminée
+        {/* Beau boulot en eyebrow, nom de séance en display */}
+        <p className="t-eyebrow" style={{ marginTop: 16 }}>Beau boulot.</p>
+        <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
+          {session.name}
         </p>
-        <p className="t-display">Beau boulot.</p>
-        <p className="t-caption">{recap.session.name}</p>
+        {session.programWeek != null && (
+          <p className="t-caption" style={{ color: 'var(--muted)', marginTop: 2 }}>
+            Semaine {session.programWeek}
+          </p>
+        )}
 
         <div className="t-num" style={{ fontSize: 52, marginTop: 8 }}>
           {formatDuration(recap.durationSec)}
@@ -68,24 +75,31 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
           <StatTile label="Records" value={String(recap.prCount)} />
         </div>
 
+        {/* Faits : PR et streak — deux lignes avec chiffre mono à droite */}
         {recap.prCount > 0 && (
-          <Card variant="accent" style={{ width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Icon name="bolt" size={22} />
-              <span style={{ fontWeight: 700 }}>
-                {recap.prCount} nouveau{recap.prCount > 1 ? 'x' : ''} record
-                {recap.prCount > 1 ? 's' : ''} !
+          <Card variant="flat" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}><Icon name="bolt" size={18} /></span>
+                <span style={{ fontWeight: 600 }}>
+                  Record{recap.prCount > 1 ? 's' : ''} personnel{recap.prCount > 1 ? 's' : ''}
+                </span>
+              </div>
+              <span className="t-num" style={{ fontSize: 'var(--fs-title)', color: 'var(--accent)' }}>
+                {recap.prCount}
               </span>
             </div>
           </Card>
         )}
-
         {streak > 0 && (
           <Card variant="flat" style={{ width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
-              <Icon name="trend" size={20} />
-              <span style={{ fontWeight: 600 }}>
-                Streak de {streak} jour{streak > 1 ? 's' : ''}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}><Icon name="trend" size={18} /></span>
+                <span style={{ fontWeight: 600 }}>Streak</span>
+              </div>
+              <span className="t-num" style={{ fontSize: 'var(--fs-title)' }}>
+                {streak} j.
               </span>
             </div>
           </Card>

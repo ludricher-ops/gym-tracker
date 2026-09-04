@@ -12,7 +12,7 @@ import { shareOrCopy } from '../../utils/feedback'
 import { formatClock, formatDuration, formatVolume } from '../../utils/format'
 import { formatWeight } from '../../utils/units'
 import { uuid } from '../../utils/uuid'
-import { Button, Card, EmptyState, Icon, SectionHeader, Sheet, StatTile } from '../ui'
+import { Button, Card, EmptyState, Icon, PrimaryBar, SectionHeader, Sheet, StatTile, Swatch } from '../ui'
 import { SetEditSheet } from './SetEditSheet'
 
 export function SessionRecapScreen({ params }: ScreenProps) {
@@ -103,7 +103,6 @@ export function SessionRecapScreen({ params }: ScreenProps) {
     nav.back()
   }
 
-  // Édition des séries d'une séance passée (recalcule les totaux ensuite).
   const saveSet = async (updated: SetRecord) => {
     await store.set.save(updated)
     await recomputeSessionTotals(session, store)
@@ -151,52 +150,56 @@ export function SessionRecapScreen({ params }: ScreenProps) {
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
-        <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
+        <button className="gt-iconbtn" onClick={() => { saveNotes(); nav.back() }} aria-label="Retour">
           <Icon name="arrow" size={22} strokeWidth={1.8} />
         </button>
         <div style={{ flex: 1 }}>
           <h1 className="gt-topbar__title">{start.toLocaleDateString('fr-FR')}</h1>
-          <div className="t-caption">{timeRange}</div>
         </div>
         <button className="gt-iconbtn" onClick={() => setEditOpen(true)} aria-label="Modifier">
           <Icon name="edit" size={20} />
         </button>
         <button className="gt-iconbtn" onClick={share} aria-label="Partager">
-          <Icon name="copy" size={20} />
+          <Icon name="share" size={20} />
         </button>
       </div>
 
       <div className="gt-screen__scroll">
+        {/* ── Hero accent : date · plage horaire · nom · semaine · tuiles ── */}
         <Card variant="accent">
-          <p style={{ fontWeight: 700, fontSize: 'var(--fs-title)' }}>{session.name}</p>
+          <div className="t-eyebrow" style={{ opacity: 0.75 }}>
+            {timeRange}
+          </div>
+          <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
+            {session.name}
+          </p>
           {session.programWeek != null && (
             <p style={{ fontSize: 'var(--fs-caption)', opacity: 0.8, marginTop: 2 }}>
               Semaine {session.programWeek}
             </p>
           )}
+          <div className="gt-statrow" style={{ marginTop: 12 }}>
+            <StatTile
+              label="Volume"
+              value={`${formatVolume(recap.totalVolumeKg)} kg`}
+              delta={previous ? Math.round(recap.totalVolumeKg - previous.volumeKg) : undefined}
+            />
+            <StatTile
+              label="Durée"
+              value={formatDuration(recap.durationSec)}
+              delta={
+                previous
+                  ? Math.round((recap.durationSec - previous.durationSec) / 60)
+                  : undefined
+              }
+              deltaUnit=" min"
+            />
+            <StatTile
+              label="RPE moyen"
+              value={recap.avgRPE != null ? recap.avgRPE.toFixed(1) : '—'}
+            />
+          </div>
         </Card>
-
-        <div className="gt-statrow">
-          <StatTile
-            label="Volume"
-            value={`${formatVolume(recap.totalVolumeKg)} kg`}
-            delta={previous ? Math.round(recap.totalVolumeKg - previous.volumeKg) : undefined}
-          />
-          <StatTile
-            label="Durée"
-            value={formatDuration(recap.durationSec)}
-            delta={
-              previous
-                ? Math.round((recap.durationSec - previous.durationSec) / 60)
-                : undefined
-            }
-            deltaUnit=" min"
-          />
-          <StatTile
-            label="RPE moyen"
-            value={recap.avgRPE != null ? recap.avgRPE.toFixed(1) : '—'}
-          />
-        </div>
 
         {recap.prCount > 0 && (
           <Card variant="flat">
@@ -212,6 +215,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           </Card>
         )}
 
+        {/* ── Volume musculaire — barre + légende avec Swatch ──────────── */}
         {recap.muscleSlices.length > 0 && (
           <div>
             <SectionHeader label="Volume par groupe musculaire" />
@@ -236,8 +240,13 @@ export function SessionRecapScreen({ params }: ScreenProps) {
               ))}
             </div>
             <div className="gt-chips" style={{ marginTop: 8 }}>
-              {recap.muscleSlices.map((s) => (
-                <span key={s.region} className="t-caption">
+              {recap.muscleSlices.map((s, i) => (
+                <span
+                  key={s.region}
+                  className="t-caption"
+                  style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <Swatch opacity={1 - i * 0.16} />
                   {s.region} {Math.round(s.pct * 100)}%
                 </span>
               ))}
@@ -245,6 +254,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           </div>
         )}
 
+        {/* ── Exercices ────────────────────────────────────────────────── */}
         <SectionHeader label="Exercices" />
         {recap.exercises.map((ex) => (
           <Card key={ex.sessionExerciseId}>
@@ -263,15 +273,18 @@ export function SessionRecapScreen({ params }: ScreenProps) {
                   key={s.id}
                   type="button"
                   className={`gt-chip ${s.isPersonalRecord ? 'gt-chip--active' : ''}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 3 }}
                   onClick={() => setEditSet({ set: s, trackingType: ex.trackingType })}
                 >
-                  {s.isWarmup ? '🔥 ' : ''}
-                  {ex.trackingType === 'weight_reps'
-                    ? `${formatWeight(s.weightKg, weightUnit)} × ${s.reps}`
-                    : ex.trackingType === 'time'
-                      ? formatClock(s.reps)
-                      : `${s.reps} reps`}
-                  {s.isPersonalRecord ? ' ★' : ''}
+                  {s.isWarmup && <Icon name="flame" size={11} />}
+                  <span>
+                    {ex.trackingType === 'weight_reps'
+                      ? `${formatWeight(s.weightKg, weightUnit)} × ${s.reps}`
+                      : ex.trackingType === 'time'
+                        ? formatClock(s.reps)
+                        : `${s.reps} reps`}
+                  </span>
+                  {s.isPersonalRecord && <Icon name="trophy" size={11} />}
                 </button>
               ))}
               <button type="button" className="gt-chip" onClick={() => addSet(ex)}>
@@ -294,8 +307,11 @@ export function SessionRecapScreen({ params }: ScreenProps) {
             placeholder="Sensations, douleurs, points à retenir…"
           />
         </div>
+      </div>
 
-        {workoutTemplate && (
+      {/* ── Actions principales dans la barre fixe ───────────────────── */}
+      {workoutTemplate && (
+        <PrimaryBar>
           <Button
             icon="bolt"
             onClick={async () => {
@@ -306,11 +322,8 @@ export function SessionRecapScreen({ params }: ScreenProps) {
           >
             Refaire cette séance
           </Button>
-        )}
-        <Button variant="secondary" onClick={() => { saveNotes(); nav.back() }}>
-          Terminé
-        </Button>
-      </div>
+        </PrimaryBar>
+      )}
 
       {editOpen && (
         <Sheet title="Modifier la séance" onClose={() => setEditOpen(false)}>

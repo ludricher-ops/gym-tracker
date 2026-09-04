@@ -1,10 +1,10 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { addWeeks, localDayKey, weekRange } from '../../utils/dates'
 import { statsForWeek } from '../../utils/stats'
 import { formatDuration, formatVolume } from '../../utils/format'
-import { DateBlock, EmptyState, Heatmap, Icon, Row, type HeatmapCell } from '../ui'
+import { DateBlock, EmptyState, Heatmap, Icon, Row, SectionHeader, type HeatmapCell } from '../ui'
 
 const DAY_MS = 86_400_000
 
@@ -26,7 +26,6 @@ export function HistoryScreen() {
   }, [monthOffset])
   const monthLabel = month.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
-  // Jour entraîné → volume cumulé (pour l'intensité de la heatmap).
   const volumeByDay = useMemo(() => {
     const map = new Map<string, number>()
     for (const s of ended) {
@@ -50,6 +49,7 @@ export function HistoryScreen() {
         key,
         intensity: volumeByDay.has(key) ? 0.35 + 0.65 * (vol / maxDayVolume) : 0,
         title: key,
+        outOfMonth: new Date(t).getMonth() !== month.getMonth(),
       })
     }
     const grouped: HeatmapCell[][] = []
@@ -70,6 +70,9 @@ export function HistoryScreen() {
     const max = Math.max(1, ...bars.map((b) => b.volume))
     return bars.map((b) => ({ ...b, ratio: b.volume / max }))
   }, [ended, weekStart])
+
+  // Volume de la semaine courante (dernier bar)
+  const currentWeekVolume = volumeBars[3]?.volume ?? 0
 
   const monthSessions = ended.filter((s) => {
     const d = new Date(s.startedAt)
@@ -96,6 +99,7 @@ export function HistoryScreen() {
       </div>
 
       <div className="gt-screen__scroll">
+        {/* ── Navigation mois ──────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             className="gt-iconbtn"
@@ -115,12 +119,24 @@ export function HistoryScreen() {
           </button>
         </div>
 
-        <Heatmap weeks={weeks} selectedKey={selectedDay} onCellClick={handleDayClick} />
+        {/* ── Heatmap avec en-tête L M M J V S D ──────────────────────── */}
+        <Heatmap
+          weeks={weeks}
+          selectedKey={selectedDay}
+          onCellClick={handleDayClick}
+          showHeaders
+          weekStart={weekStart}
+        />
 
+        {/* ── Volume 4 semaines — chiffre courant en display + barres ──── */}
         <div>
-          <p className="t-eyebrow" style={{ marginBottom: 8 }}>
-            Volume — 4 dernières semaines
-          </p>
+          <SectionHeader label="Volume — 4 dernières semaines" />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 12 }}>
+            <span className="t-num" style={{ fontSize: 'var(--fs-display)', fontWeight: 700, lineHeight: 1 }}>
+              {Math.round(currentWeekVolume).toLocaleString('fr-FR')}
+            </span>
+            <span className="t-caption" style={{ color: 'var(--muted)' }}>kg cette semaine</span>
+          </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 90 }}>
             {volumeBars.map((b, i) => (
               <div key={i} style={{ flex: 1, textAlign: 'center' }}>
@@ -139,6 +155,7 @@ export function HistoryScreen() {
           </div>
         </div>
 
+        {/* ── Liste des séances du mois ────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p className="t-eyebrow" style={{ margin: 0 }}>
             {selectedDay
@@ -163,16 +180,24 @@ export function HistoryScreen() {
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {visibleSessions.map((s) => (
-              <Row
-                key={s.id}
-                leading={<DateBlock date={s.startedAt} />}
-                label={s.name}
-                value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
-                chevron
-                onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
-              />
-            ))}
+            {visibleSessions.map((s) => {
+              const start = new Date(s.startedAt)
+              const endTs = s.endedAt ? new Date(s.endedAt) : null
+              const timeRange = endTs
+                ? `${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} → ${endTs.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+                : start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+              return (
+                <Row
+                  key={s.id}
+                  leading={<DateBlock date={s.startedAt} />}
+                  label={s.name}
+                  sub={timeRange}
+                  value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
+                  chevron
+                  onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
+                />
+              )
+            })}
           </div>
         )}
       </div>
