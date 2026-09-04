@@ -4,7 +4,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import { exercisesWithHistory, buildExerciseStats } from '../../utils/exerciseStats'
 import { formatVolume } from '../../utils/format'
 import { weekRange } from '../../utils/dates'
-import { Card, EmptyState, StatTile } from '../ui'
+import { Card, DeltaPill, EmptyState, SectionHeader, StatTile } from '../ui'
 import type { MuscleGroup, WeekStart } from '../../types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ export function StatsScreen() {
       const vol = store.sessions
         .filter((s) => s.endedAt != null && s.startedAt >= wStart && s.startedAt < wEnd)
         .reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0)
-      return { vol, offset, isCurrent: offset === 0 }
+      return { vol, offset, isCurrent: offset === 0, wStart }
     })
     const maxVol = Math.max(...weeklyVols.map((w) => w.vol), 1)
 
@@ -170,9 +170,7 @@ export function StatsScreen() {
       <div className="gt-screen__scroll">
 
         {/* ── Stats de la semaine sélectionnée ────────────────────────── */}
-        <p className="t-eyebrow" style={{ marginBottom: 8 }}>
-          {weekLabel(weekOffset, currentWeekStart)}
-        </p>
+        <SectionHeader label={weekLabel(weekOffset, currentWeekStart)} />
         <div className="gt-statrow">
           <StatTile label="Séances" value={String(weekSessions.length)} />
           <StatTile label="Volume" value={`${formatVolume(weekVolume)} kg`} />
@@ -180,7 +178,7 @@ export function StatsScreen() {
         </div>
 
         {/* ── Volume 8 semaines — barres cliquables ─────────────────── */}
-        <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Volume hebdomadaire</p>
+        <SectionHeader label="Volume hebdomadaire" />
         <Card style={{ padding: '12px 14px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 64 }}>
             {weeklyVols.map((w, i) => {
@@ -222,14 +220,14 @@ export function StatsScreen() {
                   />
                   <span
                     style={{
-                      fontSize: 9,
+                      fontSize: 'var(--fs-eyebrow)',
                       lineHeight: 1,
                       color: isSelected ? 'var(--accent)' : 'var(--dim)',
                       fontWeight: isSelected ? 700 : 400,
                       flexShrink: 0,
                     }}
                   >
-                    {`S${i + 1}`}
+                    {new Date(w.wStart).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </span>
                 </button>
               )
@@ -238,9 +236,7 @@ export function StatsScreen() {
         </Card>
 
         {/* ── Muscles de la semaine sélectionnée ───────────────────────── */}
-        <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>
-          Muscles travaillés
-        </p>
+        <SectionHeader label="Muscles travaillés" />
         <div className="gt-chips">
           {MUSCLE_DISPLAY.map((m) => {
             const hit = m.groups.some((g) => hitMuscles.has(g))
@@ -248,7 +244,7 @@ export function StatsScreen() {
               <span
                 key={m.key}
                 className={`gt-chip${hit ? ' gt-chip--active' : ''}`}
-                style={{ fontSize: 12, padding: '5px 12px', minHeight: 'unset' }}
+                style={{ fontSize: 'var(--fs-caption)', padding: '5px 12px', minHeight: 'unset' }}
               >
                 {m.label}
               </span>
@@ -259,7 +255,7 @@ export function StatsScreen() {
         {/* ── Records récents (tous temps) ─────────────────────────────── */}
         {recentPRs.length > 0 && (
           <>
-            <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Records récents</p>
+            <SectionHeader label="Records récents" />
             <Card>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {recentPRs.map((pr, i) => (
@@ -289,14 +285,14 @@ export function StatsScreen() {
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text)' }}>
+                    <span style={{ flex: 1, fontSize: 'var(--fs-body)', color: 'var(--text)' }}>
                       {pr.exerciseName}
                     </span>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>
+                      <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--accent)' }}>
                         {pr.estimated1RM.toFixed(1)} kg 1RM
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+                      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', marginTop: 1 }}>
                         {new Date(pr.achievedAt).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'short',
@@ -313,10 +309,9 @@ export function StatsScreen() {
         {/* ── Progression 30 jours (fixe) ───────────────────────────────── */}
         {progressions.length > 0 && (
           <>
-            <p className="t-eyebrow" style={{ margin: '20px 0 8px' }}>Progression — 30 jours</p>
+            <SectionHeader label="Progression — 30 jours" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {progressions.map((prog) => {
-                const isUp = prog.delta !== null && prog.delta > 0
                 const isNew = prog.delta === null
                 return (
                   <Card
@@ -327,7 +322,7 @@ export function StatsScreen() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
-                            fontSize: 13,
+                            fontSize: 'var(--fs-body)',
                             fontWeight: 500,
                             color: 'var(--text)',
                             whiteSpace: 'nowrap',
@@ -337,33 +332,15 @@ export function StatsScreen() {
                         >
                           {prog.name}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', marginTop: 2 }}>
                           1RM estimé {prog.recentBest.toFixed(1)} kg
                         </div>
                       </div>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: '4px 10px',
-                          borderRadius: 20,
-                          flexShrink: 0,
-                          background: isUp ? 'var(--accent)' : 'var(--surface2)',
-                          color: isUp
-                            ? 'var(--accent-ink)'
-                            : isNew
-                              ? 'var(--muted)'
-                              : 'var(--dim)',
-                        }}
-                      >
-                        {isNew
-                          ? 'Nouveau'
-                          : prog.delta! > 0
-                            ? `+${prog.delta!.toFixed(1)} kg`
-                            : prog.delta === 0
-                              ? '='
-                              : `${prog.delta!.toFixed(1)} kg`}
-                      </span>
+                      {isNew ? (
+                        <span className="t-caption" style={{ color: 'var(--muted)', flexShrink: 0 }}>Nouveau</span>
+                      ) : (
+                        <DeltaPill value={prog.delta!} unit="kg" />
+                      )}
                     </div>
                   </Card>
                 )

@@ -4,7 +4,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import { addWeeks, localDayKey, weekRange } from '../../utils/dates'
 import { statsForWeek } from '../../utils/stats'
 import { formatDuration, formatVolume } from '../../utils/format'
-import { EmptyState, Heatmap, Icon, Row, type HeatmapCell } from '../ui'
+import { DateBlock, EmptyState, Heatmap, Icon, Row, type HeatmapCell } from '../ui'
 
 const DAY_MS = 86_400_000
 
@@ -60,11 +60,15 @@ export function HistoryScreen() {
   // Volume des 4 dernières semaines (par rapport à aujourd'hui).
   const volumeBars = useMemo(() => {
     const ref = Date.now()
-    const bars = [3, 2, 1, 0].map(
-      (w) => statsForWeek(ended, addWeeks(ref, -w), weekStart).volumeKg,
-    )
-    const max = Math.max(1, ...bars)
-    return bars.map((v) => ({ volume: v, ratio: v / max }))
+    const bars = [3, 2, 1, 0].map((w) => {
+      const ts = addWeeks(ref, -w)
+      return {
+        volume: statsForWeek(ended, ts, weekStart).volumeKg,
+        wStart: weekRange(ts, weekStart).start,
+      }
+    })
+    const max = Math.max(1, ...bars.map((b) => b.volume))
+    return bars.map((b) => ({ ...b, ratio: b.volume / max }))
   }, [ended, weekStart])
 
   const monthSessions = ended.filter((s) => {
@@ -127,8 +131,8 @@ export function HistoryScreen() {
                     borderRadius: 6,
                   }}
                 />
-                <div className="t-caption" style={{ fontSize: 10, marginTop: 4 }}>
-                  {formatVolume(b.volume)}
+                <div className="t-caption" style={{ fontSize: 'var(--fs-eyebrow)', marginTop: 4 }}>
+                  {b.wStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                 </div>
               </div>
             ))}
@@ -162,13 +166,8 @@ export function HistoryScreen() {
             {visibleSessions.map((s) => (
               <Row
                 key={s.id}
-                icon="dumbbell"
+                leading={<DateBlock date={s.startedAt} />}
                 label={s.name}
-                sub={new Date(s.startedAt).toLocaleDateString('fr-FR', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short',
-                })}
                 value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
                 chevron
                 onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}

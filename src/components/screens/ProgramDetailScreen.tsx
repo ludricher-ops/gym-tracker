@@ -42,25 +42,10 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     setEditingIconFor(null)
   }, [store, program])
 
-  if (!program) {
-    return (
-      <div className="gt-screen">
-        <div className="gt-topbar">
-          <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
-            <Icon name="arrow" size={22} strokeWidth={1.8} />
-          </button>
-          <h1 className="gt-topbar__title">Programme</h1>
-        </div>
-        <div className="gt-screen__scroll">
-          <EmptyState icon="info" title="Programme introuvable" />
-        </div>
-      </div>
-    )
-  }
-
-  const summary = programSummary(program, store)
+  // ── Hooks déplacés avant le return anticipé pour respecter les rules-of-hooks ──
   // Associe chaque workoutTemplate à son jour de semaine pour le tri et l'affichage
   const workoutsWithDay = useMemo(() => {
+    if (!program) return []
     const assignedIds = new Set(Object.values(program.weekTemplate).filter(Boolean) as string[])
     const dayOrder = Object.fromEntries(WEEKDAYS.map((d, i) => [d, i]))
     // wtId → premier jour de la semaine où cette séance apparaît
@@ -72,24 +57,9 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
       .filter((w) => w.programId === program.id && assignedIds.has(w.id))
       .map((w) => ({ wt: w, day: wtDay[w.id] ?? '' }))
       .sort((a, b) => (dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99))
-  }, [store.workoutTemplates, program.id, program.weekTemplate])
+  }, [store.workoutTemplates, program])
 
   const workouts = useMemo(() => workoutsWithDay.map((x) => x.wt), [workoutsWithDay])
-
-  const canEdit = !program.isTemplate || store.isAdmin
-
-  const del = async () => {
-    const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''
-    if (!confirm(`Supprimer le programme « ${program.name} » ?${warn}`)) return
-    await deleteProgram(program, store)
-    nav.back()
-  }
-
-  const stop = async () => {
-    if (!confirm(`Arrêter le programme « ${program.name} » ?`)) return
-    await deactivateProgram(program, store)
-    nav.back()
-  }
 
   /** Retourne les WETs d'un workout avec exercice + média associé, triés par ordre. */
   const wetInfos = (workoutTemplateId: string) =>
@@ -108,6 +78,38 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [previewWorkout, store.workoutExerciseTemplates, store.exercises],
   )
+
+  if (!program) {
+    return (
+      <div className="gt-screen">
+        <div className="gt-topbar">
+          <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
+            <Icon name="arrow" size={22} strokeWidth={1.8} />
+          </button>
+          <h1 className="gt-topbar__title">Programme</h1>
+        </div>
+        <div className="gt-screen__scroll">
+          <EmptyState icon="info" title="Programme introuvable" />
+        </div>
+      </div>
+    )
+  }
+
+  const summary = programSummary(program, store)
+  const canEdit = !program.isTemplate || store.isAdmin
+
+  const del = async () => {
+    const warn = program.isActive ? ' Ce programme est actuellement actif.' : ''
+    if (!confirm(`Supprimer le programme « ${program.name} » ?${warn}`)) return
+    await deleteProgram(program, store)
+    nav.back()
+  }
+
+  const stop = async () => {
+    if (!confirm(`Arrêter le programme « ${program.name} » ?`)) return
+    await deactivateProgram(program, store)
+    nav.back()
+  }
 
   return (
     <div className="gt-screen">

@@ -10,7 +10,7 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.cjs'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.cjs', 'scripts/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

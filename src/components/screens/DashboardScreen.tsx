@@ -10,7 +10,7 @@ import { localDayKey, startOfLocalDay } from '../../utils/dates'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
-import { Button, Card, Icon, Row, StatTile } from '../ui'
+import { Button, Card, DateBlock, Icon, Row, SectionHeader, StatTile } from '../ui'
 
 const WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
@@ -163,7 +163,7 @@ export function DashboardScreen() {
       <div className="gt-topbar">
         <div style={{ flex: 1 }}>
           <div className="t-eyebrow">{dateLabel}</div>
-          <h1 className="gt-topbar__title" style={{ fontSize: 22 }}>
+          <h1 className="gt-topbar__title" style={{ fontSize: 'var(--fs-title)' }}>
             {greeting}
           </h1>
         </div>
@@ -172,8 +172,8 @@ export function DashboardScreen() {
             style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--accent)' }}
             title="Jours consécutifs"
           >
-            <Icon name="flame" size={20} />
-            <span className="t-num" style={{ fontSize: 18 }}>
+            <Icon name="trend" size={20} />
+            <span className="t-num" style={{ fontSize: 'var(--fs-title)' }}>
               {streak}
             </span>
           </div>
@@ -201,19 +201,19 @@ export function DashboardScreen() {
             {card.completedSession && (
               <div className="gt-statrow" style={{ marginTop: 10 }}>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {formatDuration(card.completedSession.durationSec ?? 0)}
                   </div>
                   <div className="gt-stat__label">Durée</div>
                 </div>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
                   </div>
                   <div className="gt-stat__label">Volume</div>
                 </div>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {card.completedSession.completedSets}
                   </div>
                   <div className="gt-stat__label">Séries</div>
@@ -246,19 +246,19 @@ export function DashboardScreen() {
             {card.completedSession && (
               <div className="gt-statrow" style={{ marginTop: 10 }}>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {formatDuration(card.completedSession.durationSec ?? 0)}
                   </div>
                   <div className="gt-stat__label">Durée</div>
                 </div>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
                   </div>
                   <div className="gt-stat__label">Volume</div>
                 </div>
                 <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 17 }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
                     {card.completedSession.completedSets}
                   </div>
                   <div className="gt-stat__label">Séries</div>
@@ -518,7 +518,7 @@ export function DashboardScreen() {
           </>
         )}
 
-        <p className="t-eyebrow">Cette semaine</p>
+        <SectionHeader label="Cette semaine" />
         <div className="gt-statrow">
           <StatTile
             label="Séances"
@@ -534,37 +534,18 @@ export function DashboardScreen() {
 
         {recent.length > 0 && (
           <>
-            <p className="t-eyebrow" style={{ marginTop: 6 }}>
-              Séances récentes
-            </p>
+            <SectionHeader label="Séances récentes" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recent.map((s) => {
-                // Lookup par ID direct, puis fallback par nom si le template source
-                // avait son icône mise à jour (l'icon est défini sur le template mais
-                // la session pointe vers un clone avec un ID différent)
-                const byId = s.workoutTemplateId
-                  ? store.workoutTemplates.find((w) => w.id === s.workoutTemplateId)
-                  : undefined
-                const sessionIcon =
-                  byId?.icon ??
-                  store.workoutTemplates.find((w) => w.name === s.name && w.icon)?.icon
-                return (
-                  <Row
-                    key={s.id}
-                    leading={sessionIcon ? <SessionEmoji emoji={sessionIcon} /> : undefined}
-                    icon={sessionIcon ? undefined : 'dumbbell'}
-                    label={s.name}
-                    sub={new Date(s.startedAt).toLocaleDateString('fr-FR', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                    value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
-                    chevron
-                    onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
-                  />
-                )
-              })}
+              {recent.map((s) => (
+                <Row
+                  key={s.id}
+                  leading={<DateBlock date={s.startedAt} />}
+                  label={s.name}
+                  value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
+                  chevron
+                  onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
+                />
+              ))}
             </div>
           </>
         )}

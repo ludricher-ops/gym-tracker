@@ -15,7 +15,7 @@ export function DeltaPill({ value, unit }: DeltaPillProps) {
   const formatted = Number.isInteger(abs) ? String(abs) : abs.toFixed(1)
   return (
     <span className={`gt-deltapill${up ? ' gt-deltapill--up' : ' gt-deltapill--down'}`}>
-      {sign}{formatted}{unit != null ? ` ${unit}` : ''}
+      {sign}{formatted}{unit != null ? ' ' + unit : ''}
     </span>
   )
 }

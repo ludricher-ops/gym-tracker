@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SetRecord } from '../../../types'
 import { useStore } from '../../../hooks/useStore'
 import { useNavigation } from '../../../nav/useNavigation'
@@ -400,7 +400,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   Préc.&nbsp;
                   {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
                   {exercisePR != null
-                    ? ` · PR ${Number(exercisePR.estimated1RM).toFixed(1)} kg`
+                    ? ` · PR ${Number(exercisePR.estimated1RM).toFixed(1)} kg`
                     : ''}
                 </p>
               </div>
