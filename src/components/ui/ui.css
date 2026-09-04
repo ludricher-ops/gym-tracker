@@ -167,7 +167,7 @@ button.gt-row:active {
 .gt-stepper__value {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 26px;
+  font-size: var(--fs-display); /* 30px — spec LOT 1 */
   letter-spacing: -1px;
   min-width: 64px;
   text-align: center;
