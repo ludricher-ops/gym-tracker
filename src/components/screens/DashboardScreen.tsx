@@ -425,10 +425,13 @@ export function DashboardScreen() {
               L&apos;app sait alors quoi te proposer chaque jour d&apos;entraînement.
             </p>
             <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
-              <Button icon="bolt" onClick={() => nav.navigate('programsLibrary')}>
-                Voir les programmes
+              <Button icon="bolt" onClick={() => nav.navigate('programGenerator')}>
+                ⚡ Générer mon programme
               </Button>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
+              <Button variant="secondary" icon="list" onClick={() => nav.navigate('programsLibrary')}>
+                Parcourir la bibliothèque
+              </Button>
+              <Button variant="ghost" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>
             </div>
