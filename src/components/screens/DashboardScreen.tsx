@@ -289,16 +289,16 @@ export function DashboardScreen() {
             </p>
             {scheduledExos > 0 && (
               <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
-                {/* overlay-dim = voile sombre semi-transparent → tuile teintée de l'accent */}
-                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
+                {/* 75 % accent + 25 % accent-ink → vert olive assorti, légèrement plus sombre */}
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledExos}</div>
                   <div className="gt-stat__label">EXOS</div>
                 </div>
-                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledSeries}</div>
                   <div className="gt-stat__label">SÉRIES</div>
                 </div>
-                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>~{scheduledDurMin}&apos;</div>
                   <div className="gt-stat__label">DURÉE</div>
                 </div>
@@ -316,28 +316,15 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {/* ── Rattrapages en attente (résumé + lien vers l'écran dédié) */}
+        {/* ── Rattrapages en attente : Row cliquable → écran dédié */}
         {!resumable && activeProgram && card.type === 'scheduled' && visibleMissed.length > 0 && (
-          <Card>
-            <p className="t-eyebrow" style={{ marginBottom: 'var(--gap-tile)' }}>
-              {visibleMissed.length} rattrapage{visibleMissed.length > 1 ? 's' : ''} en attente
-            </p>
-            {visibleMissed.slice(0, 3).map((s) => (
-              <p key={s.label} className="t-caption" style={{ color: 'var(--muted)', marginBottom: 2 }}>
-                {s.workoutName} · {s.label}
-              </p>
-            ))}
-            {visibleMissed.length > 3 && (
-              <p className="t-caption" style={{ color: 'var(--muted)' }}>
-                +{visibleMissed.length - 3} autre{visibleMissed.length - 3 > 1 ? 's' : ''}
-              </p>
-            )}
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
-              <Button variant="secondary" icon="bolt" onClick={() => nav.navigate('rattrapages')}>
-                Voir les rattrapages
-              </Button>
-            </div>
-          </Card>
+          <Row
+            icon="clock"
+            label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
+            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            chevron
+            onClick={() => nav.navigate('rattrapages')}
+          />
         )}
 
         {/* ── Séance du jour terminée ──────────────────────────────────── */}
@@ -691,8 +678,8 @@ export function DashboardScreen() {
             delta={deltas.sessions}
           />
           <StatTile
-            label="Volume"
-            value={`${formatVolume(current.volumeKg)} kg`}
+            label="Volume kg"
+            value={abbrevVol(current.volumeKg)}
           />
           <StatTile label="Temps" value={formatDuration(current.timeSec)} />
         </div>
