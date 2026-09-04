@@ -157,7 +157,6 @@ export function DashboardScreen() {
   }, [card.todaySession, store.workoutExerciseTemplates])
   const scheduledExos = scheduledWets.length
   const scheduledSeries = scheduledWets.reduce((sum, wet) => sum + wet.targetSets, 0)
-  const scheduledDurMin = Math.ceil(scheduledSeries * 3.5)
 
   // Nombre d'exercices (hors échauffement) par séance terminée
   const sessionExoCounts = useMemo(() => {
@@ -285,16 +284,15 @@ export function DashboardScreen() {
               {card.todaySession.workoutName}
             </p>
             {scheduledExos > 0 && (
-              <div style={{ display: 'flex', gap: 16, marginTop: 8, opacity: 0.85 }}>
-                <span className="t-caption">
-                  <span className="t-num" style={{ fontWeight: 700 }}>{scheduledExos}</span> exos
-                </span>
-                <span className="t-caption">
-                  <span className="t-num" style={{ fontWeight: 700 }}>{scheduledSeries}</span> séries
-                </span>
-                <span className="t-caption">
-                  ~<span className="t-num" style={{ fontWeight: 700 }}>{scheduledDurMin}</span>'
-                </span>
+              <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledExos}</div>
+                  <div className="gt-stat__label">EXOS</div>
+                </div>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledSeries}</div>
+                  <div className="gt-stat__label">SÉRIES</div>
+                </div>
               </div>
             )}
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -572,16 +570,15 @@ export function DashboardScreen() {
                           aria-label={`${cell.label} — ${cell.workoutName}`}
                           onClick={() => handleCellClick(cell)}
                           style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 5,
+                            flex: 1,
+                            height: 14, /* barre horizontale — aucun token ne couvre cette hauteur */
+                            borderRadius: 4,
                             background: bg,
                             border: isSelected ? '2px solid var(--accent)' : border,
                             padding: 0,
                             cursor: 'pointer',
                             outline: 'none',
                             boxSizing: 'border-box',
-                            flexShrink: 0,
                           }}
                         />
                       )
@@ -667,9 +664,8 @@ export function DashboardScreen() {
           />
           <StatTile
             label="Volume"
-            value={`${formatVolume(current.volumeKg)} kg`}
+            value={`${abbrevVol(current.volumeKg)} kg`}
           />
-          <StatTile label="Temps" value={formatDuration(current.timeSec)} />
         </div>
 
         {/* ── Séances récentes ─────────────────────────────────────────── */}
