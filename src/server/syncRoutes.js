@@ -40,18 +40,20 @@ async function propagateAdminChanges(pool, changes) {
   const otherIds = otherUsers.map((r) => r.user_id)
 
   for (const { record } of toPropagate) {
-    const seedData = { ...record, updatedAt: 1, dirty: true }
-    const seedJson = JSON.stringify(seedData)
+    // On conserve le vrai updatedAt pour que le LWW côté client (updatedAt > 1)
+    // puisse écraser le seed local (updatedAt = 1).
+    const propagated = { ...record, dirty: true }
+    const propagatedJson = JSON.stringify(propagated)
     for (const uid of otherIds) {
       await pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         VALUES ($1, 'exercises', $2, $3::jsonb, 1)
+         VALUES ($1, 'exercises', $2, $3::jsonb, $4)
          ON CONFLICT (user_id, store, id) DO UPDATE
            SET data       = EXCLUDED.data,
-               updated_at = 1,
+               updated_at = EXCLUDED.updated_at,
                server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
-         WHERE sync_records.updated_at = 1`,
-        [uid, record.id, seedJson],
+         WHERE sync_records.updated_at < EXCLUDED.updated_at`,
+        [uid, record.id, propagatedJson, record.updatedAt],
       )
     }
   }

@@ -18,9 +18,11 @@ export type GeneratorEquipment = 'full_gym' | 'dumbbell_barbell' | 'bodyweight'
 export interface GeneratorParams {
   goal: ProgramGoal
   daysPerWeek: 2 | 3 | 4 | 5
-  sessionDuration: 45 | 60 | 90
+  sessionDuration: 20 | 45 | 60 | 90
   equipment: GeneratorEquipment
   level: ProgramLevel
+  /** Jours explicitement choisis par l'utilisateur (optionnel — sinon par défaut). */
+  selectedDays?: Weekday[]
 }
 
 // ── Équipement autorisé par choix ─────────────────────────────────────────────
@@ -164,7 +166,8 @@ const WORKOUT_NAMES: Record<Exclude<WorkoutType, 'custom'>, string> = {
 
 // ── Ajustement du nombre de slots selon la durée ──────────────────────────────
 
-function adjustedSlotCount(base: number, duration: 45 | 60 | 90): number {
+function adjustedSlotCount(base: number, duration: 20 | 45 | 60 | 90): number {
+  if (duration === 20) return Math.max(2, Math.floor(base * 0.5))
   if (duration === 45) return Math.max(3, Math.floor(base * 0.75))
   if (duration === 90) return Math.min(base + 2, 8)
   return base
@@ -249,7 +252,7 @@ export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays } = params
 
   // Exercices disponibles selon l'équipement (hors warmup, hors supprimés)
   const allowed = new Set(EQUIPMENT_FILTER[equipment])
@@ -258,7 +261,10 @@ export function generateProgramDraft(
   )
 
   const split = selectSplit(params)
-  const days = DAY_ASSIGNMENTS[daysPerWeek] ?? (['monday', 'wednesday', 'friday'] as Weekday[])
+  // Jours choisis par l'utilisateur ou défaut par nombre de séances
+  const days: Weekday[] = (selectedDays && selectedDays.length === daysPerWeek)
+    ? selectedDays
+    : (DAY_ASSIGNMENTS[daysPerWeek] ?? ['monday', 'wednesday', 'friday'] as Weekday[])
 
   // IDs d'exercices utilisés dans l'ensemble du programme (pour varier entre séances du même type)
   const usedGlobally = new Set<string>()

@@ -201,11 +201,13 @@ app.post('/auth/register', async (req, res) => {
     // Non attendu — la réponse est déjà envoyée.
     const ADMIN_ID = 1
     if (pool && userId !== ADMIN_ID) {
+      // On conserve le vrai updatedAt de l'admin pour que le LWW client
+      // puisse écraser le seed local (updatedAt=1) dès le premier pull.
       pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
          SELECT $1, store, id,
-                jsonb_set(data, '{updatedAt}', '1'::jsonb) || '{"dirty":true}'::jsonb,
-                1
+                data || '{"dirty":true}'::jsonb,
+                updated_at
            FROM sync_records
           WHERE user_id = $2
             AND store = 'exercises'

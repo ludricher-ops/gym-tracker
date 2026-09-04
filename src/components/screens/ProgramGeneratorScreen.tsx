@@ -1,8 +1,8 @@
 // Wizard de génération automatique de programme.
-// 5 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
+// 6 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
 
 import { useState } from 'react'
-import type { ProgramGoal, ProgramLevel } from '../../types'
+import type { ProgramGoal, ProgramLevel, Weekday } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { Icon } from '../ui'
@@ -38,13 +38,25 @@ const STEP_DAYS: Step<2 | 3 | 4 | 5> = {
   ],
 }
 
-const STEP_DURATION: Step<45 | 60 | 90> = {
+// Jours de la semaine pour le sélecteur de jours (étape 2b)
+const WEEKDAY_OPTIONS: { value: Weekday; label: string; full: string }[] = [
+  { value: 'monday',    label: 'Lun', full: 'Lundi'    },
+  { value: 'tuesday',   label: 'Mar', full: 'Mardi'    },
+  { value: 'wednesday', label: 'Mer', full: 'Mercredi' },
+  { value: 'thursday',  label: 'Jeu', full: 'Jeudi'    },
+  { value: 'friday',    label: 'Ven', full: 'Vendredi' },
+  { value: 'saturday',  label: 'Sam', full: 'Samedi'   },
+  { value: 'sunday',    label: 'Dim', full: 'Dimanche' },
+]
+
+const STEP_DURATION: Step<20 | 45 | 60 | 90> = {
   question: "Durée d'une séance ?",
   subtitle: "Échauffement non inclus.",
   options: [
-    { value: 45, label: '45 min',  sub: 'Séance courte et efficace' },
-    { value: 60, label: '1 heure', sub: 'Le format classique'       },
-    { value: 90, label: '1h 30',   sub: 'Volume élevé'              },
+    { value: 20, label: '20 min',  sub: 'Séance express'           },
+    { value: 45, label: '45 min',  sub: 'Courte et efficace'       },
+    { value: 60, label: '1 heure', sub: 'Le format classique'      },
+    { value: 90, label: '1h 30',   sub: 'Volume élevé'             },
   ],
 }
 
@@ -66,6 +78,11 @@ const STEP_LEVEL: Step<ProgramLevel> = {
   ],
 }
 
+// ── Ordre des étapes ──────────────────────────────────────────────────────────
+// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Équipement  5: Niveau
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Équipement', 'Niveau']
+const TOTAL = 6
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function ProgramGeneratorScreen() {
@@ -75,14 +92,14 @@ export function ProgramGeneratorScreen() {
   const [stepIndex, setStepIndex] = useState(0)
   const [goal, setGoal]           = useState<ProgramGoal | null>(null)
   const [days, setDays]           = useState<2 | 3 | 4 | 5 | null>(null)
-  const [duration, setDuration]   = useState<45 | 60 | 90 | null>(null)
+  const [selectedDays, setSelectedDays] = useState<Weekday[]>([])
+  const [duration, setDuration]   = useState<20 | 45 | 60 | 90 | null>(null)
   const [equipment, setEquipment] = useState<GeneratorEquipment | null>(null)
   const [level, setLevel]         = useState<ProgramLevel | null>(null)
   const [advancing, setAdvancing] = useState(false)
 
-  // Auto-avance vers la prochaine étape après un clic (sauf la dernière)
   function advance() {
-    if (stepIndex < 4) {
+    if (stepIndex < TOTAL - 1) {
       setAdvancing(true)
       setTimeout(() => {
         setStepIndex((s) => s + 1)
@@ -99,16 +116,39 @@ export function ProgramGeneratorScreen() {
   function handleGenerate() {
     if (!goal || !days || !duration || !equipment || !level) return
 
+    // Trier les jours dans l'ordre de la semaine
+    const orderedDays = WEEKDAY_OPTIONS
+      .filter((d) => selectedDays.includes(d.value))
+      .map((d) => d.value)
+
     const params: GeneratorParams = {
-      goal, daysPerWeek: days, sessionDuration: duration, equipment, level,
+      goal, daysPerWeek: days, sessionDuration: duration,
+      equipment, level, selectedDays: orderedDays,
     }
     const draft = generateProgramDraft(params, store.exercises)
     setPendingDraft(draft)
     nav.navigate('programBuilder')
   }
 
-  // Indicateur de progression (5 points)
-  const TOTAL = 5
+  // ── Sélection des jours (étape 2) ──────────────────────────────────────────
+
+  function toggleDay(day: Weekday) {
+    if (days === null) return
+    setSelectedDays((prev) => {
+      if (prev.includes(day)) return prev.filter((d) => d !== day)
+      if (prev.length >= days) return prev  // déjà au max
+      const next = [...prev, day]
+      // Auto-avance quand le nombre exact est atteint
+      if (next.length === days) {
+        setAdvancing(true)
+        setTimeout(() => {
+          setStepIndex((s) => s + 1)
+          setAdvancing(false)
+        }, 200)
+      }
+      return next
+    })
+  }
 
   // ── Rendu des étapes ────────────────────────────────────────────────────────
 
@@ -120,20 +160,26 @@ export function ProgramGeneratorScreen() {
     }
     if (stepIndex === 1) {
       return renderChips(STEP_DAYS, days, (v: 2 | 3 | 4 | 5) => {
-        setDays(v); advance()
+        setDays(v)
+        // Reset la sélection de jours quand on change le compte
+        setSelectedDays([])
+        advance()
       })
     }
     if (stepIndex === 2) {
-      return renderChips(STEP_DURATION, duration, (v: 45 | 60 | 90) => {
+      return renderDayPicker()
+    }
+    if (stepIndex === 3) {
+      return renderChips(STEP_DURATION, duration, (v: 20 | 45 | 60 | 90) => {
         setDuration(v); advance()
       })
     }
-    if (stepIndex === 3) {
+    if (stepIndex === 4) {
       return renderChips(STEP_EQUIPMENT, equipment, (v: GeneratorEquipment) => {
         setEquipment(v); advance()
       })
     }
-    // Étape 5 — Niveau : sélection + bouton Générer
+    // Étape 6 — Niveau : sélection + bouton Générer
     return (
       <>
         {renderChips(STEP_LEVEL, level, (v: ProgramLevel) => setLevel(v))}
@@ -158,6 +204,78 @@ export function ProgramGeneratorScreen() {
           </button>
         </div>
       </>
+    )
+  }
+
+  // Sélecteur de jours — grille 7 boutons + compteur
+  function renderDayPicker() {
+    const needed = days ?? 0
+    const remaining = needed - selectedDays.length
+
+    return (
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
+          Quels jours t'entraînes-tu ?
+        </p>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 20 }}>
+          {remaining > 0
+            ? `Encore ${remaining} jour${remaining > 1 ? 's' : ''} à choisir`
+            : 'Parfait !'}
+        </p>
+
+        {/* Grille des jours */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
+          {WEEKDAY_OPTIONS.map((opt) => {
+            const active = selectedDays.includes(opt.value)
+            const disabled = advancing || (!active && selectedDays.length >= needed)
+            return (
+              <button
+                key={opt.value}
+                onClick={() => !disabled && toggleDay(opt.value)}
+                style={{
+                  padding: '12px 6px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: disabled && !active ? 'var(--fg-muted)' : 'var(--fg)',
+                  fontWeight: active ? 700 : 400,
+                  fontSize: 'var(--fs-body)',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  transition: 'border-color 0.12s, background 0.12s',
+                  textAlign: 'center',
+                }}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Résumé des jours sélectionnés */}
+        {selectedDays.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {WEEKDAY_OPTIONS
+              .filter((d) => selectedDays.includes(d.value))
+              .map((d) => (
+                <span
+                  key={d.value}
+                  className="t-caption"
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 100,
+                    background: 'var(--accent)',
+                    color: 'var(--accent-ink)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {d.full}
+                </span>
+              ))}
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -219,9 +337,6 @@ export function ProgramGeneratorScreen() {
       </div>
     )
   }
-
-  // Titre de l'étape courante
-  const STEP_TITLE = ['Objectif', 'Fréquence', 'Durée', 'Équipement', 'Niveau']
 
   return (
     <div className="gt-screen">
