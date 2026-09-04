@@ -39,6 +39,7 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
     <div className="gt-screen">
       <div className="gt-screen__scroll" style={{ alignItems: 'center', textAlign: 'center' }}>
         <div
+          className="gt-complete-circle"
           style={{
             width: 84,
             height: 84,
@@ -65,17 +66,20 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
           </p>
         )}
 
+        {/* Durée hero — taille volontairement large (pas de token pour 52px) */}
         <div className="t-num" style={{ fontSize: 52, marginTop: 8 }}>
-          {formatDuration(recap.durationSec)}
+          {formatDuration(recap.durationSec).replace(/:\d{2}$/, '')}
         </div>
 
         <div className="gt-statrow" style={{ width: '100%', marginTop: 12 }}>
           <StatTile label="Séries" value={String(recap.completedSets)} />
-          <StatTile label="Volume" value={`${formatVolume(recap.totalVolumeKg)} kg`} />
-          <StatTile label="Records" value={String(recap.prCount)} />
+          <StatTile label="Volume kg" value={formatVolume(recap.totalVolumeKg)} />
+          {recap.prCount > 0 && (
+            <StatTile label="Records" value={String(recap.prCount)} />
+          )}
         </div>
 
-        {/* Faits : PR et streak — deux lignes avec chiffre mono à droite */}
+        {/* Faits : PR et streak */}
         {recap.prCount > 0 && (
           <Card variant="flat" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -95,7 +99,7 @@ export function SessionCompleteView({ sessionId, onHome, onRecap }: SessionCompl
           <Card variant="flat" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: 'var(--accent)' }}><Icon name="trend" size={18} /></span>
+                <span style={{ color: 'var(--accent)' }}><Icon name="flame" size={18} /></span>
                 <span style={{ fontWeight: 600 }}>Streak</span>
               </div>
               <span className="t-num" style={{ fontSize: 'var(--fs-title)' }}>

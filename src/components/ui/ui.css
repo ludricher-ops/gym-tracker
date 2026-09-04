@@ -578,6 +578,15 @@ h2.gt-topbar__title {
   }
 }
 
+/* Cercle de validation post-séance : apparition avec rebond */
+@keyframes gt-complete-bounce {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.gt-complete-circle {
+  animation: gt-complete-bounce 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
 .gt-rot-up {
   transform: rotate(-90deg);
 }
