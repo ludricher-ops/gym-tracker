@@ -400,7 +400,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   Préc.&nbsp;
                   {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
                   {exercisePR != null
-                    ? ` · PR ${Number(exercisePR.estimated1RM).toFixed(1)} kg`
+                    ? ` · PR ${formatWeight(exercisePR.weightKg, weightUnit)}×${exercisePR.reps}`
                     : ''}
                 </p>
               </div>
@@ -469,109 +469,108 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           <RestTimerBar timer={restTimer} />
         ) : (
           currentSE && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* Carte de saisie */}
-              <Card variant="flat">
-                {trackingType === 'time' ? (
-                  <div style={{ textAlign: 'center' }}>
-                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>
-                      {isCardio ? 'Durée (min)' : 'Durée (s)'}
-                    </div>
-                    <Stepper
-                      value={inputR}
-                      onChange={setInputR}
-                      step={isCardio ? 300 : 5}
-                      min={isCardio ? 300 : 5}
-                      format={isCardio ? (v) => `${Math.round(v / 60)} min` : undefined}
-                      ariaLabel="Durée"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    {/* Steppers côte à côte, séparés par un filet vertical */}
-                    <div style={{ display: 'flex' }}>
-                      {showWeight && (
-                        <>
-                          <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
-                            <div className="t-eyebrow" style={{ marginBottom: 4 }}>
-                              Poids ({weightUnit})
-                            </div>
-                            <Stepper
-                              value={inputW}
-                              onChange={setInputW}
-                              step={prefs.weightStep}
-                              min={0}
-                              decimals={inputW % 1 === 0 ? 0 : 1}
-                              ariaLabel="Poids"
-                            />
-                          </div>
-                          {/* Filet séparateur */}
-                          <div
-                            style={{
-                              width: 1,
-                              background: 'var(--border)',
-                              margin: '8px',
-                              alignSelf: 'stretch',
-                            }}
-                          />
-                        </>
-                      )}
-                      <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
-                        <div className="t-eyebrow" style={{ marginBottom: 4 }}>Reps</div>
-                        <Stepper
-                          value={inputR}
-                          onChange={setInputR}
-                          min={0}
-                          ariaLabel="Répétitions"
-                        />
-                      </div>
-                    </div>
-
-                    {/* RPE stepper (affiché si activé via l'action secondaire) */}
-                    {inputRpe != null && (
-                      <div
-                        style={{
-                          borderTop: '1px solid var(--border)',
-                          marginTop: 10,
-                          paddingTop: 10,
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div className="t-eyebrow" style={{ marginBottom: 4 }}>RPE</div>
-                        <Stepper
-                          value={inputRpe}
-                          onChange={setInputRpe}
-                          step={0.5}
-                          min={6}
-                          max={10}
-                          decimals={1}
-                          ariaLabel="RPE"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </Card>
-
-              {/* Bouton de validation pleine largeur */}
+            <Card variant="flat">
               {trackingType === 'time' ? (
-                <Button
-                  icon="play"
-                  onClick={() => {
-                    setInputR(targetDurationSec)
-                    exerciseTimer.start(targetDurationSec)
-                  }}
-                >
-                  Démarrer · {formatClock(targetDurationSec)}
-                </Button>
+                <div style={{ textAlign: 'center' }}>
+                  <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+                    {isCardio ? 'Durée (min)' : 'Durée (s)'}
+                  </div>
+                  <Stepper
+                    value={inputR}
+                    onChange={setInputR}
+                    step={isCardio ? 300 : 5}
+                    min={isCardio ? 300 : 5}
+                    format={isCardio ? (v) => `${Math.round(v / 60)} min` : undefined}
+                    ariaLabel="Durée"
+                  />
+                </div>
               ) : (
-                <Button onClick={validate} disabled={!canValidate} icon="check">
-                  Valider la série
-                </Button>
+                <>
+                  {/* Steppers côte à côte, séparés par un filet vertical */}
+                  <div style={{ display: 'flex' }}>
+                    {showWeight && (
+                      <>
+                        <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
+                          <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+                            Poids ({weightUnit})
+                          </div>
+                          <Stepper
+                            value={inputW}
+                            onChange={setInputW}
+                            step={prefs.weightStep}
+                            min={0}
+                            decimals={inputW % 1 === 0 ? 0 : 1}
+                            ariaLabel="Poids"
+                          />
+                        </div>
+                        {/* Filet séparateur */}
+                        <div
+                          style={{
+                            width: 1,
+                            background: 'var(--border)',
+                            margin: 'var(--gap-tile)',
+                            alignSelf: 'stretch',
+                          }}
+                        />
+                      </>
+                    )}
+                    <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
+                      <div className="t-eyebrow" style={{ marginBottom: 4 }}>Reps</div>
+                      <Stepper
+                        value={inputR}
+                        onChange={setInputR}
+                        min={0}
+                        ariaLabel="Répétitions"
+                      />
+                    </div>
+                  </div>
+
+                  {/* RPE stepper (affiché si activé via l'action secondaire) */}
+                  {inputRpe != null && (
+                    <div
+                      style={{
+                        borderTop: '1px solid var(--border)',
+                        marginTop: 'var(--gap-tile)',
+                        paddingTop: 'var(--gap-tile)',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div className="t-eyebrow" style={{ marginBottom: 4 }}>RPE</div>
+                      <Stepper
+                        value={inputRpe}
+                        onChange={setInputRpe}
+                        step={0.5}
+                        min={6}
+                        max={10}
+                        decimals={1}
+                        ariaLabel="RPE"
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
+              {/* Bouton de validation pleine largeur */}
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 'var(--gap-tile)', paddingTop: 'var(--gap-tile)' }}>
+                {trackingType === 'time' ? (
+                  <Button
+                    icon="play"
+                    onClick={() => {
+                      setInputR(targetDurationSec)
+                      exerciseTimer.start(targetDurationSec)
+                    }}
+                  >
+                    Démarrer · {formatClock(targetDurationSec)}
+                  </Button>
+                ) : (
+                  <Button onClick={validate} disabled={!canValidate} icon="check">
+                    Valider la série
+                  </Button>
+                )}
+              </div>
+
               {/* Actions secondaires : RPE · +Série · Menu */}
-              <div className="gt-session-actions">
+              <div className="gt-session-actions" style={{ marginTop: 'var(--gap-tile)' }}>
                 {trackingType !== 'time' && (
                   <button
                     type="button"
@@ -602,7 +601,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   <Icon name="grip" size={14} />
                 </button>
               </div>
-            </div>
+            </Card>
           )
         )}
       </div>
