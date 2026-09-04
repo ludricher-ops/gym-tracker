@@ -252,8 +252,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   }
 
   const close = () => {
-    if (doneCount > 0) setExitSheet(true)
-    else nav.closeModal()
+    setExitSheet(true)
   }
 
   const abandon = async () => {
