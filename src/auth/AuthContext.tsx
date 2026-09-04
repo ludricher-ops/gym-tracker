@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { idbClearAll } from '../db/idb'
-import { resetSyncCursor, setSyncUserId } from '../db/sync'
+import { resetSyncCursor, resetSharedCursor, setSyncUserId } from '../db/sync'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Nouveau compte : efface l'IDB locale et repart de zéro
     await idbClearAll()
     resetSyncCursor()
+    resetSharedCursor()
     setSyncUserId(data.id!)
     setUser({ id: data.id!, email: data.email! })
   }, [])
@@ -91,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await idbClearAll()
     resetSyncCursor()
+    resetSharedCursor()
     setSyncUserId(data.id!)
     setUser({ id: data.id!, email: data.email! })
   }, [])
@@ -99,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetch('/auth/logout', { method: 'POST', credentials: 'include' })
     await idbClearAll()
     resetSyncCursor()
+    resetSharedCursor()
     setSyncUserId(null)
     setUser(null)
   }, [])

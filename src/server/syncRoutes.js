@@ -27,10 +27,9 @@ const ADMIN_USER_ID = 1
  * Best-effort : appelée après le commit, les erreurs sont loggées mais non fatales.
  */
 async function propagateAdminChanges(pool, changes) {
-  // Propager exercices ET blobs (images d'exercices)
-  const toPropagate = changes.filter(({ store }) =>
-    store === 'exercises' || store === 'blobs',
-  )
+  // Propager exercices uniquement — les blobs sont servis via le curseur partagé
+  // (un seul enregistrement dans la DB, pas de copie per-user).
+  const toPropagate = changes.filter(({ store }) => store === 'exercises')
   if (toPropagate.length === 0) return
 
   const { rows: otherUsers } = await pool.query(
@@ -40,27 +39,25 @@ async function propagateAdminChanges(pool, changes) {
   if (otherUsers.length === 0) return
   const otherIds = otherUsers.map((r) => r.user_id)
 
-  for (const { store, record } of toPropagate) {
+  for (const { record } of toPropagate) {
     const seedData = { ...record, updatedAt: 1, dirty: true }
     const seedJson = JSON.stringify(seedData)
     for (const uid of otherIds) {
       await pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         VALUES ($1, $2, $3, $4::jsonb, 1)
+         VALUES ($1, 'exercises', $2, $3::jsonb, 1)
          ON CONFLICT (user_id, store, id) DO UPDATE
            SET data       = EXCLUDED.data,
                updated_at = 1,
                server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
          WHERE sync_records.updated_at = 1`,
-        [uid, store, record.id, seedJson],
+        [uid, record.id, seedJson],
       )
     }
   }
 
-  const exCount  = toPropagate.filter((c) => c.store === 'exercises').length
-  const blobCount = toPropagate.filter((c) => c.store === 'blobs').length
   console.log(
-    `[admin-propagation] ${exCount} exercice(s), ${blobCount} blob(s) → ${otherIds.length} user(s)`,
+    `[admin-propagation] ${toPropagate.length} exercice(s) → ${otherIds.length} user(s)`,
   )
 }
 
@@ -133,6 +130,7 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
   app.get('/api/sync/pull', extractUser, requireUser, async (req, res) => {
     const userId = req.userId
     const since = Number(req.query.since) || 0
+    const sinceShared = Number(req.query.sinceShared) || 0
     try {
       // 1. Records propres à l'utilisateur (filtrés par curseur)
       const { rows: ownRows } = await pool.query(
@@ -175,10 +173,40 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
         templateRows = rows
       }
 
-      // 3. Fusion LWW : templates d'abord, propres records ensuite (updated_at arbitre).
-      //    Un même id ne peut apparaître qu'une fois dans la réponse.
+      // 3. Blobs admin d'exercices — servis sans copie per-user, filtrés par
+      //    sinceShared pour ne renvoyer que les nouveaux/modifiés depuis le dernier pull.
+      //    Un blob admin non modifié ne transite plus du tout une fois reçu.
+      let sharedBlobRows = []
+      let newSharedCursor = sinceShared
+      if (userId !== ADMIN_USER_ID) {
+        const { rows } = await pool.query(
+          `SELECT sr.store, sr.id, sr.data, sr.updated_at, sr.server_seq
+             FROM sync_records sr
+            WHERE sr.user_id = $1
+              AND sr.store = 'blobs'
+              AND sr.server_seq > $2
+              AND sr.id IN (
+                SELECT data->'media'->>'blobId'
+                  FROM sync_records
+                 WHERE user_id = $1
+                   AND store = 'exercises'
+                   AND data->'media'->>'blobId' IS NOT NULL
+                   AND (data->>'deleted')::boolean IS NOT TRUE
+              )
+              AND (sr.data->>'deleted')::boolean IS NOT TRUE
+            ORDER BY sr.server_seq ASC`,
+          [ADMIN_USER_ID, sinceShared],
+        )
+        sharedBlobRows = rows
+        if (rows.length > 0) {
+          newSharedCursor = Number(rows[rows.length - 1].server_seq)
+        }
+      }
+
+      // 4. Fusion LWW : templates + blobs partagés d'abord, propres records ensuite.
       const seen = new Map()
-      for (const r of templateRows) seen.set(`${r.store}:${r.id}`, r)
+      for (const r of templateRows)    seen.set(`${r.store}:${r.id}`, r)
+      for (const r of sharedBlobRows)  seen.set(`${r.store}:${r.id}`, r)
       for (const r of ownRows) {
         const key = `${r.store}:${r.id}`
         const prev = seen.get(key)
@@ -191,7 +219,7 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
         serverSeq: Number(r.server_seq),
       }))
 
-      // 4. Curseur = max server_seq des propres records (pas des templates admin)
+      // 5. Curseurs — own records et blobs partagés sont indépendants.
       const cursor = ownRows.length
         ? Number(ownRows[ownRows.length - 1].server_seq)
         : since
@@ -199,6 +227,7 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       res.json({
         records,
         cursor,
+        sharedCursor: newSharedCursor,
         hasMore: ownRows.length === PULL_LIMIT,
         isAdmin: userId === ADMIN_USER_ID,
       })

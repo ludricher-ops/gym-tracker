@@ -194,12 +194,13 @@ app.post('/auth/register', async (req, res) => {
     res.cookie(COOKIE_NAME, token, COOKIE_OPTS)
     res.status(201).json({ id: userId, email: emailClean })
 
-    // Seed best-effort : copie les exercices + blobs d'exercices de l'admin
-    // vers le nouvel utilisateur (updated_at=1 → remplaçable par les propres modifs).
+    // Seed best-effort : copie les exercices de l'admin vers le nouvel utilisateur
+    // (updated_at=1 → remplaçable si l'utilisateur modifie sa propre copie).
+    // Les blobs (images) ne sont PAS copiés ici — ils sont servis via le curseur
+    // partagé (sinceShared) dans le pull, sans duplication per-user.
     // Non attendu — la réponse est déjà envoyée.
     const ADMIN_ID = 1
     if (pool && userId !== ADMIN_ID) {
-      // 1. Exercices admin
       pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
          SELECT $1, store, id,
@@ -215,31 +216,6 @@ app.post('/auth/register', async (req, res) => {
         if (r.rowCount > 0)
           console.log(`[register] ${r.rowCount} exercice(s) seedé(s) → user ${userId}`)
       }).catch(err => console.error('[register] seed exercises:', err.message))
-
-      // 2. Blobs associés aux exercices admin (images)
-      pool.query(
-        `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         SELECT $1, 'blobs', sr.id,
-                jsonb_set(sr.data, '{updatedAt}', '1'::jsonb) || '{"dirty":true}'::jsonb,
-                1
-           FROM sync_records sr
-          WHERE sr.user_id = $2
-            AND sr.store   = 'blobs'
-            AND sr.id IN (
-              SELECT data->'media'->>'blobId'
-                FROM sync_records
-               WHERE user_id = $2
-                 AND store   = 'exercises'
-                 AND data->'media'->>'blobId' IS NOT NULL
-                 AND (data->>'deleted')::boolean IS NOT TRUE
-            )
-            AND (sr.data->>'deleted')::boolean IS NOT TRUE
-         ON CONFLICT (user_id, store, id) DO NOTHING`,
-        [userId, ADMIN_ID],
-      ).then(r => {
-        if (r.rowCount > 0)
-          console.log(`[register] ${r.rowCount} blob(s) seedé(s) → user ${userId}`)
-      }).catch(err => console.error('[register] seed blobs:', err.message))
     }
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email déjà utilisé' })

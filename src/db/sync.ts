@@ -29,7 +29,7 @@ export function getIsAdmin(): boolean {
   return _isAdmin
 }
 
-// ── Curseur de pull (localStorage, scopé par userId) ─────────────────────────
+// ── Curseur de pull propre à l'utilisateur (localStorage, scopé par userId) ───
 
 function cursorKey(): string {
   return _userId ? `gymtrack-sync-cursor-${_userId}` : 'gymtrack-sync-cursor'
@@ -46,6 +46,24 @@ function setCursor(n: number): void {
 export function resetSyncCursor(): void {
   if (_userId) localStorage.removeItem(`gymtrack-sync-cursor-${_userId}`)
   localStorage.removeItem('gymtrack-sync-cursor')
+}
+
+// ── Curseur partagé — blobs admin servis sans copie per-user ─────────────────
+// Un seul blob stocké sous l'admin, servi à tous via ?sinceShared=N.
+// Indépendant du userId : un reset suffit pour forcer un re-fetch complet.
+
+const SHARED_CURSOR_KEY = 'gymtrack-sync-cursor-shared'
+
+function getSharedCursor(): number {
+  return Number(localStorage.getItem(SHARED_CURSOR_KEY) || 0)
+}
+function setSharedCursor(n: number): void {
+  localStorage.setItem(SHARED_CURSOR_KEY, String(n))
+}
+
+/** Remet le curseur partagé à zéro (login / logout / register). */
+export function resetSharedCursor(): void {
+  localStorage.removeItem(SHARED_CURSOR_KEY)
 }
 
 // ── Headers communs ───────────────────────────────────────────────────────────
@@ -99,18 +117,20 @@ export async function pushOutbox(): Promise<number> {
 /** Récupère les changements serveur et les fusionne (LWW). Renvoie le nombre appliqué. */
 export async function pullChanges(): Promise<number> {
   let cursor = getCursor()
+  let sharedCursor = getSharedCursor()
   let applied = 0
   let hasMore = true
 
   while (hasMore) {
-    const res = await fetch(`/api/sync/pull?since=${cursor}`, {
-      credentials: 'include',
-      headers: syncHeaders(false),
-    })
+    const res = await fetch(
+      `/api/sync/pull?since=${cursor}&sinceShared=${sharedCursor}`,
+      { credentials: 'include', headers: syncHeaders(false) },
+    )
     if (!res.ok) throw new Error(`sync/pull ${res.status}`)
     const data = (await res.json()) as {
       records: { store: string; record: Syncable }[]
       cursor: number
+      sharedCursor: number
       hasMore: boolean
       isAdmin?: boolean
     }
@@ -148,8 +168,10 @@ export async function pullChanges(): Promise<number> {
     }
 
     cursor = data.cursor
+    sharedCursor = data.sharedCursor ?? sharedCursor
     hasMore = data.hasMore
     setCursor(cursor)
+    setSharedCursor(sharedCursor)
   }
   return applied
 }
