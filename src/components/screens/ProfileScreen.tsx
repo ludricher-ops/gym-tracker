@@ -36,10 +36,11 @@ export function ProfileScreen() {
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
-        <h1 className="gt-topbar__title">Profil</h1>
+        <h1 className="gt-topbar__title">Moi</h1>
       </div>
 
       <div className="gt-screen__scroll">
+        {/* ── Identité ─────────────────────────────────────────────────── */}
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div
@@ -72,19 +73,8 @@ export function ProfileScreen() {
           <StatTile label="Tonnage" value={`${formatVolume(lifetime.tonnage)} kg`} />
         </div>
 
-        <p className="t-eyebrow">Compte</p>
-        <Row
-          icon="user"
-          label="Compte personnel"
-          chevron
-          onClick={() => nav.navigate('account')}
-        />
-        <Row
-          icon="target"
-          label="Objectifs"
-          chevron
-          onClick={() => nav.navigate('goalsPrograms')}
-        />
+        {/* ── Entraînement ─────────────────────────────────────────────── */}
+        <p className="t-eyebrow">Entraînement</p>
         <Row
           icon="list"
           label="Programmes"
@@ -97,6 +87,15 @@ export function ProfileScreen() {
           chevron
           onClick={() => nav.navigate('myExercises')}
         />
+
+        {/* ── Suivi ────────────────────────────────────────────────────── */}
+        <p className="t-eyebrow">Suivi</p>
+        <Row
+          icon="target"
+          label="Objectifs"
+          chevron
+          onClick={() => nav.navigate('goalsPrograms')}
+        />
         <Row
           icon="scale"
           label="Corps & mesures"
@@ -104,9 +103,14 @@ export function ProfileScreen() {
           onClick={() => nav.navigate('body')}
         />
 
-        <p className="t-eyebrow" style={{ marginTop: 6 }}>
-          Application
-        </p>
+        {/* ── Réglages ─────────────────────────────────────────────────── */}
+        <p className="t-eyebrow">Réglages</p>
+        <Row
+          icon="user"
+          label="Compte"
+          chevron
+          onClick={() => nav.navigate('account')}
+        />
         <Row
           icon="cog"
           label="Préférences"

@@ -49,5 +49,5 @@ export const TABS: TabDef<Tab>[] = [
   { key: 'today', label: "Aujourd'hui", icon: 'flame' },
   { key: 'history', label: 'Historique', icon: 'list' },
   { key: 'stats', label: 'Progression', icon: 'chart' },
-  { key: 'profile', label: 'Profil', icon: 'user' },
+  { key: 'profile', label: 'Moi', icon: 'user' },
 ]
