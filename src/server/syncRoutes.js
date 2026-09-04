@@ -20,12 +20,16 @@ const MAX_PUSH_BATCH = 500
 const ADMIN_USER_ID = 1
 
 /**
- * Propage les exercices et templates de l'admin vers tous les autres users.
+ * Propage les exercices de l'admin vers tous les autres users.
+ * Les programmes isTemplate et leurs séances/exercices sont servis directement
+ * via le pull (voir endpoint GET /api/sync/pull) — pas besoin de propagation.
  * Best-effort : appelée après le commit, les erreurs sont loggées mais non fatales.
  * LWW : updated_at = 1 → n'écrase que les enregistrements non modifiés par l'utilisateur.
  */
 async function propagateAdminChanges(pool, changes) {
-  // Récupère tous les user_id non-admin
+  const exerciseChanges = changes.filter(({ store }) => store === 'exercises')
+  if (exerciseChanges.length === 0) return
+
   const { rows: otherUsers } = await pool.query(
     `SELECT DISTINCT user_id FROM sync_records WHERE user_id != $1`,
     [ADMIN_USER_ID],
@@ -33,61 +37,25 @@ async function propagateAdminChanges(pool, changes) {
   if (otherUsers.length === 0) return
   const otherIds = otherUsers.map((r) => r.user_id)
 
-  const toPropagate = []
-
-  for (const { store, record } of changes) {
-    if (store === 'exercises') {
-      toPropagate.push({ store, record })
-    } else if (store === 'programs' && record.isTemplate) {
-      toPropagate.push({ store, record })
-    } else if (store === 'workoutTemplates' && record.programId) {
-      // Vérifie que le programme parent est un template
-      const { rows } = await pool.query(
-        `SELECT 1 FROM sync_records
-         WHERE user_id=$1 AND store='programs' AND id=$2
-           AND (data->>'isTemplate')::boolean = true`,
-        [ADMIN_USER_ID, record.programId],
-      )
-      if (rows.length > 0) toPropagate.push({ store, record })
-    } else if (store === 'workoutExerciseTemplates' && record.workoutTemplateId) {
-      // Vérifie que la séance parente appartient à un programme template
-      const { rows } = await pool.query(
-        `SELECT 1 FROM sync_records wt
-         INNER JOIN sync_records prog
-           ON prog.user_id = $1 AND prog.store = 'programs'
-           AND prog.id = wt.data->>'programId'
-           AND (prog.data->>'isTemplate')::boolean = true
-         WHERE wt.user_id=$1 AND wt.store='workoutTemplates' AND wt.id=$2`,
-        [ADMIN_USER_ID, record.workoutTemplateId],
-      )
-      if (rows.length > 0) toPropagate.push({ store, record })
-    }
-  }
-
-  if (toPropagate.length === 0) return
-
-  // Upsert vers chaque user non-admin :
-  // - INSERT si l'enregistrement n'existe pas encore
-  // - UPDATE seulement si l'utilisateur n'a pas modifié sa copie (updated_at = 1)
-  for (const { store, record } of toPropagate) {
+  for (const { record } of exerciseChanges) {
     const seedData = { ...record, updatedAt: 1, dirty: true }
     const seedJson = JSON.stringify(seedData)
     for (const uid of otherIds) {
       await pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         VALUES ($1, $2, $3, $4::jsonb, 1)
+         VALUES ($1, 'exercises', $2, $3::jsonb, 1)
          ON CONFLICT (user_id, store, id) DO UPDATE
            SET data       = EXCLUDED.data,
                updated_at = 1,
                server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
          WHERE sync_records.updated_at = 1`,
-        [uid, store, record.id, seedJson],
+        [uid, record.id, seedJson],
       )
     }
   }
 
   console.log(
-    `[admin-propagation] ${toPropagate.length} record(s) → ${otherIds.length} user(s)`,
+    `[admin-propagation] ${exerciseChanges.length} exercice(s) → ${otherIds.length} user(s)`,
   )
 }
 
@@ -152,11 +120,17 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
   })
 
   // GET /api/sync/pull?since=<server_seq>
+  //
+  // Pour les non-admins : les programmes isTemplate et leurs séances/exercices
+  // sont injectés depuis les records de l'admin (source unique de vérité).
+  // Pas de copie per-user → pas de propagation à déclencher.
+  // LWW côté client : le record avec le updatedAt le plus élevé gagne.
   app.get('/api/sync/pull', extractUser, requireUser, async (req, res) => {
     const userId = req.userId
     const since = Number(req.query.since) || 0
     try {
-      const { rows } = await pool.query(
+      // 1. Records propres à l'utilisateur (filtrés par curseur)
+      const { rows: ownRows } = await pool.query(
         `SELECT store, id, data, updated_at, server_seq
            FROM sync_records
           WHERE user_id = $1 AND server_seq > $2
@@ -164,18 +138,63 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
           LIMIT $3`,
         [userId, since, PULL_LIMIT],
       )
-      const records = rows.map((r) => ({
+
+      // 2. Templates admin (non-admins uniquement) — toujours la version courante,
+      //    sans filtre de curseur : source unique, toujours à jour.
+      let templateRows = []
+      if (userId !== ADMIN_USER_ID) {
+        const { rows } = await pool.query(
+          `WITH tprog AS (
+             SELECT id FROM sync_records
+             WHERE user_id = $1 AND store = 'programs'
+               AND (data->>'isTemplate')::boolean = true
+               AND (data->>'deleted')::boolean IS NOT TRUE
+           ),
+           twt AS (
+             SELECT id FROM sync_records
+             WHERE user_id = $1 AND store = 'workoutTemplates'
+               AND data->>'programId' IN (SELECT id FROM tprog)
+               AND (data->>'deleted')::boolean IS NOT TRUE
+           )
+           SELECT store, id, data, updated_at, server_seq
+             FROM sync_records
+            WHERE user_id = $1 AND (
+              (store = 'programs'                 AND id IN (SELECT id FROM tprog))
+              OR (store = 'workoutTemplates'      AND id IN (SELECT id FROM twt))
+              OR (store = 'workoutExerciseTemplates'
+                  AND data->>'workoutTemplateId' IN (SELECT id FROM twt)
+                  AND (data->>'deleted')::boolean IS NOT TRUE)
+            )`,
+          [ADMIN_USER_ID],
+        )
+        templateRows = rows
+      }
+
+      // 3. Fusion LWW : templates d'abord, propres records ensuite (updated_at arbitre).
+      //    Un même id ne peut apparaître qu'une fois dans la réponse.
+      const seen = new Map()
+      for (const r of templateRows) seen.set(`${r.store}:${r.id}`, r)
+      for (const r of ownRows) {
+        const key = `${r.store}:${r.id}`
+        const prev = seen.get(key)
+        if (!prev || Number(r.updated_at) >= Number(prev.updated_at)) seen.set(key, r)
+      }
+
+      const records = [...seen.values()].map((r) => ({
         store: r.store,
         record: r.data,
         serverSeq: Number(r.server_seq),
       }))
-      const cursor = records.length
-        ? records[records.length - 1].serverSeq
+
+      // 4. Curseur = max server_seq des propres records (pas des templates admin)
+      const cursor = ownRows.length
+        ? Number(ownRows[ownRows.length - 1].server_seq)
         : since
+
       res.json({
         records,
         cursor,
-        hasMore: records.length === PULL_LIMIT,
+        hasMore: ownRows.length === PULL_LIMIT,
         isAdmin: userId === ADMIN_USER_ID,
       })
     } catch (err) {
