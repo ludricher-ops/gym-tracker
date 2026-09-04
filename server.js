@@ -195,7 +195,8 @@ app.post('/auth/register', async (req, res) => {
     res.status(201).json({ id: userId, email: emailClean })
 
     // Seed best-effort : copie les exercices de l'admin vers le nouvel utilisateur
-    // (updated_at=1 → remplaçable si l'utilisateur modifie sa propre copie).
+    // avec leur vrai updated_at (LWW réel). La propagation au démarrage (syncRoutes)
+    // pourra écraser ces enregistrements si l'admin met à jour un exercice ultérieurement.
     // Les blobs (images) ne sont PAS copiés ici — ils sont servis via le curseur
     // partagé (sinceShared) dans le pull, sans duplication per-user.
     // Non attendu — la réponse est déjà envoyée.

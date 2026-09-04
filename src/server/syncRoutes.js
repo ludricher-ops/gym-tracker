@@ -3,8 +3,9 @@
 // applique un last-write-wins sur `updated_at`. Toutes les requêtes sont
 // filtrées par user_id (extrait du JWT via le middleware extractUser).
 //
-// Admin (user_id = 1) : ses exercices et templates sont automatiquement
-// propagés vers tous les autres users (seed LWW updated_at=1).
+// Admin (user_id = 1) : ses exercices sont propagés vers tous les autres users
+// avec leur vrai updated_at (LWW réel — pas de timestamp forcé à 1).
+// La propagation a lieu à chaque push admin et au démarrage du serveur.
 
 /** Stores autorisés (doit refléter SyncStoreName côté client). */
 const ALLOWED_STORES = new Set([
@@ -73,23 +74,35 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     return
   }
 
-  // Propagation au démarrage : met à jour tous les utilisateurs existants avec les exercices
-  // admin actuels. Corrige les users seedés avant le fix LWW (updatedAt était forcé à 1).
-  // La clause WHERE sync_records.updated_at < EXCLUDED.updated_at rend l'opération idempotente :
-  // une fois les utilisateurs à jour, les upserts suivants ne modifient rien.
+  // Propagation au démarrage : une requête bulk (CROSS JOIN + UPSERT) au lieu du
+  // pattern N×M qui consommait des connexions en boucle. Corrige les users seedés
+  // avant le fix LWW. Idempotente : la clause WHERE updated_at < EXCLUDED.updated_at
+  // ne modifie rien une fois les utilisateurs à jour.
   ;(async () => {
     try {
-      const { rows } = await pool.query(
-        `SELECT data FROM sync_records
-          WHERE user_id = $1 AND store = 'exercises'
-            AND (data->>'deleted')::boolean IS NOT TRUE`,
+      await pool.query(
+        `INSERT INTO sync_records (user_id, store, id, data, updated_at)
+         SELECT u.user_id, 'exercises', e.id,
+                e.data || '{"dirty":true}'::jsonb,
+                e.updated_at
+           FROM (
+             SELECT id, data, updated_at
+               FROM sync_records
+              WHERE user_id = $1
+                AND store = 'exercises'
+                AND (data->>'deleted')::boolean IS NOT TRUE
+           ) e
+           CROSS JOIN (
+             SELECT DISTINCT user_id FROM sync_records WHERE user_id != $1
+           ) u
+         ON CONFLICT (user_id, store, id) DO UPDATE
+           SET data       = EXCLUDED.data,
+               updated_at = EXCLUDED.updated_at,
+               server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
+         WHERE sync_records.updated_at < EXCLUDED.updated_at`,
         [ADMIN_USER_ID],
       )
-      if (rows.length > 0) {
-        const changes = rows.map(r => ({ store: 'exercises', record: r.data }))
-        await propagateAdminChanges(pool, changes)
-        console.log(`[startup] Propagation admin : ${rows.length} exercice(s) vérifiés`)
-      }
+      console.log('[startup] Propagation admin exercices → OK')
     } catch (err) {
       console.error('[startup-propagate]', err.message)
     }
@@ -218,8 +231,9 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
                    AND (data->>'deleted')::boolean IS NOT TRUE
               )
               AND (sr.data->>'deleted')::boolean IS NOT TRUE
-            ORDER BY sr.server_seq ASC`,
-          [ADMIN_USER_ID, sinceShared],
+            ORDER BY sr.server_seq ASC
+            LIMIT $3`,
+          [ADMIN_USER_ID, sinceShared, PULL_LIMIT],
         )
         sharedBlobRows = rows
         if (rows.length > 0) {

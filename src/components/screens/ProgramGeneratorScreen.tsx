@@ -1,7 +1,7 @@
 // Wizard de génération automatique de programme.
 // 6 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ProgramGoal, ProgramLevel, Weekday } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
@@ -132,21 +132,25 @@ export function ProgramGeneratorScreen() {
 
   // ── Sélection des jours (étape 2) ──────────────────────────────────────────
 
+  // Auto-avance quand exactement N jours sont sélectionnés.
+  // Effet hors de l'updater pour éviter les doubles timers en React Strict Mode.
+  useEffect(() => {
+    if (days !== null && selectedDays.length === days) {
+      setAdvancing(true)
+      const t = setTimeout(() => {
+        setStepIndex((s) => s + 1)
+        setAdvancing(false)
+      }, 200)
+      return () => clearTimeout(t)
+    }
+  }, [selectedDays.length, days])
+
   function toggleDay(day: Weekday) {
     if (days === null) return
     setSelectedDays((prev) => {
       if (prev.includes(day)) return prev.filter((d) => d !== day)
       if (prev.length >= days) return prev  // déjà au max
-      const next = [...prev, day]
-      // Auto-avance quand le nombre exact est atteint
-      if (next.length === days) {
-        setAdvancing(true)
-        setTimeout(() => {
-          setStepIndex((s) => s + 1)
-          setAdvancing(false)
-        }, 200)
-      }
-      return next
+      return [...prev, day]
     })
   }
 
@@ -231,7 +235,8 @@ export function ProgramGeneratorScreen() {
             return (
               <button
                 key={opt.value}
-                onClick={() => !disabled && toggleDay(opt.value)}
+                onClick={() => toggleDay(opt.value)}
+                disabled={disabled}
                 style={{
                   padding: '12px 6px',
                   borderRadius: 'var(--radius-card)',
