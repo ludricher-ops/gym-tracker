@@ -194,6 +194,7 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
       {view.step === 4 && (
         <StepReview
           draft={draft}
+          exercises={store.exercises}
           startDate={startDate}
           setStartDate={setStartDate}
           hasActiveProgram={activeProgram?.name ?? null}

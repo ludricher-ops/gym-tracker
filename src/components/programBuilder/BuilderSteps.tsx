@@ -2,7 +2,7 @@
 // (ProgramBuilderScreen) détient le brouillon et passe ici les données.
 
 import { useMemo, useState } from 'react'
-import type { MuscleGroup, ProgramGoal, WorkoutType } from '../../types'
+import type { Exercise, MuscleGroup, ProgramGoal, Weekday, WorkoutType } from '../../types'
 import type { StoreApi } from '../../hooks/useStore'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
 import {
@@ -524,6 +524,7 @@ export function StepEditWorkout({
 
 interface StepReviewProps {
   draft: DraftProgram
+  exercises: Exercise[]
   startDate: string
   setStartDate: (v: string) => void
   hasActiveProgram: string | null
@@ -534,12 +535,13 @@ interface StepReviewProps {
 }
 
 export function StepReview({
-  draft, startDate, setStartDate, hasActiveProgram, saving, isEditing, onActivate, onSave,
+  draft, exercises, startDate, setStartDate, hasActiveProgram, saving, isEditing, onActivate, onSave,
 }: StepReviewProps) {
   const stats = draftStats(draft)
   return (
     <>
       <div className="gt-screen__scroll">
+        {/* En-tête programme */}
         <Card variant="accent">
           <p className="t-eyebrow" style={{ color: 'var(--accent-ink)', opacity: 0.7 }}>
             {GOAL_LABEL[draft.goal]}
@@ -554,48 +556,88 @@ export function StepReview({
           </div>
         </Card>
 
+        {/* Rythme hebdomadaire avec type de séance */}
         <div>
-          <p className="t-eyebrow" style={{ marginBottom: 8 }}>
-            Rythme hebdomadaire
-          </p>
+          <p className="t-eyebrow" style={{ marginBottom: 8 }}>Rythme hebdomadaire</p>
           <div style={{ display: 'flex', gap: 4 }}>
             {WEEKDAYS.map((day) => {
-              const filled = !!draft.week[day]
+              const wtLocalId = draft.week[day]
+              const workout = wtLocalId ? draft.workouts.find((w) => w.localId === wtLocalId) : undefined
               return (
                 <div
                   key={day}
                   style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    padding: '8px 0',
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    background: filled ? 'var(--accent)' : 'var(--surface2)',
-                    color: filled ? 'var(--accent-ink)' : 'var(--dim)',
+                    flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 8,
+                    background: workout ? 'var(--accent)' : 'var(--surface2)',
+                    color: workout ? 'var(--accent-ink)' : 'var(--dim)',
                   }}
                 >
-                  {WEEKDAY_LABEL[day][0]}
+                  <div style={{ fontSize: 10, fontWeight: 700 }}>{WEEKDAY_LABEL[day]}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, marginTop: 2 }}>
+                    {workout
+                      ? (workout.type === 'custom' ? workout.name : WORKOUT_TYPE_LABEL[workout.type])
+                      : '—'}
+                  </div>
                 </div>
               )
             })}
           </div>
         </div>
 
-        <div>
-          <p className="t-eyebrow" style={{ marginBottom: 8 }}>
-            Séances
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {draft.workouts.map((w) => (
-              <Row
-                key={w.localId}
-                label={w.name}
-                sub={`${w.exercises.length} exercice(s)`}
-              />
-            ))}
-          </div>
-        </div>
+        {/* Cartes de séances avec miniatures */}
+        <p className="t-eyebrow">Séances</p>
+        {draft.workouts.map((w) => {
+          const day = (Object.keys(draft.week) as Weekday[]).find((d) => draft.week[d] === w.localId)
+          const dayLabel = day ? WEEKDAY_LABEL[day] : undefined
+          return (
+            <Card key={w.localId} style={{ padding: 0, overflow: 'clip' }}>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px 8px', gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: 'var(--surface2)', border: '0.5px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <Icon name="dumbbell" size={20} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  {dayLabel && <div className="t-eyebrow" style={{ marginBottom: 2 }}>{dayLabel}</div>}
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--ink)' }}>
+                    {w.name}
+                  </div>
+                  <div className="t-caption" style={{ marginTop: 2, color: 'var(--dim)' }}>
+                    {w.exercises.length} exercice{w.exercises.length > 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+              {w.exercises.length > 0 && (
+                <div style={{
+                  display: 'flex', gap: 6, padding: '0 14px 12px',
+                  overflowX: 'auto', scrollbarWidth: 'none',
+                }}>
+                  {w.exercises.map((dwe) => {
+                    const ex = exercises.find((e) => e.id === dwe.exerciseId)
+                    return (
+                      <div
+                        key={dwe.localId}
+                        style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}
+                      >
+                        <ReviewExThumb url={ex?.media?.url} />
+                        <span style={{
+                          fontSize: 9, color: 'var(--dim)', maxWidth: 52,
+                          textAlign: 'center', lineHeight: 1.2,
+                          display: '-webkit-box', WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                        }}>
+                          {ex?.name}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Card>
+          )
+        })}
 
         {!isEditing && (
           <div className="gt-field">
@@ -634,6 +676,28 @@ export function StepReview({
         )}
       </PrimaryBar>
     </>
+  )
+}
+
+function ReviewExThumb({ url }: { url?: string }) {
+  return (
+    <div style={{
+      width: 60, height: 60, borderRadius: 12,
+      background: 'var(--surface2)', border: '0.5px solid var(--border)',
+      overflow: 'hidden', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', flexShrink: 0,
+    }}>
+      {url ? (
+        <img
+          src={url}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 70%' }}
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      ) : (
+        <Icon name="dumbbell" size={20} />
+      )}
+    </div>
   )
 }
 

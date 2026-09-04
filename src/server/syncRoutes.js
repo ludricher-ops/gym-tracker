@@ -73,6 +73,28 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     return
   }
 
+  // Propagation au démarrage : met à jour tous les utilisateurs existants avec les exercices
+  // admin actuels. Corrige les users seedés avant le fix LWW (updatedAt était forcé à 1).
+  // La clause WHERE sync_records.updated_at < EXCLUDED.updated_at rend l'opération idempotente :
+  // une fois les utilisateurs à jour, les upserts suivants ne modifient rien.
+  ;(async () => {
+    try {
+      const { rows } = await pool.query(
+        `SELECT data FROM sync_records
+          WHERE user_id = $1 AND store = 'exercises'
+            AND (data->>'deleted')::boolean IS NOT TRUE`,
+        [ADMIN_USER_ID],
+      )
+      if (rows.length > 0) {
+        const changes = rows.map(r => ({ store: 'exercises', record: r.data }))
+        await propagateAdminChanges(pool, changes)
+        console.log(`[startup] Propagation admin : ${rows.length} exercice(s) vérifiés`)
+      }
+    } catch (err) {
+      console.error('[startup-propagate]', err.message)
+    }
+  })()
+
   // POST /api/sync/push — { changes: [{ store, record }] }
   app.post('/api/sync/push', extractUser, requireUser, async (req, res) => {
     const userId = req.userId
