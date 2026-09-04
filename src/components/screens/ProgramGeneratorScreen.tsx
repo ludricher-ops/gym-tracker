@@ -6,7 +6,12 @@ import type { ProgramGoal, ProgramLevel, Weekday } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { Icon } from '../ui'
-import { generateProgramDraft, type GeneratorEquipment, type GeneratorParams } from '../../utils/programGenerator'
+import {
+  generateProgramDraft,
+  type FocusMuscle,
+  type GeneratorEquipment,
+  type GeneratorParams,
+} from '../../utils/programGenerator'
 import { setPendingDraft } from '../../utils/generatorDraft'
 
 // ── Données des étapes ────────────────────────────────────────────────────────
@@ -78,10 +83,28 @@ const STEP_LEVEL: Step<ProgramLevel> = {
   ],
 }
 
+// ── Options muscles prioritaires ─────────────────────────────────────────────
+
+interface FocusOption {
+  value: FocusMuscle
+  emoji: string
+  label: string
+  sub: string
+}
+
+const FOCUS_OPTIONS: FocusOption[] = [
+  { value: 'chest',     emoji: '🏋️', label: 'Pectoraux',  sub: 'Poitrine, grand pectoral'          },
+  { value: 'back',      emoji: '🔗',  label: 'Dos',         sub: 'Largeur et épaisseur de dos'        },
+  { value: 'shoulders', emoji: '🎯',  label: 'Épaules',     sub: 'Deltoïdes antérieurs, médians…'    },
+  { value: 'arms',      emoji: '💪',  label: 'Bras',         sub: 'Biceps, triceps, avant-bras'       },
+  { value: 'legs',      emoji: '🦵',  label: 'Jambes',       sub: 'Quadris, ischios, fessiers, mollets' },
+  { value: 'core',      emoji: '⭕',  label: 'Core',         sub: 'Abdominaux, gainage'               },
+]
+
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Équipement  5: Niveau
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Équipement', 'Niveau']
-const TOTAL = 6
+// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Équipement  5: Niveau  6: Muscles
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Équipement', 'Niveau', 'Muscles']
+const TOTAL = 7
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -96,6 +119,7 @@ export function ProgramGeneratorScreen() {
   const [duration, setDuration]   = useState<20 | 45 | 60 | 90 | null>(null)
   const [equipment, setEquipment] = useState<GeneratorEquipment | null>(null)
   const [level, setLevel]         = useState<ProgramLevel | null>(null)
+  const [focusMuscles, setFocusMuscles] = useState<FocusMuscle[]>([])
   const [advancing, setAdvancing] = useState(false)
 
   function advance() {
@@ -124,10 +148,17 @@ export function ProgramGeneratorScreen() {
     const params: GeneratorParams = {
       goal, daysPerWeek: days, sessionDuration: duration,
       equipment, level, selectedDays: orderedDays,
+      focusMuscles: focusMuscles.length > 0 ? focusMuscles : undefined,
     }
     const draft = generateProgramDraft(params, store.exercises)
     setPendingDraft(draft)
     nav.navigate('programBuilder')
+  }
+
+  function toggleFocus(m: FocusMuscle) {
+    setFocusMuscles((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
+    )
   }
 
   // ── Sélection des jours (étape 2) ──────────────────────────────────────────
@@ -183,31 +214,82 @@ export function ProgramGeneratorScreen() {
         setEquipment(v); advance()
       })
     }
-    // Étape 6 — Niveau : sélection + bouton Générer
+    if (stepIndex === 5) {
+      return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => {
+        setLevel(v); advance()
+      })
+    }
+    // Étape 7 — Muscles prioritaires : multi-select + bouton Générer
+    return renderMusclePicker()
+  }
+
+  // Sélecteur de muscles prioritaires — multi-select + bouton Générer
+  function renderMusclePicker() {
     return (
-      <>
-        {renderChips(STEP_LEVEL, level, (v: ProgramLevel) => setLevel(v))}
-        <div style={{ padding: '0 16px 24px' }}>
-          <button
-            onClick={handleGenerate}
-            disabled={!level}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: 'var(--radius-card)',
-              border: 'none',
-              background: level ? 'var(--accent)' : 'var(--fg-muted)',
-              color: 'var(--accent-ink)',
-              fontSize: 'var(--fs-body)',
-              fontWeight: 700,
-              cursor: level ? 'pointer' : 'not-allowed',
-              transition: 'background 0.15s',
-            }}
-          >
-            ⚡ Générer mon programme
-          </button>
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
+          Quels muscles veux-tu prioriser ?
+        </p>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 20 }}>
+          Optionnel — le programme reste équilibré, mais les séances courtes favoriseront ces muscles.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+          {FOCUS_OPTIONS.map((opt) => {
+            const active = focusMuscles.includes(opt.value)
+            return (
+              <button
+                key={opt.value}
+                onClick={() => toggleFocus(opt.value)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 2,
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: 'var(--fg)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.12s, background 0.12s',
+                }}
+              >
+                <span style={{ fontSize: 20, lineHeight: 1 }}>{opt.emoji}</span>
+                <span style={{ fontWeight: 700, fontSize: 'var(--fs-body)', marginTop: 4 }}>
+                  {opt.label}
+                </span>
+                <span className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+                  {opt.sub}
+                </span>
+              </button>
+            )
+          })}
         </div>
-      </>
+
+        <button
+          onClick={handleGenerate}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: 'var(--radius-card)',
+            border: 'none',
+            background: 'var(--accent)',
+            color: 'var(--accent-ink)',
+            fontSize: 'var(--fs-body)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'background 0.15s',
+          }}
+        >
+          {focusMuscles.length > 0
+            ? `⚡ Générer avec focus ${focusMuscles.length > 1 ? `${focusMuscles.length} muscles` : FOCUS_OPTIONS.find(o => o.value === focusMuscles[0])?.label ?? ''}`
+            : '⚡ Générer mon programme'}
+        </button>
+      </div>
     )
   }
 

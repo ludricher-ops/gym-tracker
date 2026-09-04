@@ -15,6 +15,19 @@ import { uuid } from './uuid'
 
 export type GeneratorEquipment = 'full_gym' | 'dumbbell_barbell' | 'bodyweight'
 
+/** Groupes musculaires larges sélectionnables dans le wizard. */
+export type FocusMuscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core'
+
+/** Mapping FocusMuscle → MuscleGroup fins utilisés dans les slots. */
+export const FOCUS_TO_MUSCLES: Record<FocusMuscle, MuscleGroup[]> = {
+  chest:     ['chest', 'chest_upper', 'chest_lower'],
+  back:      ['back', 'back_width', 'back_thickness'],
+  shoulders: ['shoulders', 'shoulders_front', 'shoulders_lateral', 'shoulders_rear'],
+  arms:      ['biceps', 'triceps', 'forearms'],
+  legs:      ['quads', 'hamstrings', 'glutes', 'calves'],
+  core:      ['core'],
+}
+
 export interface GeneratorParams {
   goal: ProgramGoal
   daysPerWeek: 2 | 3 | 4 | 5
@@ -23,6 +36,8 @@ export interface GeneratorParams {
   level: ProgramLevel
   /** Jours explicitement choisis par l'utilisateur (optionnel — sinon par défaut). */
   selectedDays?: Weekday[]
+  /** Muscles prioritaires (optionnel — vide = pas de préférence). */
+  focusMuscles?: FocusMuscle[]
 }
 
 // ── Équipement autorisé par choix ─────────────────────────────────────────────
@@ -203,12 +218,31 @@ const DURATION_WEEKS: Record<ProgramLevel, number> = {
 
 // ── Sélection d'un exercice pour un slot ──────────────────────────────────────
 
+// ── Réordonnancement des slots selon les muscles ciblés ───────────────────────
+// Les composés ciblés passent avant les composés non ciblés, puis idem pour
+// les isolations. L'ordre compound-before-isolation est toujours préservé.
+
+function reorderSlotsByFocus(slots: Slot[], focused: Set<MuscleGroup>): Slot[] {
+  if (focused.size === 0) return slots
+  const byFocus = (a: Slot, b: Slot) => {
+    const aF = a.muscles.some((m) => focused.has(m)) ? 0 : 1
+    const bF = b.muscles.some((m) => focused.has(m)) ? 0 : 1
+    return aF - bF
+  }
+  const compounds  = slots.filter((s) => s.compound).sort(byFocus)
+  const isolations = slots.filter((s) => !s.compound).sort(byFocus)
+  return [...compounds, ...isolations]
+}
+
+// ── Sélection d'un exercice pour un slot ──────────────────────────────────────
+
 function pickExercise(
   slot: Slot,
   available: Exercise[],
   usedInWorkout: Set<string>,
   usedGlobally: Set<string>,
   level: ProgramLevel,
+  focused: Set<MuscleGroup>,
 ): Exercise | null {
   // Filtrer par muscle cible
   let candidates = available.filter(
@@ -226,8 +260,13 @@ function pickExercise(
     if (isolationFirst.length > 0) candidates = isolationFirst
   }
 
-  // Trier : non-utilisé globalement en premier, puis par popularité desc
+  // Trier : muscles ciblés d'abord, puis non-utilisé globalement, puis popularité desc
   candidates.sort((a, b) => {
+    if (focused.size > 0) {
+      const aF = focused.has(a.primaryMuscle) ? 0 : 1
+      const bF = focused.has(b.primaryMuscle) ? 0 : 1
+      if (aF !== bF) return aF - bF
+    }
     const aUsed = usedGlobally.has(a.id) ? 1 : 0
     const bUsed = usedGlobally.has(b.id) ? 1 : 0
     if (aUsed !== bUsed) return aUsed - bUsed
@@ -263,7 +302,12 @@ export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles } = params
+
+  // Construire le Set<MuscleGroup> des muscles ciblés une seule fois
+  const focusedMuscles = new Set<MuscleGroup>(
+    (focusMuscles ?? []).flatMap((f) => FOCUS_TO_MUSCLES[f]),
+  )
 
   // Exercices disponibles selon l'équipement (hors warmup, hors supprimés)
   const allowed = new Set(EQUIPMENT_FILTER[equipment])
@@ -289,7 +333,9 @@ export function generateProgramDraft(
     const count = (typeCount.get(workoutType) ?? 0) + 1
     typeCount.set(workoutType, count)
 
-    const baseSlots = SLOTS[workoutType] ?? []
+    // Réordonner les slots : muscles ciblés montent avant la coupure de durée
+    const rawSlots = SLOTS[workoutType] ?? []
+    const baseSlots = reorderSlotsByFocus(rawSlots, focusedMuscles)
     const slotCount = adjustedSlotCount(baseSlots.length, sessionDuration)
     const slots = baseSlots.slice(0, slotCount)
 
@@ -298,7 +344,7 @@ export function generateProgramDraft(
 
     for (const slot of slots) {
       const spec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
-      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level)
+      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level, focusedMuscles)
       if (!ex) continue
 
       usedInWorkout.add(ex.id)
