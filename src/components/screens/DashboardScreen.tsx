@@ -7,7 +7,7 @@ import {
 import { computeStreak } from '../../utils/streak'
 import { statsForWeek, statsForPreviousWeek, weekDeltas } from '../../utils/stats'
 import { localDayKey, startOfLocalDay } from '../../utils/dates'
-import { formatDuration, formatVolume } from '../../utils/format'
+import { formatDuration } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
 import { Button, Card, DateBlock, Icon, Row, SectionHeader, StatTile } from '../ui'
@@ -210,34 +210,6 @@ export function DashboardScreen() {
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
 
-  // Catchup condensé : 1 session → bouton direct ; >1 → ligne « N en attente »
-  const catchupToggle = (
-    <>
-      {visibleMissed.length === 1 && (
-        <Button variant="ghost" icon="bolt" onClick={() => startScheduled(visibleMissed[0]!)}>
-          Rattraper : {visibleMissed[0]!.workoutName}
-        </Button>
-      )}
-      {visibleMissed.length > 1 && (
-        <>
-          <button
-            type="button"
-            style={catchupLinkStyle}
-            onClick={() => setShowMissed((v) => !v)}
-          >
-            <Icon name="bolt" size={14} />
-            {visibleMissed.length} rattrapages en attente
-            <Icon name="chevron-right" size={12} className={showMissed ? 'gt-rot-up' : 'gt-rot-down'} />
-          </button>
-          {showMissed && visibleMissed.map((s) => (
-            <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
-              {s.workoutName} · {s.label}
-            </Button>
-          ))}
-        </>
-      )}
-    </>
-  )
 
   return (
     <div className="gt-screen">
@@ -265,7 +237,7 @@ export function DashboardScreen() {
               <Icon name="flame" size={20} />
             </div>
             <div>
-              <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)', lineHeight: 1 }}>{streak}</div>
+              <div className="t-num gt-stat__label" style={{ lineHeight: 1 }}>{streak}</div>
               <div className="gt-stat__label">JOURS</div>
             </div>
           </div>
@@ -344,39 +316,44 @@ export function DashboardScreen() {
             </p>
             <p className="t-caption" style={{ marginTop: 2, opacity: 0.8 }}>{card.todaySession.label}</p>
             {card.completedSession && (
-              <div className="gt-statrow" style={{ marginTop: 10 }}>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
-                    {formatDuration(card.completedSession.durationSec ?? 0)}
+              <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
+                    {formatDuration(card.completedSession.durationSec ?? 0).replace(/:\d{2}$/, '')}
                   </div>
-                  <div className="gt-stat__label">Durée</div>
+                  <div className="gt-stat__label">DURÉE</div>
                 </div>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
-                    {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
+                    {abbrevVol(card.completedSession.totalVolumeKg ?? 0)}
                   </div>
-                  <div className="gt-stat__label">Volume</div>
+                  <div className="gt-stat__label">VOLUME KG</div>
                 </div>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
                     {card.completedSession.completedSets}
                   </div>
-                  <div className="gt-stat__label">Séries</div>
+                  <div className="gt-stat__label">SÉRIES</div>
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
               </Button>
-              {catchupToggle}
-              {hasMissedToIgnore && visibleMissed.length > 0 && (
-                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
-                  Ignorer les rattrapages antérieurs
-                </Button>
-              )}
             </div>
           </Card>
+        )}
+
+        {/* Rattrapages en attente sous done_today */}
+        {!resumable && activeProgram && card.type === 'done_today' && visibleMissed.length > 0 && (
+          <Row
+            icon="clock"
+            label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
+            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            chevron
+            onClick={() => nav.navigate('rattrapages')}
+          />
         )}
 
         {/* ── Séance en avance terminée ──────────────────────────────── */}
@@ -388,28 +365,28 @@ export function DashboardScreen() {
             </p>
             <p className="t-caption" style={{ marginTop: 2, opacity: 0.8 }}>{card.todaySession.label}</p>
             {card.completedSession && (
-              <div className="gt-statrow" style={{ marginTop: 10 }}>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
-                    {formatDuration(card.completedSession.durationSec ?? 0)}
+              <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
+                    {formatDuration(card.completedSession.durationSec ?? 0).replace(/:\d{2}$/, '')}
                   </div>
-                  <div className="gt-stat__label">Durée</div>
+                  <div className="gt-stat__label">DURÉE</div>
                 </div>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
-                    {formatVolume(card.completedSession.totalVolumeKg ?? 0)} kg
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
+                    {abbrevVol(card.completedSession.totalVolumeKg ?? 0)}
                   </div>
-                  <div className="gt-stat__label">Volume</div>
+                  <div className="gt-stat__label">VOLUME KG</div>
                 </div>
-                <div className="gt-stat">
-                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-title)' }}>
+                <div className="gt-stat" style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}>
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)' }}>
                     {card.completedSession.completedSets}
                   </div>
-                  <div className="gt-stat__label">Séries</div>
+                  <div className="gt-stat__label">SÉRIES</div>
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Ajouter une séance libre
               </Button>
