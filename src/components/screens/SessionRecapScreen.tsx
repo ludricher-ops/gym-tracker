@@ -184,6 +184,7 @@ export function SessionRecapScreen({ params }: ScreenProps) {
               value={`${formatVolume(recap.totalVolumeKg)} kg`}
               delta={previous ? Math.round(recap.totalVolumeKg - previous.volumeKg) : undefined}
               style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
+              valueStyle={{ fontSize: 'var(--fs-body)' }}
             />
             <StatTile
               label="Durée"
@@ -195,11 +196,13 @@ export function SessionRecapScreen({ params }: ScreenProps) {
               }
               deltaUnit=" min"
               style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
+              valueStyle={{ fontSize: 'var(--fs-body)' }}
             />
             <StatTile
               label="RPE moyen"
               value={recap.avgRPE != null ? recap.avgRPE.toFixed(1) : '—'}
               style={{ background: 'color-mix(in oklch, var(--accent) 75%, var(--accent-ink))', border: 'none' }}
+              valueStyle={{ fontSize: 'var(--fs-body)' }}
             />
           </div>
         </Card>
