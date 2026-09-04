@@ -249,17 +249,25 @@ export function DashboardScreen() {
           </h1>
         </div>
         {streak > 0 && (
-          /* Tuile streak : colonne centrée icône / valeur / label */
+          /* Chip streak compact : icône flamme + nombre + JOURS, layout horizontal */
           <div
-            className="gt-stat"
-            style={{ flex: 'none', border: 'none', alignItems: 'center' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--gap-tile)',
+              background: 'var(--surface)',
+              borderRadius: 'var(--radius-card)',
+              padding: 'var(--gap-tile)',
+            }}
             title="Jours consécutifs"
           >
             <div style={{ color: 'var(--accent)', display: 'flex' }}>
-              <Icon name="flame" size={18} />
+              <Icon name="flame" size={16} />
             </div>
-            <div className="gt-stat__value">{streak}</div>
-            <div className="gt-stat__label">JOURS</div>
+            <div>
+              <div className="gt-stat__value" style={{ lineHeight: 1 }}>{streak}</div>
+              <div className="gt-stat__label">JOURS</div>
+            </div>
           </div>
         )}
       </div>
