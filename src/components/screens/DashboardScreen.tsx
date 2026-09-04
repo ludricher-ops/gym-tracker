@@ -10,7 +10,7 @@ import { localDayKey, startOfLocalDay } from '../../utils/dates'
 import { formatDuration } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
-import { Button, Card, DateBlock, Icon, Row, SectionHeader, StatTile } from '../ui'
+import { Button, Card, Icon, Row, SectionHeader, StatTile } from '../ui'
 
 const WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
@@ -22,20 +22,6 @@ function abbrevVol(kg: number): string {
   return String(Math.round(kg))
 }
 
-/** Style du bouton condensé "N rattrapages en attente". */
-const catchupLinkStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  background: 'none',
-  border: 'none',
-  color: 'var(--accent-ink)',
-  cursor: 'pointer',
-  fontSize: 'var(--fs-caption)',
-  fontWeight: 600,
-  padding: '4px 0',
-  opacity: 0.85,
-}
 
 export function DashboardScreen() {
   const store = useStore()
@@ -129,11 +115,6 @@ export function DashboardScreen() {
     setSelectedCell((prev) => (prev?.label === cell.label ? null : cell))
   }, [])
 
-  const handleIgnoreCatchups = useCallback(async () => {
-    if (!activeProgram) return
-    await store.program.save({ ...activeProgram, catchupIgnoredBefore: startOfToday })
-    setSelectedCell(null)
-  }, [activeProgram, store, startOfToday])
 
   const handleRestoreCell = useCallback(async (cell: typeof progressCells[0]) => {
     if (!activeProgram) return
@@ -159,18 +140,6 @@ export function DashboardScreen() {
   const scheduledSeries = scheduledWets.reduce((sum, wet) => sum + wet.targetSets, 0)
   const scheduledDurMin = Math.ceil(scheduledSeries * 3.5)
 
-  // Nombre d'exercices (hors échauffement) par séance terminée
-  const sessionExoCounts = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const se of store.sessionExercises) {
-      if (!se.isWarmup && !se.deleted) {
-        map.set(se.sessionId, (map.get(se.sessionId) ?? 0) + 1)
-      }
-    }
-    return map
-  }, [store.sessionExercises])
-
-  const recent = endedSessions.slice(0, 3)
 
   const openSession = (id: string) => nav.openModal('session', { sessionId: id })
   const startFree = async () => openSession((await startFreestyleSession(store)).id)
@@ -196,10 +165,8 @@ export function DashboardScreen() {
     () => card.missedSessions.filter((s) => s.date.getTime() >= ignoredBefore),
     [card.missedSessions, ignoredBefore],
   )
-  const hasMissedToIgnore = visibleMissed.length > 0
 
   const [showWorkoutPicker, setShowWorkoutPicker] = useState(false)
-  const [showMissed, setShowMissed] = useState(false)
 
   const startFromWorkout = async (wtId: string) => {
     const wt = store.workoutTemplates.find((w) => w.id === wtId)
@@ -399,44 +366,21 @@ export function DashboardScreen() {
           <Card>
             <p className="t-eyebrow">Jour de repos</p>
             <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
-            <p className="t-caption" style={{ marginTop: 2 }}>
-              Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
-            </p>
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {visibleMissed.length > 0 && (
-                <Button variant="primary" icon="bolt" onClick={() => startScheduled(visibleMissed[0]!)}>
-                  Rattraper : {visibleMissed[0]!.workoutName}
-                  {visibleMissed.length > 1 ? ` · ${visibleMissed[0]!.label}` : ''}
-                </Button>
-              )}
-              {visibleMissed.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    style={catchupLinkStyle}
-                    onClick={() => setShowMissed((v) => !v)}
-                  >
-                    <Icon name="bolt" size={14} />
-                    {visibleMissed.length - 1} autre{visibleMissed.length > 2 ? 's' : ''} en attente
-                    <Icon name="chevron-right" size={12} className={showMissed ? 'gt-rot-up' : 'gt-rot-down'} />
-                  </button>
-                  {showMissed && visibleMissed.slice(1).map((s) => (
-                    <Button key={s.label} variant="ghost" icon="bolt" onClick={() => startScheduled(s)}>
-                      {s.workoutName} · {s.label}
-                    </Button>
-                  ))}
-                </>
-              )}
-              {hasMissedToIgnore && (
-                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
-                  Ignorer les rattrapages antérieurs
-                </Button>
-              )}
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>
             </div>
           </Card>
+        )}
+        {!resumable && activeProgram && card.type === 'missed' && visibleMissed.length > 0 && (
+          <Row
+            icon="clock"
+            label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
+            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            chevron
+            onClick={() => nav.navigate('rattrapages')}
+          />
         )}
 
         {/* ── Jour de repos — séance en avance possible ──────────────── */}
@@ -444,12 +388,9 @@ export function DashboardScreen() {
           <Card>
             <p className="t-eyebrow">Jour de repos</p>
             <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
-            <p className="t-caption" style={{ marginTop: 2 }}>
-              Aucune séance prévue aujourd&apos;hui dans «&nbsp;{activeProgram.name}&nbsp;».
-            </p>
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
               <Button icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
-                Commencer la séance en avance : {card.nextSession!.workoutName}
+                Commencer {card.nextSession!.workoutName} en avance
               </Button>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
@@ -465,14 +406,9 @@ export function DashboardScreen() {
               {schedule.length > 0 ? 'Programme terminé' : 'Jour de repos'}
             </p>
             <p className="t-title" style={{ marginTop: 4 }}>
-              {schedule.length > 0 ? activeProgram.name : 'Récupération'}
+              {schedule.length > 0 ? 'Toutes les séances sont complètes 🎉' : 'Récupération'}
             </p>
-            <p className="t-caption" style={{ marginTop: 2 }}>
-              {schedule.length > 0
-                ? 'Toutes les séances sont complètes. Bravo !'
-                : `Aucune séance prévue aujourd'hui dans « ${activeProgram.name} ».`}
-            </p>
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>
@@ -483,20 +419,36 @@ export function DashboardScreen() {
         {/* ── Pas de programme actif ──────────────────────────────────── */}
         {!resumable && !activeProgram && (
           <Card>
-            <p className="t-eyebrow">Pas de programme actif</p>
-            <p className="t-title" style={{ marginTop: 4 }}>
-              Démarrer une séance libre
-            </p>
+            <p className="t-eyebrow">Pour commencer</p>
+            <p className="t-title" style={{ marginTop: 4 }}>Crée ton programme</p>
             <p className="t-caption" style={{ marginTop: 2 }}>
-              Active un programme depuis l&apos;onglet Profil, ou lance une séance libre.
+              L&apos;app sait alors quoi te proposer chaque jour d&apos;entraînement.
             </p>
-            <div style={{ marginTop: 12 }}>
-              <Button icon="bolt" onClick={startFree}>
+            <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
+              <Button icon="bolt" onClick={() => nav.navigate('programsLibrary')}>
+                Voir les programmes
+              </Button>
+              <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
               </Button>
             </div>
           </Card>
         )}
+
+        {/* ── Stats de la semaine en cours ────────────────────────────── */}
+        <SectionHeader label="Cette semaine" />
+        <div className="gt-statrow">
+          <StatTile
+            label="Séances"
+            value={String(current.sessions)}
+            delta={deltas.sessions}
+          />
+          <StatTile
+            label="Volume kg"
+            value={abbrevVol(current.volumeKg)}
+          />
+          <StatTile label="Temps" value={formatDuration(current.timeSec).replace(/:\d{2}$/, '')} />
+        </div>
 
         {/* ── Séances du programme (picker dépliable) ──────────────────── */}
         {activeProgram && programWorkouts.length > 0 && (
@@ -654,45 +606,6 @@ export function DashboardScreen() {
           </>
         )}
 
-        {/* ── Stats de la semaine en cours ────────────────────────────── */}
-        <SectionHeader label="Cette semaine" />
-        <div className="gt-statrow">
-          <StatTile
-            label="Séances"
-            value={String(current.sessions)}
-            delta={deltas.sessions}
-          />
-          <StatTile
-            label="Volume kg"
-            value={abbrevVol(current.volumeKg)}
-          />
-          <StatTile label="Temps" value={formatDuration(current.timeSec).replace(/:\d{2}$/, '')} />
-        </div>
-
-        {/* ── Séances récentes ─────────────────────────────────────────── */}
-        {recent.length > 0 && (
-          <>
-            <SectionHeader label="Séances récentes" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recent.map((s) => {
-                const exoCount = sessionExoCounts.get(s.id) ?? 0
-                const weekday = new Date(s.startedAt).toLocaleDateString('fr-FR', { weekday: 'long' })
-                const durationMin = Math.round((s.durationSec ?? 0) / 60)
-                return (
-                  <Row
-                    key={s.id}
-                    leading={<DateBlock date={s.startedAt} />}
-                    label={s.name}
-                    sub={`${weekday} · ${exoCount} exo${exoCount > 1 ? 's' : ''}`}
-                    value={`${abbrevVol(s.totalVolumeKg ?? 0)} · ${durationMin}'`}
-                    chevron
-                    onClick={() => nav.navigate('sessionRecap', { sessionId: s.id })}
-                  />
-                )
-              })}
-            </div>
-          </>
-        )}
       </div>
     </div>
   )
