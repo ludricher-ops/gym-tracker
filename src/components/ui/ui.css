@@ -767,3 +767,86 @@ button.gt-row:focus-visible,
   font-weight: 600;
   color: var(--muted);
 }
+
+/* ── MiniBars — variante étendue (barre de progression segmentée) ─── */
+/* grow : les barres se partagent toute la largeur disponible. */
+.gt-minibars--grow {
+  flex: 1;
+}
+.gt-minibars--grow .gt-minibar {
+  flex: 1;
+  width: auto;
+  min-width: 2px;
+}
+
+/* ── SetTable — grille SET / valeur / valeur / marque ─────────────── */
+.gt-set-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gt-set-table__head {
+  display: grid;
+  gap: 8px;
+  padding: 2px 13px 6px;
+}
+.gt-set-table__head--4 {
+  grid-template-columns: 58px 1fr 1fr 40px;
+}
+.gt-set-table__head--3 {
+  grid-template-columns: 58px 1fr 40px;
+}
+.gt-set-table__cell {
+  font-size: var(--fs-eyebrow);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--dim);
+  text-align: right;
+}
+.gt-set-table__cell:first-child {
+  text-align: left;
+}
+/* Passe les lignes de série en grille (override display:flex du .gt-set) */
+.gt-set--grid {
+  display: grid;
+  gap: 8px;
+}
+.gt-set--grid-4 {
+  grid-template-columns: 58px 1fr 1fr 40px;
+}
+.gt-set--grid-3 {
+  grid-template-columns: 58px 1fr 40px;
+}
+/* Valeurs numériques KG et REPS, alignées à droite */
+.gt-set__kg,
+.gt-set__reps {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-align: right;
+  align-self: center;
+}
+
+/* ── Actions secondaires de saisie (RPE, +Série, Actions) ─────────── */
+.gt-session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.gt-session-action {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 4px;
+}
+@media (hover: hover) {
+  .gt-session-action:hover {
+    color: var(--text);
+  }
+}

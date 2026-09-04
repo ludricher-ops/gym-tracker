@@ -13,40 +13,61 @@ interface SetTableProps {
   onValidate?: () => void
 }
 
-function perfLabel(set: SetRecord, type: SetTableProps['trackingType'], unit: WeightUnit): string {
-  if (type === 'time') return `${set.reps}s`
-  if (type === 'reps_only') return `${set.reps} reps`
-  return `${formatWeight(set.weightKg, unit)} × ${set.reps}`
-}
-
 export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect, onValidate }: SetTableProps) {
   // Numérotation des séries de travail (l'échauffement ne compte pas).
   let work = 0
-  const labels = sets.map((s) => (s.isWarmup ? 'Échauff.' : `Série ${++work}`))
+  const labels = sets.map((s) => (s.isWarmup ? 'Éch.' : `S${++work}`))
+
+  const showWeight = trackingType === 'weight_reps'
+  const colCount = showWeight ? 4 : 3
+  const colClass = `gt-set--grid-${colCount}`
+  const headClass = `gt-set-table__head--${colCount}`
+
+  // En-tête de colonne métrique : unité si poids, sinon DURÉE ou REPS.
+  const col2Header = showWeight ? weightUnit.toUpperCase() : trackingType === 'time' ? 'DURÉE' : 'REPS'
+  const col3Header = showWeight ? 'REPS' : ''
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="gt-set-table">
+      {/* Ligne d'en-tête */}
+      {sets.length > 0 && (
+        <div className={`gt-set-table__head ${headClass}`} aria-hidden="true">
+          <span className="gt-set-table__cell">SET</span>
+          <span className="gt-set-table__cell">{col2Header}</span>
+          {showWeight && <span className="gt-set-table__cell">{col3Header}</span>}
+          <span className="gt-set-table__cell" />
+        </div>
+      )}
+
+      {/* Lignes de séries */}
       {sets.map((set, i) => {
         const done = set.completedAt != null
         const active = set.id === activeSetId
         const label = labels[i]
+
+        const kgStr = showWeight ? formatWeight(set.weightKg, weightUnit) : null
+        const repsStr = trackingType === 'time' ? `${set.reps}s` : String(set.reps)
+
         return (
           <button
             key={set.id}
             type="button"
-            className={`gt-set ${active ? 'gt-set--active' : ''} ${
+            className={`gt-set gt-set--grid ${colClass} ${active ? 'gt-set--active' : ''} ${
               !done && !active ? 'gt-set--planned' : ''
             }`}
             onClick={() => onSelect(set.id)}
           >
             <span className="gt-set__idx">{label}</span>
-            <span className="gt-set__perf">{perfLabel(set, trackingType, weightUnit)}</span>
+            {kgStr != null && <span className="gt-set__kg">{kgStr}</span>}
+            <span className="gt-set__reps">{repsStr}</span>
             <span className="gt-set__mark">
               {set.rpe != null && (
-                <span style={{ fontSize: 11, fontWeight: 600 }}>RPE {set.rpe}</span>
+                <span style={{ fontSize: 'var(--fs-eyebrow)', fontWeight: 600 }}>
+                  RPE {set.rpe}
+                </span>
               )}
               {set.isFailure && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger)' }}>
+                <span style={{ fontSize: 'var(--fs-eyebrow)', fontWeight: 700, color: 'var(--danger)' }}>
                   Échec
                 </span>
               )}
@@ -97,6 +118,7 @@ export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect
           </button>
         )
       })}
+
       {sets.length === 0 && (
         <p className="t-caption">Aucune série — {TRACKING_LABEL[trackingType]}.</p>
       )}

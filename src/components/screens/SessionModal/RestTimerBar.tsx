@@ -6,7 +6,7 @@ interface RestTimerBarProps {
   timer: RestTimer
 }
 
-/** Bandeau de repos : décompte mm:ss + barre + actions Passer / +15 s. */
+/** Bandeau de repos : décompte mm:ss centré (56 px) + barre + actions Passer / +15 s. */
 export function RestTimerBar({ timer }: RestTimerBarProps) {
   if (!timer.active) return null
   const done = timer.remainingSec === 0
@@ -14,19 +14,17 @@ export function RestTimerBar({ timer }: RestTimerBarProps) {
 
   return (
     <Card variant="flat">
-      <div
-        style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}
-        aria-live="polite"
-      >
-        <span className="t-eyebrow">{done ? 'Repos terminé' : 'Repos'}</span>
-        <span
+      <div style={{ textAlign: 'center' }} aria-live="polite">
+        <div className="t-eyebrow">{done ? 'Repos terminé' : 'Repos'}</div>
+        <div
           className="t-num"
-          style={{ fontSize: 34, color: done ? 'var(--accent)' : 'var(--text)' }}
+          // 56 px : valeur spécifique timer — aucun token de la gamme ne couvre cette taille.
+          style={{ fontSize: 56, lineHeight: 1.1, color: done ? 'var(--accent)' : 'var(--text)' }}
           role="timer"
           aria-label={`Repos : ${formatClock(timer.remainingSec)}`}
         >
           {formatClock(timer.remainingSec)}
-        </span>
+        </div>
       </div>
       <div style={{ margin: '10px 0' }}>
         <ProgressBar value={progress} />

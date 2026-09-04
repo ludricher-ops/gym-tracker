@@ -15,7 +15,7 @@ import {
   playBeep, vibrate, notify, requestNotificationPermission,
 } from '../../../utils/feedback'
 import {
-  Button, Card, Icon, Modal, Pill, ProgressBar, Sheet, Stepper, Switch,
+  Button, Card, Icon, MiniBars, Modal, Pill, Sheet, Stepper,
 } from '../../ui'
 import { ExercisePicker } from '../../programBuilder/ExercisePicker'
 import { MediaImage } from '../../exercises/MediaImage'
@@ -144,7 +144,6 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const showWeight = trackingType === 'weight_reps'
   const isCardio = currentExercise?.primaryMuscle === 'cardio'
   const weightUnit = prefs.weightUnit
-  const exerciseCount = act.exercises.length
   const nextExercise = act.exercises[act.exIndex + 1]
   const supersetGroup = currentSE?.supersetGroup ?? null
   const supersetPeers = supersetGroup
@@ -264,37 +263,43 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   return (
     <Modal onRequestClose={close} ariaLabel={session.name ?? 'Séance en cours'}>
-      {/* Barre du haut */}
-      <div className="gt-topbar" style={{ paddingBottom: 8 }}>
+      {/* Barre du haut — 3 zones : Fermer · En cours + chrono · Compteur séries */}
+      <div className="gt-topbar">
+        {/* Zone 1 : fermer */}
         <button className="gt-iconbtn" onClick={close} aria-label="Fermer la séance">
           <Icon name="close" size={22} />
         </button>
+
+        {/* Zone 2 : label "En cours" + chrono */}
         <div style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
+          <div className="t-eyebrow">En cours</div>
           <div
             className="t-num"
-            style={{ fontSize: 20 }}
+            style={{ fontSize: 'var(--fs-title)' }}
             role="timer"
             aria-label={`Durée de la séance : ${formatDuration(elapsed)}`}
           >
             {formatDuration(elapsed)}
           </div>
-          <div
-            className="t-caption"
-            style={{ fontSize: 11 }}
-            aria-label={`${doneCount} séries validées sur ${totalCount}`}
-          >
-            {doneCount}/{totalCount} séries
-          </div>
         </div>
-        <button className="gt-iconbtn" onClick={() => setOverview(true)} aria-label="Vue d'ensemble">
-          <Icon name="list" size={22} />
-        </button>
-        <button className="gt-iconbtn" onClick={() => setMenu(true)} aria-label="Actions">
-          <Icon name="grip" size={22} />
+
+        {/* Zone 3 : compteur X/Y — ouvre la vue d'ensemble */}
+        <button
+          className="gt-iconbtn"
+          onClick={() => setOverview(true)}
+          aria-label={`${doneCount}/${totalCount} séries – Vue d'ensemble`}
+          style={{ flexDirection: 'column', gap: 1 }}
+        >
+          <span className="t-num" style={{ fontSize: 'var(--fs-body)', lineHeight: 1.2 }}>
+            {doneCount}/{totalCount}
+          </span>
+          <span className="t-eyebrow">séries</span>
         </button>
       </div>
-      <div style={{ padding: '0 var(--pad-screen)' }}>
-        <ProgressBar value={totalCount ? doneCount / totalCount : 0} />
+
+      {/* Barre de progression segmentée (une micro-barre par série) */}
+      <div style={{ padding: '0 var(--pad-screen) 4px', display: 'flex' }}>
+        <MiniBars total={totalCount} done={doneCount} grow />
       </div>
 
       {/* Corps */}
@@ -348,21 +353,23 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                  <Pill variant="surface2">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
-                  <span className="t-eyebrow">
+                  {/* Pill accent — sujet de l'écran */}
+                  <Pill variant="accent">{MUSCLE_LABEL[currentExercise.primaryMuscle]}</Pill>
+                  <span className="t-eyebrow t-num">
                     {supersetGroup
                       ? `Superset ${supersetGroup}`
                       : currentSection !== 'main'
                         ? SECTION_LABEL[currentSection]
-                        : `Ex ${sectionIdx + 1}/${sectionCount}`}
+                        : `EX ${sectionIdx + 1}/${sectionCount}`}
                   </span>
                 </div>
+                {/* Nom à display (30 px — maquette demande 26 px, token le plus proche = --fs-display) */}
                 <p
-                  className="t-title"
+                  className="t-display"
                   style={{
-                    // En superset : hauteur fixe = 2 lignes de titre pour que
-                    // les séries restent au même niveau quel que soit l'exercice.
-                    minHeight: isInSuperset ? '60px' : undefined,
+                    margin: '0 0 6px',
+                    // En superset : hauteur fixe ≈ 2 lignes display (30 px × 1.1 lh × 2 ≈ 66 px)
+                    minHeight: isInSuperset ? '66px' : undefined,
                   }}
                 >
                   {currentExercise.name}
@@ -388,15 +395,14 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                     })}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-                  <span className="t-caption">
-                    Précédent :{' '}
-                    {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
-                  </span>
-                  <span className="t-caption">
-                    PR : {exercisePR ? `${Number(exercisePR.estimated1RM).toFixed(1)} kg` : '—'}
-                  </span>
-                </div>
+                {/* Préc. + PR sur une seule ligne mono */}
+                <p className="t-caption t-num" style={{ margin: 0 }}>
+                  Préc.&nbsp;
+                  {prev ? `${formatWeight(prev.weightKg, weightUnit)} × ${prev.reps}` : '—'}
+                  {exercisePR != null
+                    ? ` · PR ${Number(exercisePR.estimated1RM).toFixed(1)} kg`
+                    : ''}
+                </p>
               </div>
             </div>
 
@@ -464,17 +470,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
         ) : (
           currentSE && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {trackingType === 'time' ? (
-                <>
-                  <Button
-                    icon="play"
-                    onClick={() => {
-                      setInputR(targetDurationSec)
-                      exerciseTimer.start(targetDurationSec)
-                    }}
-                  >
-                    Démarrer · {formatClock(targetDurationSec)}
-                  </Button>
+              {/* Carte de saisie */}
+              <Card variant="flat">
+                {trackingType === 'time' ? (
                   <div style={{ textAlign: 'center' }}>
                     <div className="t-eyebrow" style={{ marginBottom: 4 }}>
                       {isCardio ? 'Durée (min)' : 'Durée (s)'}
@@ -488,64 +486,122 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                       ariaLabel="Durée"
                     />
                   </div>
-                </>
-              ) : (
-                <div style={{ display: 'flex', gap: 16, justifyContent: 'space-around' }}>
-                  {showWeight && (
-                    <div style={{ textAlign: 'center' }}>
-                      <div className="t-eyebrow" style={{ marginBottom: 4 }}>
-                        Poids ({weightUnit})
+                ) : (
+                  <>
+                    {/* Steppers côte à côte, séparés par un filet vertical */}
+                    <div style={{ display: 'flex' }}>
+                      {showWeight && (
+                        <>
+                          <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
+                            <div className="t-eyebrow" style={{ marginBottom: 4 }}>
+                              Poids ({weightUnit})
+                            </div>
+                            <Stepper
+                              value={inputW}
+                              onChange={setInputW}
+                              step={prefs.weightStep}
+                              min={0}
+                              decimals={inputW % 1 === 0 ? 0 : 1}
+                              ariaLabel="Poids"
+                            />
+                          </div>
+                          {/* Filet séparateur */}
+                          <div
+                            style={{
+                              width: 1,
+                              background: 'var(--border)',
+                              margin: '8px',
+                              alignSelf: 'stretch',
+                            }}
+                          />
+                        </>
+                      )}
+                      <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
+                        <div className="t-eyebrow" style={{ marginBottom: 4 }}>Reps</div>
+                        <Stepper
+                          value={inputR}
+                          onChange={setInputR}
+                          min={0}
+                          ariaLabel="Répétitions"
+                        />
                       </div>
-                      <Stepper
-                        value={inputW}
-                        onChange={setInputW}
-                        step={prefs.weightStep}
-                        min={0}
-                        decimals={inputW % 1 === 0 ? 0 : 1}
-                        ariaLabel="Poids"
-                      />
                     </div>
-                  )}
-                  <div style={{ textAlign: 'center' }}>
-                    <div className="t-eyebrow" style={{ marginBottom: 4 }}>Reps</div>
-                    <Stepper value={inputR} onChange={setInputR} min={0} ariaLabel="Répétitions" />
-                  </div>
-                </div>
-              )}
 
-              {trackingType !== 'time' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Switch
-                    checked={inputRpe != null}
-                    onChange={(on) => setInputRpe(on ? 8 : null)}
-                    label="RPE"
-                  />
-                  <span className="t-caption">RPE</span>
-                  {inputRpe != null && (
-                    <Stepper
-                      value={inputRpe}
-                      onChange={setInputRpe}
-                      step={0.5}
-                      min={6}
-                      max={10}
-                      decimals={1}
-                      ariaLabel="RPE"
-                    />
-                  )}
-                  {repsLookSuspicious(inputR) && (
-                    <span className="t-caption" style={{ color: 'var(--danger)' }}>
-                      {inputR} reps ?
-                    </span>
-                  )}
-                </div>
-              )}
+                    {/* RPE stepper (affiché si activé via l'action secondaire) */}
+                    {inputRpe != null && (
+                      <div
+                        style={{
+                          borderTop: '1px solid var(--border)',
+                          marginTop: 10,
+                          paddingTop: 10,
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div className="t-eyebrow" style={{ marginBottom: 4 }}>RPE</div>
+                        <Stepper
+                          value={inputRpe}
+                          onChange={setInputRpe}
+                          step={0.5}
+                          min={6}
+                          max={10}
+                          decimals={1}
+                          ariaLabel="RPE"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </Card>
 
-              {/* Pour les exercices en mode temps, la validation passe par le timer — pas de bouton redondant */}
-              {trackingType !== 'time' && (
+              {/* Bouton de validation pleine largeur */}
+              {trackingType === 'time' ? (
+                <Button
+                  icon="play"
+                  onClick={() => {
+                    setInputR(targetDurationSec)
+                    exerciseTimer.start(targetDurationSec)
+                  }}
+                >
+                  Démarrer · {formatClock(targetDurationSec)}
+                </Button>
+              ) : (
                 <Button onClick={validate} disabled={!canValidate} icon="check">
                   Valider la série
                 </Button>
               )}
+
+              {/* Actions secondaires : RPE · +Série · Menu */}
+              <div className="gt-session-actions">
+                {trackingType !== 'time' && (
+                  <button
+                    type="button"
+                    className="gt-session-action"
+                    onClick={() => setInputRpe(inputRpe != null ? null : 8)}
+                  >
+                    {inputRpe != null ? '− RPE' : '+ RPE'}
+                  </button>
+                )}
+                {repsLookSuspicious(inputR) && (
+                  <span className="t-caption" style={{ color: 'var(--danger)' }}>
+                    {inputR} reps ?
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="gt-session-action"
+                  onClick={() => act.addSet()}
+                >
+                  + Série
+                </button>
+                <button
+                  type="button"
+                  className="gt-session-action"
+                  onClick={() => setMenu(true)}
+                  aria-label="Actions"
+                >
+                  <Icon name="grip" size={14} />
+                </button>
+              </div>
             </div>
           )
         )}

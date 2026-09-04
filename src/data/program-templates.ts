@@ -480,6 +480,10 @@ const wbJ3Wet: WorkoutExerciseTemplate[] = [
 // Iron Upper et 3 Semaines Sans Matériel sont gérés directement en DB via
 // les scripts recreate-iron-upper.mjs et create-sans-materiel.mjs — ils ne
 // font pas partie du seed générique (ils référencent des exercices spécifiques).
+// La ligne ci-dessous les référence pour satisfaire noUnusedLocals.
+void [iuProgram, iuWorkoutTemplates, iuJ1Wet, iuJ2Wet, iuJ3Wet,
+      bwProgram, bwWorkoutTemplates, bwJ1Wet, bwJ2Wet, bwJ3Wet]
+
 export const PROGRAM_TEMPLATES: Program[] = [
   wmProgram,
   wbProgram,
