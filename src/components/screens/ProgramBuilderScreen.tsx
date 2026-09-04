@@ -126,7 +126,10 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
     try {
       const created = await commitDraft(draft, store)
       await activateProgram(created, parseDateInput(startDate), store)
-      nav.back()
+      // Réinitialise la pile de l'onglet courant et bascule sur l'accueil
+      // pour que l'utilisateur voie immédiatement son nouveau programme actif.
+      nav.popToRoot()
+      nav.switchTab('today')
     } finally {
       setSaving(false)
     }

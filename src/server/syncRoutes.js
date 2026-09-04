@@ -20,15 +20,18 @@ const MAX_PUSH_BATCH = 500
 const ADMIN_USER_ID = 1
 
 /**
- * Propage les exercices de l'admin vers tous les autres users.
- * Les programmes isTemplate et leurs séances/exercices sont servis directement
- * via le pull (voir endpoint GET /api/sync/pull) — pas besoin de propagation.
- * Best-effort : appelée après le commit, les erreurs sont loggées mais non fatales.
+ * Propage les exercices et blobs de l'admin vers tous les autres users.
+ * Les blobs sont inclus pour que les images d'exercices soient visibles
+ * dès le premier pull après la propagation.
  * LWW : updated_at = 1 → n'écrase que les enregistrements non modifiés par l'utilisateur.
+ * Best-effort : appelée après le commit, les erreurs sont loggées mais non fatales.
  */
 async function propagateAdminChanges(pool, changes) {
-  const exerciseChanges = changes.filter(({ store }) => store === 'exercises')
-  if (exerciseChanges.length === 0) return
+  // Propager exercices ET blobs (images d'exercices)
+  const toPropagate = changes.filter(({ store }) =>
+    store === 'exercises' || store === 'blobs',
+  )
+  if (toPropagate.length === 0) return
 
   const { rows: otherUsers } = await pool.query(
     `SELECT DISTINCT user_id FROM sync_records WHERE user_id != $1`,
@@ -37,25 +40,27 @@ async function propagateAdminChanges(pool, changes) {
   if (otherUsers.length === 0) return
   const otherIds = otherUsers.map((r) => r.user_id)
 
-  for (const { record } of exerciseChanges) {
+  for (const { store, record } of toPropagate) {
     const seedData = { ...record, updatedAt: 1, dirty: true }
     const seedJson = JSON.stringify(seedData)
     for (const uid of otherIds) {
       await pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         VALUES ($1, 'exercises', $2, $3::jsonb, 1)
+         VALUES ($1, $2, $3, $4::jsonb, 1)
          ON CONFLICT (user_id, store, id) DO UPDATE
            SET data       = EXCLUDED.data,
                updated_at = 1,
                server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
          WHERE sync_records.updated_at = 1`,
-        [uid, record.id, seedJson],
+        [uid, store, record.id, seedJson],
       )
     }
   }
 
+  const exCount  = toPropagate.filter((c) => c.store === 'exercises').length
+  const blobCount = toPropagate.filter((c) => c.store === 'blobs').length
   console.log(
-    `[admin-propagation] ${exerciseChanges.length} exercice(s) → ${otherIds.length} user(s)`,
+    `[admin-propagation] ${exCount} exercice(s), ${blobCount} blob(s) → ${otherIds.length} user(s)`,
   )
 }
 
