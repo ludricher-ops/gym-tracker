@@ -13,8 +13,6 @@ import { uuid } from './uuid'
 
 // ── Types publics ────────────────────────────────────────────────────────────
 
-export type GeneratorEquipment = 'full_gym' | 'dumbbell_barbell' | 'bodyweight'
-
 /** Groupes musculaires larges sélectionnables dans le wizard. */
 export type FocusMuscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core'
 
@@ -32,20 +30,13 @@ export interface GeneratorParams {
   goal: ProgramGoal
   daysPerWeek: 2 | 3 | 4 | 5
   sessionDuration: 20 | 45 | 60 | 90
-  equipment: GeneratorEquipment
+  /** Équipements disponibles — tableau direct des valeurs Equipment sélectionnées. */
+  equipment: Equipment[]
   level: ProgramLevel
   /** Jours explicitement choisis par l'utilisateur (optionnel — sinon par défaut). */
   selectedDays?: Weekday[]
   /** Muscles prioritaires (optionnel — vide = pas de préférence). */
   focusMuscles?: FocusMuscle[]
-}
-
-// ── Équipement autorisé par choix ─────────────────────────────────────────────
-
-const EQUIPMENT_FILTER: Record<GeneratorEquipment, Equipment[]> = {
-  full_gym:         ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'kettlebell', 'band'],
-  dumbbell_barbell: ['barbell', 'dumbbell', 'bodyweight', 'kettlebell', 'band'],
-  bodyweight:       ['bodyweight', 'band'],
 }
 
 // ── Paramètres de séries/répétitions par objectif ────────────────────────────
@@ -310,7 +301,7 @@ export function generateProgramDraft(
   )
 
   // Exercices disponibles selon l'équipement (hors warmup, hors supprimés)
-  const allowed = new Set(EQUIPMENT_FILTER[equipment])
+  const allowed = new Set(equipment)
   const available = exercises.filter(
     (ex) => !ex.deleted && !ex.isWarmupExercise && allowed.has(ex.equipment),
   )

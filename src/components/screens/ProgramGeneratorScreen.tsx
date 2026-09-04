@@ -2,14 +2,13 @@
 // 6 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
 
 import { useEffect, useState } from 'react'
-import type { ProgramGoal, ProgramLevel, Weekday } from '../../types'
+import type { Equipment, ProgramGoal, ProgramLevel, Weekday } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { Icon } from '../ui'
 import {
   generateProgramDraft,
   type FocusMuscle,
-  type GeneratorEquipment,
   type GeneratorParams,
 } from '../../utils/programGenerator'
 import { setPendingDraft } from '../../utils/generatorDraft'
@@ -65,14 +64,31 @@ const STEP_DURATION: Step<20 | 45 | 60 | 90> = {
   ],
 }
 
-const STEP_EQUIPMENT: Step<GeneratorEquipment> = {
-  question: "Quel équipement as-tu ?",
-  options: [
-    { value: 'full_gym',         label: '🏋️ Salle complète',   sub: 'Barres, haltères, câbles, machines' },
-    { value: 'dumbbell_barbell', label: '🏠 Haltères & barre', sub: 'Barres et haltères libres'          },
-    { value: 'bodyweight',       label: '🤸 Poids du corps',   sub: 'Aucun matériel nécessaire'          },
-  ],
+// ── Options équipement (multi-select) ────────────────────────────────────────
+
+interface EquipmentOption {
+  value: Equipment
+  emoji: string
+  label: string
 }
+
+const EQUIPMENT_OPTIONS: EquipmentOption[] = [
+  { value: 'barbell',    emoji: '🏋️', label: 'Barre olympique'  },
+  { value: 'dumbbell',   emoji: '🔩',  label: 'Haltères'         },
+  { value: 'cable',      emoji: '🔗',  label: 'Câbles / poulie'  },
+  { value: 'machine',    emoji: '⚙️',  label: 'Machines'         },
+  { value: 'bodyweight', emoji: '🤸',  label: 'Poids du corps'   },
+  { value: 'kettlebell', emoji: '🫙',  label: 'Kettlebell'       },
+  { value: 'band',       emoji: '🪢',  label: 'Élastiques'       },
+]
+
+interface EquipmentPreset { label: string; items: Equipment[] }
+
+const EQUIPMENT_PRESETS: EquipmentPreset[] = [
+  { label: '🏟️ Salle',   items: ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'kettlebell', 'band'] },
+  { label: '🏠 Maison',  items: ['dumbbell', 'bodyweight', 'kettlebell', 'band'] },
+  { label: '🤸 Cardio',  items: ['bodyweight', 'band'] },
+]
 
 const STEP_LEVEL: Step<ProgramLevel> = {
   question: "Quel est ton niveau ?",
@@ -117,7 +133,7 @@ export function ProgramGeneratorScreen() {
   const [days, setDays]           = useState<2 | 3 | 4 | 5 | null>(null)
   const [selectedDays, setSelectedDays] = useState<Weekday[]>([])
   const [duration, setDuration]   = useState<20 | 45 | 60 | 90 | null>(null)
-  const [equipment, setEquipment] = useState<GeneratorEquipment | null>(null)
+  const [equipment, setEquipment] = useState<Equipment[]>([])
   const [level, setLevel]         = useState<ProgramLevel | null>(null)
   const [focusMuscles, setFocusMuscles] = useState<FocusMuscle[]>([])
   const [advancing, setAdvancing] = useState(false)
@@ -138,7 +154,7 @@ export function ProgramGeneratorScreen() {
   }
 
   function handleGenerate() {
-    if (!goal || !days || !duration || !equipment || !level) return
+    if (!goal || !days || !duration || equipment.length === 0 || !level) return
 
     // Trier les jours dans l'ordre de la semaine
     const orderedDays = WEEKDAY_OPTIONS
@@ -210,9 +226,7 @@ export function ProgramGeneratorScreen() {
       })
     }
     if (stepIndex === 4) {
-      return renderChips(STEP_EQUIPMENT, equipment, (v: GeneratorEquipment) => {
-        setEquipment(v); advance()
-      })
+      return renderEquipmentPicker()
     }
     if (stepIndex === 5) {
       return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => {
@@ -221,6 +235,102 @@ export function ProgramGeneratorScreen() {
     }
     // Étape 7 — Muscles prioritaires : multi-select + bouton Générer
     return renderMusclePicker()
+  }
+
+  // Sélecteur d'équipement — raccourcis + multi-select + bouton Continuer
+  function renderEquipmentPicker() {
+    function toggleEquipment(e: Equipment) {
+      setEquipment((prev) =>
+        prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e],
+      )
+    }
+
+    return (
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
+          Quel équipement as-tu ?
+        </p>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 16 }}>
+          Sélectionne tout ce qui est disponible.
+        </p>
+
+        {/* Raccourcis */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          {EQUIPMENT_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => setEquipment(preset.items)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 100,
+                border: '1.5px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--fg)',
+                fontSize: 'var(--fs-caption)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'border-color 0.12s',
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Multi-select équipements */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+          {EQUIPMENT_OPTIONS.map((opt) => {
+            const active = equipment.includes(opt.value)
+            return (
+              <button
+                key={opt.value}
+                onClick={() => toggleEquipment(opt.value)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: 'var(--fg)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'border-color 0.12s, background 0.12s',
+                }}
+              >
+                <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
+                <span style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Bouton Continuer */}
+        <button
+          onClick={() => { if (equipment.length > 0) advance() }}
+          disabled={equipment.length === 0}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: 'var(--radius-card)',
+            border: 'none',
+            background: equipment.length > 0 ? 'var(--accent)' : 'var(--border)',
+            color: equipment.length > 0 ? 'var(--accent-ink)' : 'var(--fg-muted)',
+            fontSize: 'var(--fs-body)',
+            fontWeight: 700,
+            cursor: equipment.length > 0 ? 'pointer' : 'not-allowed',
+            transition: 'background 0.15s, color 0.15s',
+          }}
+        >
+          {equipment.length > 0
+            ? `Continuer avec ${equipment.length} équipement${equipment.length > 1 ? 's' : ''}`
+            : 'Sélectionne au moins un équipement'}
+        </button>
+      </div>
+    )
   }
 
   // Sélecteur de muscles prioritaires — multi-select + bouton Générer
