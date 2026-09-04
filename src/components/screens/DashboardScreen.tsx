@@ -157,6 +157,7 @@ export function DashboardScreen() {
   }, [card.todaySession, store.workoutExerciseTemplates])
   const scheduledExos = scheduledWets.length
   const scheduledSeries = scheduledWets.reduce((sum, wet) => sum + wet.targetSets, 0)
+  const scheduledDurMin = Math.ceil(scheduledSeries * 3.5)
 
   // Nombre d'exercices (hors échauffement) par séance terminée
   const sessionExoCounts = useMemo(() => {
@@ -249,13 +250,16 @@ export function DashboardScreen() {
         </div>
         {streak > 0 && (
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--accent)' }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, color: 'var(--accent)' }}
             title="Jours consécutifs"
           >
-            <Icon name="trend" size={20} />
-            <span className="t-num" style={{ fontSize: 'var(--fs-title)' }}>
-              {streak}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Icon name="trend" size={18} />
+              <span className="t-num" style={{ fontSize: 'var(--fs-title)', lineHeight: 1 }}>
+                {streak}
+              </span>
+            </div>
+            <span className="t-eyebrow" style={{ color: 'var(--accent)', opacity: 0.8 }}>jours</span>
           </div>
         )}
       </div>
@@ -293,19 +297,34 @@ export function DashboardScreen() {
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledSeries}</div>
                   <div className="gt-stat__label">SÉRIES</div>
                 </div>
+                <div className="gt-stat">
+                  <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>~{scheduledDurMin}&apos;</div>
+                  <div className="gt-stat__label">DURÉE</div>
+                </div>
               </div>
             )}
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Button icon="bolt" onClick={() => startScheduled(card.todaySession!)}>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              {/* Bouton entouré en accent-ink — lisible sur fond accent quelle que soit la couleur du thème */}
+              <Button
+                icon="bolt"
+                onClick={() => startScheduled(card.todaySession!)}
+                style={{ border: '2px solid var(--accent-ink)', background: 'transparent', color: 'var(--accent-ink)' }}
+              >
                 Commencer la séance
               </Button>
-              {catchupToggle}
-              {hasMissedToIgnore && visibleMissed.length > 0 && (
-                <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
-                  Ignorer les rattrapages antérieurs
-                </Button>
-              )}
             </div>
+          </Card>
+        )}
+
+        {/* ── Rattrapages en attente (bloc distinct sous la carte planifiée) */}
+        {!resumable && activeProgram && card.type === 'scheduled' && visibleMissed.length > 0 && (
+          <Card>
+            {catchupToggle}
+            {hasMissedToIgnore && (
+              <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
+                Ignorer les rattrapages antérieurs
+              </Button>
+            )}
           </Card>
         )}
 
@@ -664,8 +683,9 @@ export function DashboardScreen() {
           />
           <StatTile
             label="Volume"
-            value={`${abbrevVol(current.volumeKg)} kg`}
+            value={`${formatVolume(current.volumeKg)} kg`}
           />
+          <StatTile label="Temps" value={formatDuration(current.timeSec)} />
         </div>
 
         {/* ── Séances récentes ─────────────────────────────────────────── */}

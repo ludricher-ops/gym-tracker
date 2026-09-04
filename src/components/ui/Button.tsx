@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, CSSProperties } from 'react'
 import { Icon, type IconName } from './Icon'
 
 interface ButtonProps {
@@ -8,6 +8,8 @@ interface ButtonProps {
   icon?: IconName
   disabled?: boolean
   type?: 'button' | 'submit'
+  /** Surcharge de style inline (ex. bouton entouré sur fond accent). */
+  style?: CSSProperties
 }
 
 export function Button({
@@ -17,6 +19,7 @@ export function Button({
   icon,
   disabled,
   type = 'button',
+  style,
 }: ButtonProps) {
   return (
     <button
@@ -24,6 +27,7 @@ export function Button({
       className={`gt-btn gt-btn--${variant}`}
       onClick={onClick}
       disabled={disabled}
+      style={style}
     >
       {icon && <Icon name={icon} size={18} />}
       {children}
