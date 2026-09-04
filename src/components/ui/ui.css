@@ -624,3 +624,146 @@ button.gt-row:focus-visible,
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ── MiniBars ─────────────────────────────────────────────────────── */
+/* Une barre par série — accent si validée, border sinon. */
+.gt-minibars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  flex: none;
+}
+.gt-minibar {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--border);
+  flex: none;
+}
+.gt-minibar--done {
+  background: var(--accent);
+}
+
+/* ── DateBlock ────────────────────────────────────────────────────── */
+/* Bloc 44×44 : numéro du jour en mono + mois abrégé. */
+.gt-dateblock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-btn);
+  background: var(--surface2);
+  flex: none;
+}
+.gt-dateblock--accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.gt-dateblock__day {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.gt-dateblock__month {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  opacity: 0.65;
+  margin-top: 1px;
+}
+
+/* ── DeltaPill ────────────────────────────────────────────────────── */
+/* Delta signé en mono : fond + couleur accent si positif, muted sinon. */
+.gt-deltapill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: none;
+}
+.gt-deltapill--up {
+  background: color-mix(in oklch, var(--accent) 15%, transparent);
+  color: var(--accent);
+}
+.gt-deltapill--down {
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+/* ── ExerciseRow ──────────────────────────────────────────────────── */
+/* Ligne d'exercice dans la vue d'ensemble : handle · nom · barres · compteur. */
+.gt-exrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gt-exrow__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 32px;
+  color: var(--dim);
+  flex: none;
+  cursor: grab;
+}
+.gt-exrow__handle:active {
+  cursor: grabbing;
+}
+.gt-exrow__name {
+  flex: 1;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gt-exrow__count {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--muted);
+  flex: none;
+}
+
+/* ── Swatch ───────────────────────────────────────────────────────── */
+/* Pastille de légende 12×12, opacité variable pour les segments musculaires. */
+.gt-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--accent);
+  flex: none;
+}
+
+/* ── SectionHeader ────────────────────────────────────────────────── */
+/* En-tête de section : eyebrow à gauche, valeur optionnelle à droite. */
+.gt-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gt-section-header__label {
+  font-size: var(--fs-eyebrow);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+.gt-section-header__value {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--muted);
+}
