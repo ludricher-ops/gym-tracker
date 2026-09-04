@@ -60,15 +60,48 @@ export function ProgramsLibraryScreen() {
       </div>
 
       <div className="gt-screen__scroll">
-        <Card variant="accent" onClick={() => nav.navigate('programBuilder')}>
+        {/* Générer automatiquement */}
+        <Card variant="accent" onClick={() => nav.navigate('programGenerator')}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Icon name="plus" size={24} />
+            <span style={{ fontSize: 22, lineHeight: 1 }}>⚡</span>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Créer mon programme</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>Workflow guidé en 4 étapes</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>
+                Générer mon programme
+              </div>
+              <div style={{ fontSize: 'var(--fs-caption)', opacity: 0.8 }}>
+                5 questions — programme prêt en 1 min
+              </div>
             </div>
           </div>
         </Card>
+
+        {/* Créer manuellement */}
+        <button
+          onClick={() => nav.navigate('programBuilder')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-card)',
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            color: 'var(--fg)',
+            textAlign: 'left',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          <Icon name="plus" size={20} />
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>
+              Créer manuellement
+            </div>
+            <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+              Workflow guidé en 4 étapes
+            </div>
+          </div>
+        </button>
 
         <input
           className="gt-input"

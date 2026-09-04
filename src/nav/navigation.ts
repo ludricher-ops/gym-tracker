@@ -22,6 +22,7 @@ export type ScreenName =
   | 'myExercises'
   | 'exerciseForm'
   | 'programBuilder'
+  | 'programGenerator'
   | 'rattrapages'
 
 export interface ScreenEntry {

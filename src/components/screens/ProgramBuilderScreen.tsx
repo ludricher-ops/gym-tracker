@@ -15,6 +15,7 @@ import {
   commitDraft, updateDraft, draftFromProgram, emptyDraft,
   type DraftProgram, type DraftWorkout, type DraftWE,
 } from '../programBuilder/programDraft'
+import { hasPendingDraft, consumePendingDraft } from '../../utils/generatorDraft'
 
 type View = { step: 1 } | { step: 2 } | { step: 3; workoutLocalId: string } | { step: 4 }
 
@@ -33,14 +34,18 @@ export function ProgramBuilderScreen({ params }: ScreenProps) {
 
   const isEditing = !!fromId
 
+  // hasPendingDraft() doit être vérifié AVANT consumePendingDraft() dans le draft
+  const [view, setView] = useState<View>(() => hasPendingDraft() ? { step: 4 } : { step: 1 })
+
   const [draft, setDraft] = useState<DraftProgram>(() => {
+    const pending = consumePendingDraft()
+    if (pending) return pending
     if (fromId) {
       const p = store.programs.find((x) => x.id === fromId)
       if (p) return draftFromProgram(p, store)
     }
     return emptyDraft()
   })
-  const [view, setView] = useState<View>({ step: 1 })
   const [startDate, setStartDate] = useState(localDayKey(Date.now()))
   const [saving, setSaving] = useState(false)
 
