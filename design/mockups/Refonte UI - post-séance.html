@@ -1,0 +1,283 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Refonte UI — post-séance</title><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:oklch(0.16 0.008 75);--surface:oklch(0.22 0.008 75);--surface2:oklch(0.27 0.008 75);--border:oklch(0.33 0.010 75);--text:oklch(0.97 0.003 80);--muted:oklch(0.62 0.008 75);--dim:oklch(0.45 0.008 75);--danger:oklch(0.70 0.18 25);--accent:oklch(0.88 0.20 130);--accent-ink:oklch(0.18 0.02 130);--overlay-dark:oklch(0 0 0/.74);--radius-btn:12px;--radius-row:16px;--radius-card:20px;--pad-screen:20px;--font-ui:'Space Grotesk',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-ui);font-weight:500;background:oklch(0.28 0.004 80)}
+a{color:var(--accent)}a:hover{color:var(--text)}
+.frame{position:absolute}
+.cap{color:oklch(0.99 0 0);margin-bottom:14px}
+.cap b{display:block;font-size:19px;font-weight:700;letter-spacing:-.3px}
+.cap span{display:block;font-size:13px;color:oklch(0.99 0 0/.55);margin-top:3px;max-width:400px;text-wrap:pretty}
+.ph{width:430px;background:var(--bg);color:var(--text);border-radius:26px;overflow:hidden;display:flex;flex-direction:column;font-size:14px;line-height:1.4;box-shadow:0 24px 60px -20px oklch(0 0 0/.6);position:relative}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:12px 24px 0;font-size:12px;font-weight:600;font-family:var(--font-mono)}
+.sb i{display:flex;gap:4px;align-items:center;font-style:normal}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted)}
+.cap2{font-size:12px;color:var(--muted)}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px var(--pad-screen) 6px}
+.ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-btn);flex:none}
+.scroll{padding:var(--pad-screen);display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:18px}
+.card.acc{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.card.flat{background:var(--surface2)}
+.btn{width:100%;padding:16px;border-radius:var(--radius-card);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:none;font-family:var(--font-ui)}
+.btn.dark{background:var(--accent-ink);color:var(--accent)}
+.btn.sec{background:var(--surface2);color:var(--text)}
+.btn.gh{background:transparent;color:var(--muted)}
+.pbar{padding:12px var(--pad-screen) 22px;display:flex;flex-direction:column;gap:8px}
+.strow{display:flex;gap:10px}
+.stat{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:13px 14px}
+.stat .v{font-family:var(--font-mono);font-weight:700;font-size:23px;letter-spacing:-1px}
+.stat .l{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.stat .d{font-size:11px;font-weight:600;margin-top:4px;color:var(--accent);font-family:var(--font-mono)}
+.itile{flex:1;background:oklch(0.18 0.02 130/.13);border-radius:14px;padding:11px 12px}
+.itile .v{font-family:var(--font-mono);font-weight:700;font-size:20px;letter-spacing:-.8px}
+.itile .l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.68;margin-top:2px}
+.itile .d{font-size:10.5px;font-weight:700;margin-top:3px;font-family:var(--font-mono);opacity:.8}
+.fact{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--radius-row);background:var(--surface2);border:1px solid var(--border)}
+.fact .l{flex:1;font-size:13.5px;font-weight:600}
+.fact .n{font-family:var(--font-mono);font-size:17px;font-weight:700;color:var(--accent);letter-spacing:-.5px}
+/* ligne exercice (vue d'ensemble) */
+.exr{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:var(--radius-btn);background:var(--surface);border:1px solid var(--border)}
+.exr.on{border-color:var(--accent);background:var(--surface2)}
+.exr .hd{color:var(--dim);flex:none;display:flex;cursor:grab}
+.exr .bd{flex:1;min-width:0}
+.exr .nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .mb{display:flex;gap:3px;margin-top:6px}
+.exr .mb i{height:4px;width:16px;border-radius:999px;background:var(--border)}
+.exr .mb i.f{background:var(--accent)}
+.exr .ct{font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--muted);flex:none}
+.gA{color:var(--accent);font-weight:700;font-family:var(--font-mono);font-size:12px}
+/* barre segmentée muscles */
+.msb{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--surface2)}
+.msb i{background:var(--accent)}
+.leg{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px}
+.leg span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.leg s{width:9px;height:9px;border-radius:3px;background:var(--accent);flex:none;text-decoration:none}
+.leg b{font-family:var(--font-mono);font-weight:700;color:var(--text)}
+/* chips séries */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface2);color:var(--text);font-family:var(--font-mono)}
+.chip.pr{background:var(--accent);color:var(--accent-ink)}
+.chip.wu{color:var(--muted)}
+.chip.add{color:var(--muted);background:transparent;box-shadow:inset 0 0 0 1px var(--border);font-family:var(--font-ui)}
+/* overlay PR */
+.ovl{position:absolute;inset:0;background:var(--overlay-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px var(--pad-screen);text-align:center;overflow:hidden}
+.halo{width:116px;height:116px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 0 70px -8px var(--accent);flex:none}
+.cft{position:absolute;width:8px;height:8px;border-radius:2px}
+.ba{display:flex;align-items:center;gap:12px;width:100%;max-width:330px;background:oklch(0.99 0 0/.07);border-radius:18px;padding:14px 16px}
+.ba .c{flex:1}
+.ba .k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.ba .n{font-family:var(--font-mono);font-size:24px;font-weight:700;letter-spacing:-1px;margin-top:2px}
+svg{display:block}
+.note{position:absolute;width:262px;font-size:12.5px;color:oklch(0.99 0 0/.72);line-height:1.5;padding-left:14px;border-left:2px solid var(--accent);text-wrap:pretty}
+.note b{color:oklch(0.99 0 0);font-weight:700}
+.note code{font-family:var(--font-mono);font-size:11px;background:oklch(0.99 0 0/.09);padding:1px 4px;border-radius:3px}
+</style></head><body>
+
+<!-- ═══ 1 · SÉANCE TERMINÉE ═══ -->
+<div class="frame" style="left:60px;top:60px">
+<div class="cap"><b>Séance terminée</b><span>La durée reste le héros, mais ce que tu viens de faire cesse d'être la plus petite ligne de l'écran.</span></div>
+<div class="ph" data-screen-label="Séance terminée">
+  <div class="sb"><span class="mono">19:30</span><i><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1"/><rect x="12.9" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/></svg></i></div>
+  <div class="scroll" style="align-items:center;text-align:center;padding-top:34px">
+    <div style="width:84px;height:84px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>
+    </div>
+    <div style="margin-top:6px">
+      <div class="eyebrow" style="color:var(--accent)">Séance terminée · Beau boulot</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.6px;line-height:1.1;margin-top:7px">Push — Pectoraux</div>
+      <div class="cap2" style="margin-top:4px">Full body rowing · Semaine 2 · Jour 3</div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="mono" style="font-size:52px;font-weight:700;letter-spacing:-3px;line-height:1">51:24</div>
+      <div class="eyebrow" style="margin-top:4px">Durée totale</div>
+    </div>
+    <div class="strow" style="width:100%;margin-top:8px">
+      <div class="stat"><div class="v">18/18</div><div class="l">Séries</div></div>
+      <div class="stat"><div class="v">5,3k</div><div class="l">Volume kg</div></div>
+      <div class="stat"><div class="v">2</div><div class="l">Records</div></div>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin-top:2px">
+      <div class="fact">
+        <span style="color:var(--accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
+        <span class="l" style="text-align:left">Records battus<br><span class="cap2" style="font-weight:500">Développé incliné · Dips lestés</span></span>
+        <span class="n">2</span>
+      </div>
+      <div class="fact">
+        <span style="color:var(--accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6 5 9a5 5 0 0 1-10 0c0-1.6.6-2.9 1.6-3.9C9 11 9.4 12 11 12c1.3 0 2-1 2-2.6C13 7.4 12 5.3 12 3z"/></svg></span>
+        <span class="l" style="text-align:left">Jours d'affilée</span>
+        <span class="n">12</span>
+      </div>
+    </div>
+  </div>
+  <div class="pbar">
+    <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Voir le récap détaillé</button>
+    <button class="btn gh">Accueil</button>
+  </div>
+</div>
+<div class="note" style="left:0;top:920px"><b>La hiérarchie était inversée.</b> « Beau boulot. » occupait le niveau display (30px) tandis que le nom de la séance était en <code>t-caption</code> à 12px : le remplissage passait avant l'information. Le nom remonte à 26px, la formule redescend en eyebrow, et la position dans le programme apparaît — <code>session.programWeek</code> existe déjà et n'était pas utilisé ici.</div>
+<div class="note" style="left:0;top:1105px"><b>Deux bannières deviennent deux faits.</b> La carte PR accent et la carte streak plate se suivaient en pleine largeur pour porter une phrase chacune. Même vocabulaire, une ligne par fait, chiffre en mono à droite — et les exercices concernés sont nommés.</div>
+</div>
+
+<!-- ═══ 2 · CÉLÉBRATION PR ═══ -->
+<div class="frame" style="left:600px;top:60px">
+<div class="cap"><b>Célébration PR</b><span>Le gain était écrit dans une légende de 11px. Il devient le deuxième chiffre de l'écran.</span></div>
+<div class="ph" style="height:980px" data-screen-label="Célébration PR">
+  <div class="ovl">
+    <i class="cft" style="left:8%;top:60px;background:var(--accent);transform:rotate(24deg)"></i>
+    <i class="cft" style="left:22%;top:130px;background:oklch(0.99 0 0);opacity:.75;transform:rotate(-40deg)"></i>
+    <i class="cft" style="left:37%;top:36px;background:var(--accent);opacity:.6;transform:rotate(12deg)"></i>
+    <i class="cft" style="left:63%;top:96px;background:var(--accent);transform:rotate(-18deg)"></i>
+    <i class="cft" style="left:78%;top:52px;background:oklch(0.99 0 0);opacity:.6;transform:rotate(48deg)"></i>
+    <i class="cft" style="left:90%;top:150px;background:var(--accent);opacity:.7;transform:rotate(-8deg)"></i>
+    <i class="cft" style="left:14%;top:700px;background:var(--accent);opacity:.5;transform:rotate(33deg)"></i>
+    <i class="cft" style="left:84%;top:748px;background:oklch(0.99 0 0);opacity:.45;transform:rotate(-25deg)"></i>
+    <div class="halo"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 0-3 3M12 14v3M8 20h8M9.5 20l.6-3h3.8l.6 3"/></svg></div>
+    <div>
+      <div class="eyebrow" style="color:var(--accent)">Nouveau record</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-.3px;margin-top:5px">Développé incliné haltères</div>
+    </div>
+    <div>
+      <div class="mono" style="font-size:56px;font-weight:700;letter-spacing:-3px;line-height:1;color:var(--accent)">36 × 6</div>
+      <div class="eyebrow" style="margin-top:5px">Série validée</div>
+    </div>
+    <div class="ba">
+      <div class="c" style="text-align:left"><div class="k">1RM précédent</div><div class="n" style="color:var(--muted)">34,5</div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <div class="c" style="text-align:left"><div class="k" style="color:var(--accent)">Nouveau 1RM</div><div class="n">43,2</div></div>
+      <div style="flex:none;font-family:var(--font-mono);font-size:19px;font-weight:700;color:var(--accent);letter-spacing:-.5px">+8,7</div>
+    </div>
+    <div class="cap2" style="max-width:290px">3<sup>e</sup> record de l'année sur cet exercice.</div>
+    <div style="width:100%;max-width:330px;display:flex;flex-direction:column;gap:8px;margin-top:2px">
+      <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>Continuer la séance</button>
+      <button class="btn gh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M8 7l4-4 4 4M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>Partager</button>
+    </div>
+  </div>
+</div>
+<div class="note" style="left:0;top:1075px"><b>Le delta sortait de la légende.</b> Il était concaténé dans le libellé de tuile — <code>1RM estimé (+1.5)</code> — à 11px en muted, sous un chiffre de 19px. Les deux 1RM deviennent un avant → après explicite, et le gain prend sa propre valeur en accent.</div>
+<div class="note" style="left:0;top:1230px"><b>Les confettis empruntaient les cinq accents.</b> <code>CONFETTI_COLORS</code> mélange toute la palette <code>ACCENTS</code> plus du blanc : sur un thème lime, du rose et du bleu tombent à l'écran. Accent courant et blanc suffisent.</div>
+<div class="note" style="left:0;top:1365px"><b>Huit éléments centrés, un seul gap.</b> Halo, eyebrow, nom, chiffre, tuiles, phrase, deux boutons se suivaient à intervalle égal. Regroupés par paires (libellé + valeur), l'écran se lit en quatre temps au lieu de huit.</div>
+</div>
+
+<!-- ═══ 3 · VUE D'ENSEMBLE ═══ -->
+<div class="frame" style="left:1140px;top:60px">
+<div class="cap"><b>Vue d'ensemble in-session</b><span>Les exercices arrêtent d'emprunter la ligne de série, et les mini-barres du cahier 6.15 apparaissent enfin.</span></div>
+<div class="ph" style="height:980px;justify-content:flex-end" data-screen-label="Vue d'ensemble">
+  <div style="position:absolute;inset:0;background:oklch(0 0 0/.55)"></div>
+  <div style="position:relative;background:var(--bg);border-radius:22px 22px 0 0;border-top:1px solid var(--border);max-height:92%;display:flex;flex-direction:column;overflow:hidden">
+    <div style="width:36px;height:4px;border-radius:999px;background:var(--border);margin:8px auto 4px;flex:none"></div>
+    <div class="topbar" style="padding-bottom:2px"><div style="flex:1;font-size:17px;font-weight:700">Vue d'ensemble</div><div class="ib" style="background:var(--surface2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+    <div class="scroll" style="gap:12px">
+      <div class="strow">
+        <div class="stat"><div class="v" style="font-size:19px">13/18</div><div class="l">Séries</div></div>
+        <div class="stat"><div class="v" style="font-size:19px">25:04</div><div class="l">Durée</div></div>
+        <div class="stat"><div class="v" style="font-size:19px">3,9k</div><div class="l">Volume kg</div></div>
+      </div>
+      <div class="eyebrow">Échauffement</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:-6px">
+        <div class="exr"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm">Rowing — 3 min</div><div class="mb"><i class="f"></i></div></div><span class="ct">1/1</span></div>
+      </div>
+      <div class="eyebrow">Exercices</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:-6px">
+        <div class="exr"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm">Développé couché</div><div class="mb"><i class="f"></i><i class="f"></i><i class="f"></i></div></div><span style="color:var(--accent);flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></span><span class="ct">3/3</span></div>
+        <div class="exr on"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm">Développé incliné haltères</div><div class="mb"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></div></div><span class="ct">3/4</span></div>
+        <div class="exr"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm"><span class="gA">A ·</span> Dips lestés</div><div class="mb"><i></i><i></i><i></i></div></div><span class="ct">0/3</span></div>
+        <div class="exr"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm"><span class="gA">A ·</span> Élévations latérales</div><div class="mb"><i></i><i></i><i></i></div></div><span class="ct">0/3</span></div>
+      </div>
+      <div class="eyebrow">Abdominaux</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:-6px">
+        <div class="exr"><span class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></span><div class="bd"><div class="nm">Gainage</div><div class="mb"><i></i><i></i><i></i><i></i></div></div><span class="ct">0/4</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="eyebrow">Notes de séance</div>
+        <div style="padding:13px 14px;border-radius:var(--radius-btn);background:var(--surface);border:1px solid var(--border);min-height:74px;color:var(--dim);font-size:14px">Sensations, douleurs, points à retenir…</div>
+      </div>
+    </div>
+    <div class="pbar" style="padding-top:0">
+      <button class="btn sec"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter un exercice</button>
+      <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>Terminer la séance</button>
+    </div>
+  </div>
+</div>
+<div class="note" style="left:0;top:1075px"><b>Un exercice n'est pas une série.</b> Les lignes réutilisaient <code>.gt-set</code> avec un <code>fontFamily: var(--font-ui)</code> en dur pour annuler le mono de <code>.gt-set__perf</code> — le signe qu'on force une primitive hors de son rôle. Une <code>ExerciseRow</code> dédiée porte poignée, nom, mini-barres et compteur.</div>
+<div class="note" style="left:0;top:1265px"><b>Les cibles faisaient 26px.</b> Deux chevrons empilés à <code>height:26</code> pour réordonner, soit bien en dessous du minimum de 44px. Une poignée de glissement unique remplace les deux, sur toute la hauteur de la ligne.</div>
+<div class="note" style="left:0;top:1400px"><b>« Terminer » n'est pas une destruction.</b> Le bouton est en <code>variant="danger"</code> — rouge — avec une icône check. Terminer sa séance est l'aboutissement, pas un risque : il passe en primaire.</div>
+</div>
+
+<!-- ═══ 4 · RÉCAP DÉTAILLÉ ═══ -->
+<div class="frame" style="left:1680px;top:60px">
+<div class="cap"><b>Récap détaillé</b><span>La légende des muscles reçoit ses pastilles, les séries perdent leurs emoji, les actions descendent en barre.</span></div>
+<div class="ph" data-screen-label="Récap détaillé">
+  <div class="sb"><span class="mono">9:41</span><i><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1"/><rect x="12.9" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/></svg></i></div>
+  <div class="topbar">
+    <div class="ib" style="background:var(--surface2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div style="flex:1"></div>
+    <div class="ib"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16v4zM14 6l4 4"/></svg></div>
+    <div class="ib"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M8 7l4-4 4 4M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></div>
+  </div>
+  <div class="scroll">
+    <div class="card acc">
+      <div class="eyebrow" style="color:inherit;opacity:.7">Mercredi 2 septembre · 18:32 → 19:23</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.6px;line-height:1.1;margin-top:6px">Push — Pectoraux</div>
+      <div style="font-size:12.5px;opacity:.72;margin-top:3px">Full body rowing · Semaine 2</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <div class="itile"><div class="v">5,3k</div><div class="l">Volume kg</div><div class="d">+480</div></div>
+        <div class="itile"><div class="v">51′</div><div class="l">Durée</div><div class="d">−3 min</div></div>
+        <div class="itile"><div class="v">8,2</div><div class="l">RPE moy.</div></div>
+      </div>
+    </div>
+    <div class="fact">
+      <span style="color:var(--accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
+      <span class="l" style="text-align:left">Records personnels battus</span><span class="n">2</span>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Volume par groupe musculaire</div>
+      <div class="msb"><i style="width:46%"></i><i style="width:28%;opacity:.68"></i><i style="width:16%;opacity:.46"></i><i style="width:10%;opacity:.28"></i></div>
+      <div class="leg">
+        <span><s></s>Pectoraux <b>46 %</b></span>
+        <span><s style="opacity:.68"></s>Triceps <b>28 %</b></span>
+        <span><s style="opacity:.46"></s>Épaules <b>16 %</b></span>
+        <span><s style="opacity:.28"></s>Abdos <b>10 %</b></span>
+      </div>
+    </div>
+    <div class="eyebrow">Exercices</div>
+    <div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <span style="font-size:14.5px;font-weight:700">Développé couché</span>
+        <span class="mono" style="font-size:14px;font-weight:700;color:var(--muted)">1 920 kg</span>
+      </div>
+      <div class="chips" style="margin-top:10px">
+        <span class="chip wu"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6 5 9a5 5 0 0 1-10 0c0-1.6.6-2.9 1.6-3.9C9 11 9.4 12 11 12c1.3 0 2-1 2-2.6C13 7.4 12 5.3 12 3z"/></svg>40 × 12</span>
+        <span class="chip">80 × 8</span><span class="chip">80 × 8</span><span class="chip">80 × 7</span>
+        <span class="chip add">+ série</span>
+      </div>
+    </div>
+    <div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <span style="font-size:14.5px;font-weight:700">Développé incliné haltères</span>
+        <span class="mono" style="font-size:14px;font-weight:700;color:var(--muted)">1 088 kg</span>
+      </div>
+      <div class="chips" style="margin-top:10px">
+        <span class="chip">32 × 10</span><span class="chip">32 × 9</span>
+        <span class="chip pr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 0-3 3M12 14v3M8 20h8M9.5 20l.6-3h3.8l.6 3"/></svg>36 × 6</span>
+        <span class="chip add">+ série</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="eyebrow">Notes</div>
+      <div style="padding:13px 14px;border-radius:var(--radius-btn);background:var(--surface);border:1px solid var(--border);min-height:74px;color:var(--dim);font-size:14px">Sensations, douleurs, points à retenir…</div>
+    </div>
+  </div>
+  <div class="pbar">
+    <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>Refaire cette séance</button>
+  </div>
+</div>
+<div class="note" style="left:0;top:1240px"><b>La légende ne renvoyait à rien.</b> La barre segmentée dégrade l'accent par <code>opacity: 1 - i*0.16</code>, mais la légende n'est qu'une suite de <code>.t-caption</code> nus dans un conteneur <code>.gt-chips</code> — sans pastille, impossible de relier un libellé à un segment. Chaque entrée reçoit son carré à la bonne opacité.</div>
+<div class="note" style="left:0;top:1435px"><b>Les emoji doublaient les icônes.</b> Les chips de série concatènent <code>🔥</code> pour l'échauffement et <code>★</code> pour un record, alors que <code>Icon.tsx</code> fournit <code>flame</code> et <code>trophy</code>. Les glyphes du jeu reprennent leur place.</div>
+<div class="note" style="left:0;top:1595px"><b>Le partage utilisait l'icône copier.</b> La barre du haut appelle <code>copy</code> pour l'action Partager quand <code>share</code> existe. Et les deux boutons pleine largeur en fin de scroll descendent dans la barre primaire — « Terminé » disparaît, le retour suffit.</div>
+</div>
+
+</body></html>

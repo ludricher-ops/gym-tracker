@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Session active — refonte UI</title><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:oklch(0.16 0.008 75);--surface:oklch(0.22 0.008 75);--surface2:oklch(0.27 0.008 75);--border:oklch(0.33 0.010 75);--text:oklch(0.97 0.003 80);--muted:oklch(0.62 0.008 75);--dim:oklch(0.45 0.008 75);--danger:oklch(0.70 0.18 25);--accent:oklch(0.88 0.20 130);--accent-ink:oklch(0.18 0.02 130);--radius-tag:8px;--radius-btn:12px;--radius-row:16px;--radius-card:20px;--radius-pill:999px;--pad-screen:20px;--font-ui:'Space Grotesk',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-ui);font-weight:500;background:oklch(0.28 0.004 80)}
+a{color:var(--accent)}a:hover{color:var(--text)}
+.frame{position:absolute}
+.cap{font-family:var(--font-ui);color:oklch(0.99 0 0);margin-bottom:14px}
+.cap b{display:block;font-size:19px;font-weight:700;letter-spacing:-.3px}
+.cap span{display:block;font-size:13px;font-weight:500;color:oklch(0.99 0 0/.55);margin-top:3px;max-width:400px;text-wrap:pretty}
+.ph{width:430px;height:880px;background:var(--bg);color:var(--text);border-radius:26px;overflow:hidden;display:flex;flex-direction:column;font-size:14px;line-height:1.4;box-shadow:0 24px 60px -20px oklch(0 0 0/.6)}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:12px 24px 0;font-size:12px;font-weight:600;font-family:var(--font-mono)}
+.sb i{display:flex;gap:4px;align-items:center;font-style:normal;letter-spacing:1px}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted)}
+.cap2{font-size:12px;color:var(--muted)}
+.scroll{flex:1;min-height:0;overflow:hidden;padding:var(--pad-screen);display:flex;flex-direction:column;gap:14px}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-btn);flex:none;color:var(--text)}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px var(--pad-screen) 8px;flex:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:18px}
+.prog{height:5px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.prog>i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.btn{width:100%;padding:16px;border-radius:var(--radius-card);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-ui);border:none;background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface2);color:var(--text)}
+.pbar{padding:12px var(--pad-screen) 22px;flex:none}
+svg{display:block}
+/* steppers */
+.stp{display:flex;align-items:center;gap:10px}
+.stp b{width:44px;height:44px;border-radius:var(--radius-btn);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex:none}
+.stp u{font-family:var(--font-mono);font-weight:700;letter-spacing:-1px;text-decoration:none;text-align:center}
+/* ACTUEL set rows */
+.setA{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--radius-btn);background:var(--surface);border:1px solid var(--border)}
+.setA em{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);width:58px;flex:none;font-style:normal}
+.setA s{font-family:var(--font-mono);font-weight:600;font-size:15px;flex:1;text-decoration:none}
+.setA .mk{display:flex;align-items:center;gap:6px;flex:none;color:var(--dim)}
+.setA .mk small{font-size:11px;font-weight:600}
+.circ{width:22px;height:22px;border-radius:50%;flex:none;border:2px solid var(--border)}
+.circ.a{border-color:var(--accent)}
+/* PROPOSÉ */
+.segprog{display:flex;gap:3px}
+.segprog i{flex:1;height:5px;border-radius:999px;background:var(--surface2)}
+.segprog i.on{background:var(--accent)}
+.segprog i.cur{background:var(--accent);opacity:.45}
+.counter{display:flex;align-items:center;gap:6px;padding:7px 10px 7px 12px;border-radius:var(--radius-btn);background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:13px;font-weight:700;flex:none}
+.tag{padding:3px 8px;border-radius:var(--radius-tag);background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:700;letter-spacing:1px;font-family:var(--font-mono)}
+.grid{display:grid;grid-template-columns:30px 1fr 1fr 26px;gap:8px;align-items:center}
+.hd{padding:0 12px 6px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);font-family:var(--font-mono)}
+.row{padding:13px 12px;border-radius:var(--radius-btn);border:1px solid var(--border);background:transparent}
+.row.done{opacity:.5}
+.row.act{border-color:var(--accent);background:var(--surface)}
+.row .n{font-family:var(--font-mono);font-weight:700;font-size:13px}
+.row .v{font-family:var(--font-mono);font-weight:600;font-size:16px}
+.chk{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.chk.on{background:var(--accent);color:var(--accent-ink)}
+.chk.off{border:1.5px solid var(--dim)}
+.nextc{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius-row);background:var(--surface2);border:1px solid var(--border)}
+.thumb{border-radius:10px;background:var(--surface);border:1px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:9px;font-weight:700;letter-spacing:.5px;font-family:var(--font-mono)}
+.entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:16px 16px 14px;display:flex;flex-direction:column;gap:14px}
+.rest{background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius-card);padding:20px 18px 16px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.pill2{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text)}
+.note{position:absolute;width:250px;font-family:var(--font-ui);font-size:12.5px;font-weight:500;color:oklch(0.99 0 0/.72);line-height:1.5;padding-left:14px;border-left:2px solid var(--accent);text-wrap:pretty}
+.note b{color:oklch(0.99 0 0);font-weight:700}
+</style></head><body>
+
+<!-- ══════════ FRAME 1 · ACTUEL ══════════ -->
+<div class="frame" style="left:60px;top:60px">
+<div class="cap"><b>Actuel — tel qu'implémenté</b><span>Recréé depuis SessionModal.tsx + ui.css. Tokens justes, hiérarchie plate.</span></div>
+<div class="ph" data-screen-label="Actuel">
+  <div class="sb"><span class="mono">9:41</span><i><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1"/><rect x="12.9" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/><path d="M20 4v3a2 2 0 000-3z" fill="currentColor" opacity=".5"/></svg></i></div>
+  <div class="topbar">
+    <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+    <div style="flex:1;text-align:center">
+      <div class="mono" style="font-size:20px;font-weight:700;letter-spacing:-1px">24:31</div>
+      <div class="cap2" style="font-size:11px">12/18 séries</div>
+    </div>
+    <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></div>
+    <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg></div>
+  </div>
+  <div style="padding:0 var(--pad-screen)"><div class="prog"><i style="width:66%"></i></div></div>
+  <div class="scroll">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div class="thumb" style="width:72px;height:72px;border-radius:14px">IMG</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <span class="pill2">Pectoraux</span><span class="eyebrow">Ex 2/5</span>
+        </div>
+        <p style="font-size:23px;font-weight:700;letter-spacing:-.3px">Développé incliné haltères</p>
+        <div style="display:flex;gap:16px;margin-top:6px">
+          <span class="cap2">Précédent : 32 kg × 10</span><span class="cap2">PR : 36.0 kg</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="setA"><em>Série 1</em><s>32 kg × 10</s><span class="mk"><small>RPE 8</small><span style="color:var(--accent)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></span></div>
+      <div class="setA"><em>Série 2</em><s>32 kg × 9</s><span class="mk"><span style="color:var(--accent)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></span></div>
+      <div class="setA" style="border-color:var(--accent);background:var(--surface2)"><em>Série 3</em><s>34 kg × 8</s><span class="mk"><span class="circ a"></span></span></div>
+      <div class="setA" style="opacity:.6"><em>Série 4</em><s>34 kg × 8</s><span class="mk"><span class="circ"></span></span></div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+      <div class="thumb" style="width:44px;height:44px">IMG</div>
+      <div style="flex:1"><div class="eyebrow">Suivant</div><div style="font-weight:700">Dips lestés</div><div class="cap2">3 séries</div></div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+  <div class="pbar">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:16px;justify-content:space-around">
+        <div style="text-align:center">
+          <div class="eyebrow" style="margin-bottom:4px">Poids (kg)</div>
+          <div class="stp"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></svg></b><u style="font-size:26px;min-width:64px">34</u><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b></div>
+        </div>
+        <div style="text-align:center">
+          <div class="eyebrow" style="margin-bottom:4px">Reps</div>
+          <div class="stp"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></svg></b><u style="font-size:26px;min-width:64px">8</u><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:46px;height:28px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);position:relative;flex:none"><div style="position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:oklch(0.99 0.003 80)"></div></div>
+        <span class="cap2">RPE</span>
+      </div>
+      <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>Valider la série</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ FRAME 2 · PROPOSÉ — SAISIE ══════════ -->
+<div class="frame" style="left:600px;top:60px">
+<div class="cap"><b>Proposé — saisie</b><span>Mêmes tokens, mêmes composants. Ce qui change : la hiérarchie, la lisibilité des chiffres, et le regroupement de la saisie.</span></div>
+<div class="ph" data-screen-label="Proposé — saisie">
+  <div class="sb"><span class="mono">9:41</span><i><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1"/><rect x="12.9" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/><path d="M20 4v3a2 2 0 000-3z" fill="currentColor" opacity=".5"/></svg></i></div>
+  <div class="topbar">
+    <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+    <div style="flex:1;text-align:center">
+      <div class="eyebrow" style="color:var(--accent)">En cours</div>
+      <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-1px;margin-top:1px">24:31</div>
+    </div>
+    <div class="counter">12/18<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+  </div>
+  <div style="padding:2px var(--pad-screen) 0">
+    <div class="segprog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div class="scroll">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div class="thumb" style="width:64px;height:64px;border-radius:14px">IMG</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="tag">PECS</span><span class="mono" style="font-size:11px;font-weight:600;color:var(--muted)">EX 2/5</span>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-.6px;line-height:1.08;margin-top:8px">Développé incliné haltères</p>
+        <div class="mono" style="font-size:11.5px;color:var(--muted);margin-top:7px;font-weight:500">Préc. 32×10 · PR 36×6</div>
+      </div>
+    </div>
+    <div>
+      <div class="grid hd"><span>SET</span><span>KG</span><span>REPS</span><span></span></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="row grid done"><span class="n">1</span><span class="v">32</span><span class="v">10</span><span class="chk on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></div>
+        <div class="row grid done"><span class="n">2</span><span class="v">32</span><span class="v">9</span><span class="chk on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></div>
+        <div class="row grid act"><span class="n">3</span><span class="v">34</span><span class="v">8</span><span class="chk off"></span></div>
+        <div class="row grid"><span class="n" style="color:var(--dim)">4</span><span class="v" style="color:var(--dim)">34</span><span class="v" style="color:var(--dim)">8</span><span class="chk off"></span></div>
+      </div>
+    </div>
+    <div class="nextc">
+      <div class="thumb" style="width:36px;height:36px">3</div>
+      <div style="flex:1"><div class="eyebrow" style="font-size:10px">Suivant</div><div style="font-size:14px;font-weight:600;margin-top:2px">Dips lestés</div></div>
+      <span class="mono" style="font-size:11px;color:var(--muted)">3 × 8</span>
+    </div>
+  </div>
+  <div class="pbar">
+    <div class="entry">
+      <div style="display:flex;gap:12px">
+        <div style="flex:1;text-align:center">
+          <div class="eyebrow" style="margin-bottom:8px">Poids · kg</div>
+          <div class="stp" style="justify-content:center"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></svg></b><u style="font-size:30px;min-width:52px">34</u><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b></div>
+        </div>
+        <div style="width:1px;background:var(--border)"></div>
+        <div style="flex:1;text-align:center">
+          <div class="eyebrow" style="margin-bottom:8px">Reps</div>
+          <div class="stp" style="justify-content:center"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></svg></b><u style="font-size:30px;min-width:52px">8</u><b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b></div>
+        </div>
+      </div>
+      <button class="btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>Valider la série</button>
+      <div style="display:flex;justify-content:center;gap:18px">
+        <span class="cap2" style="font-size:11.5px;font-weight:600">+ RPE</span>
+        <span class="cap2" style="font-size:11.5px;font-weight:600">+ Série</span>
+        <span class="cap2" style="font-size:11.5px;font-weight:600">Actions</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ FRAME 3 · PROPOSÉ — REPOS ══════════ -->
+<div class="frame" style="left:1140px;top:60px">
+<div class="cap"><b>Proposé — repos</b><span>Le timer prend la place de la saisie dans le même cadre, sans faire sauter la mise en page.</span></div>
+<div class="ph" data-screen-label="Proposé — repos">
+  <div class="sb"><span class="mono">9:42</span><i><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1"/><rect x="12.9" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/><path d="M20 4v3a2 2 0 000-3z" fill="currentColor" opacity=".5"/></svg></i></div>
+  <div class="topbar">
+    <div class="iconbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+    <div style="flex:1;text-align:center">
+      <div class="eyebrow" style="color:var(--accent)">En cours</div>
+      <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-1px;margin-top:1px">25:04</div>
+    </div>
+    <div class="counter">13/18<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+  </div>
+  <div style="padding:2px var(--pad-screen) 0">
+    <div class="segprog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div class="scroll">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div class="thumb" style="width:64px;height:64px;border-radius:14px">IMG</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="tag">PECS</span><span class="mono" style="font-size:11px;font-weight:600;color:var(--muted)">EX 2/5</span>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-.6px;line-height:1.08;margin-top:8px">Développé incliné haltères</p>
+        <div class="mono" style="font-size:11.5px;color:var(--muted);margin-top:7px;font-weight:500">Préc. 32×10 · PR 36×6</div>
+      </div>
+    </div>
+    <div>
+      <div class="grid hd"><span>SET</span><span>KG</span><span>REPS</span><span></span></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="row grid done"><span class="n">1</span><span class="v">32</span><span class="v">10</span><span class="chk on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></div>
+        <div class="row grid done"><span class="n">2</span><span class="v">32</span><span class="v">9</span><span class="chk on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></div>
+        <div class="row grid done"><span class="n">3</span><span class="v">34</span><span class="v">8</span><span class="chk on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span></div>
+        <div class="row grid act"><span class="n">4</span><span class="v">34</span><span class="v">8</span><span class="chk off"></span></div>
+      </div>
+    </div>
+    <div class="nextc">
+      <div class="thumb" style="width:36px;height:36px">3</div>
+      <div style="flex:1"><div class="eyebrow" style="font-size:10px">Suivant</div><div style="font-size:14px;font-weight:600;margin-top:2px">Dips lestés</div></div>
+      <span class="mono" style="font-size:11px;color:var(--muted)">3 × 8</span>
+    </div>
+  </div>
+  <div class="pbar">
+    <div class="rest">
+      <div class="eyebrow" style="color:var(--accent)">Repos</div>
+      <div class="mono" style="font-size:56px;font-weight:700;letter-spacing:-3px;line-height:1">01:12</div>
+      <div class="prog" style="width:100%"><i style="width:48%"></i></div>
+      <div style="display:flex;gap:10px;width:100%">
+        <button class="btn sec" style="padding:13px;font-size:14px">+ 15 s</button>
+        <button class="btn sec" style="padding:13px;font-size:14px">Passer</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- notes -->
+<div class="note" style="left:1690px;top:120px"><b>1 · Top bar à 3 zones.</b> Quatre boutons se battaient pour la place. Le compteur X/Y devient le point d'entrée de la vue d'ensemble (il en est le résumé) et absorbe le menu Actions, qui descend dans la carte de saisie.</div>
+<div class="note" style="left:1690px;top:270px"><b>2 · Progression par série.</b> La barre pleine ne dit que « 66 % ». Segmentée, elle montre où tu en es et ce qu'il reste — l'idée des mini-barres du cahier 6.15, appliquée à la barre principale.</div>
+<div class="note" style="left:1690px;top:410px"><b>3 · Le nom de l'exo prend le lead.</b> 26px au lieu de 23, tag muscle en accent, et « Préc. / PR » en mono sur une ligne : trois infos qui se lisent en un coup d'œil au lieu de trois phrases.</div>
+<div class="note" style="left:1690px;top:565px"><b>4 · Tableau des séries en grille.</b> Colonnes SET / KG / REPS alignées au lieu d'une chaîne « 32 kg × 10 » : on compare les séries verticalement, ce qui est exactement ce qu'on fait entre deux séries.</div>
+<div class="note" style="left:1690px;top:730px"><b>5 · Saisie dans une carte.</b> Aujourd'hui les steppers flottent sur le fond, sans contenant, avec le toggle RPE à gauche qui déséquilibre. Regroupés dans une carte avec séparateur, les deux chiffres passent à 30px et le bouton s'assied dessous.</div>
+<div class="note" style="left:1690px;top:900px"><b>6 · Le décompte devient l'objet principal.</b> <code>RestTimerBar</code> rend déjà une carte plate correcte, mais le mm:ss y est aligné à droite d'une ligne « Repos », à 34px. Proposé : même cadre que la saisie, décompte centré à 56px. Les actions gardent la logique existante — « + 15 s » puis « Passer », qui devient « Continuer » en primaire à 0.</div>
+
+</body></html>
