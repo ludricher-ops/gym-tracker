@@ -262,10 +262,10 @@ export function DashboardScreen() {
             title="Jours consécutifs"
           >
             <div style={{ color: 'var(--accent)', display: 'flex' }}>
-              <Icon name="flame" size={16} />
+              <Icon name="flame" size={20} />
             </div>
             <div>
-              <div className="gt-stat__value" style={{ lineHeight: 1 }}>{streak}</div>
+              <div className="gt-stat__value" style={{ fontSize: 'var(--fs-body)', lineHeight: 1 }}>{streak}</div>
               <div className="gt-stat__label">JOURS</div>
             </div>
           </div>
