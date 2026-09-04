@@ -14,6 +14,7 @@ import { PreferencesScreen } from '../components/screens/PreferencesScreen'
 import { ExerciseDetailScreen } from '../components/screens/ExerciseDetailScreen'
 import { GoalsScreen } from '../components/screens/GoalsScreen'
 import { BodyScreen } from '../components/screens/BodyScreen'
+import { RattrapagesScreen } from '../components/screens/RattrapagesScreen'
 
 /** Props reçues par tout composant d'écran. */
 export interface ScreenProps {
@@ -40,4 +41,5 @@ export const SCREENS: Partial<Record<ScreenName, ScreenComponent>> = {
   exerciseDetail: ExerciseDetailScreen,
   goalsPrograms: GoalsScreen,
   body: BodyScreen,
+  rattrapages: RattrapagesScreen,
 }

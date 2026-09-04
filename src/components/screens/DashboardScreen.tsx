@@ -289,26 +289,26 @@ export function DashboardScreen() {
             </p>
             {scheduledExos > 0 && (
               <div className="gt-statrow" style={{ marginTop: 'var(--gap-tile)' }}>
-                <div className="gt-stat">
+                {/* overlay-dim = voile sombre semi-transparent → tuile teintée de l'accent */}
+                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledExos}</div>
                   <div className="gt-stat__label">EXOS</div>
                 </div>
-                <div className="gt-stat">
+                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>{scheduledSeries}</div>
                   <div className="gt-stat__label">SÉRIES</div>
                 </div>
-                <div className="gt-stat">
+                <div className="gt-stat" style={{ background: 'var(--overlay-dim)' }}>
                   <div className="gt-stat__value" style={{ fontSize: 'var(--fs-display)' }}>~{scheduledDurMin}&apos;</div>
                   <div className="gt-stat__label">DURÉE</div>
                 </div>
               </div>
             )}
             <div style={{ marginTop: 'var(--gap-tile)' }}>
-              {/* Bouton entouré en accent-ink — lisible sur fond accent quelle que soit la couleur du thème */}
               <Button
                 icon="bolt"
+                variant="secondary"
                 onClick={() => startScheduled(card.todaySession!)}
-                style={{ border: '2px solid var(--accent-ink)', background: 'transparent', color: 'var(--accent-ink)' }}
               >
                 Commencer la séance
               </Button>
@@ -316,15 +316,27 @@ export function DashboardScreen() {
           </Card>
         )}
 
-        {/* ── Rattrapages en attente (bloc distinct sous la carte planifiée) */}
+        {/* ── Rattrapages en attente (résumé + lien vers l'écran dédié) */}
         {!resumable && activeProgram && card.type === 'scheduled' && visibleMissed.length > 0 && (
           <Card>
-            {catchupToggle}
-            {hasMissedToIgnore && (
-              <Button variant="ghost" icon="clock" onClick={handleIgnoreCatchups}>
-                Ignorer les rattrapages antérieurs
-              </Button>
+            <p className="t-eyebrow" style={{ marginBottom: 'var(--gap-tile)' }}>
+              {visibleMissed.length} rattrapage{visibleMissed.length > 1 ? 's' : ''} en attente
+            </p>
+            {visibleMissed.slice(0, 3).map((s) => (
+              <p key={s.label} className="t-caption" style={{ color: 'var(--muted)', marginBottom: 2 }}>
+                {s.workoutName} · {s.label}
+              </p>
+            ))}
+            {visibleMissed.length > 3 && (
+              <p className="t-caption" style={{ color: 'var(--muted)' }}>
+                +{visibleMissed.length - 3} autre{visibleMissed.length - 3 > 1 ? 's' : ''}
+              </p>
             )}
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              <Button variant="secondary" icon="bolt" onClick={() => nav.navigate('rattrapages')}>
+                Voir les rattrapages
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -603,9 +615,6 @@ export function DashboardScreen() {
                       )
                     })}
                   </div>
-                  <span className="t-caption" style={{ color: 'var(--muted)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>
-                    {cells.filter((c) => c.done).length}/{cells.length}
-                  </span>
                 </div>
               ))}
             </div>
