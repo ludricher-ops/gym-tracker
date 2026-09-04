@@ -245,6 +245,12 @@ export function ProgramGeneratorScreen() {
       )
     }
 
+    // Nombre d'exercices disponibles pour l'équipement sélectionné (non-warmup, actifs)
+    const availableCount = equipment.length === 0 ? 0 :
+      store.exercises.filter(
+        (ex) => !ex.deleted && !ex.isWarmupExercise && equipment.includes(ex.equipment),
+      ).length
+
     return (
       <div style={{ padding: '0 16px' }}>
         <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
@@ -307,6 +313,27 @@ export function ProgramGeneratorScreen() {
             )
           })}
         </div>
+
+        {/* Warning si peu d'exercices disponibles */}
+        {equipment.length > 0 && availableCount < 12 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--warn, #f59e0b) 12%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--warn, #f59e0b) 40%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <span className="t-caption" style={{ color: 'var(--fg)' }}>
+              {availableCount === 0
+                ? 'Aucun exercice disponible pour cet équipement — le programme sera vide.'
+                : `Seulement ${availableCount} exercice${availableCount > 1 ? 's' : ''} disponibles — certains slots de séance seront vides.`}
+            </span>
+          </div>
+        )}
 
         {/* Bouton Continuer */}
         <button

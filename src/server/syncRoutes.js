@@ -74,39 +74,82 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     return
   }
 
-  // Propagation au démarrage : une requête bulk (CROSS JOIN + UPSERT) au lieu du
-  // pattern N×M qui consommait des connexions en boucle. Corrige les users seedés
-  // avant le fix LWW. Idempotente : la clause WHERE updated_at < EXCLUDED.updated_at
-  // ne modifie rien une fois les utilisateurs à jour.
+  // Migration exercices : insère dans le compte admin les exercices KB, band et
+  // bodyweight manquants (IDs introduits en sept. 2026). Idempotente — ON CONFLICT
+  // DO NOTHING garantit qu'elle ne touche pas aux exercices déjà personnalisés.
+  // Doit s'exécuter AVANT la propagation pour que les nouveaux IDs soient inclus.
   ;(async () => {
-    try {
-      await pool.query(
+    const NEW_EXERCISES = [
+      { id: 'kb-swing',              name: 'Kettlebell swing',                     primaryMuscle: 'glutes',       secondaryMuscles: ['hamstrings','back_thickness'], equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 3 },
+      { id: 'kb-press',              name: 'Kettlebell press',                     primaryMuscle: 'shoulders',    secondaryMuscles: ['triceps'],                     equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
+      { id: 'kb-row',                name: 'Rowing kettlebell',                    primaryMuscle: 'back_thickness',secondaryMuscles: ['biceps'],                     equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
+      { id: 'kb-rdl',                name: 'Soulevé de terre KB jambes tendues',  primaryMuscle: 'hamstrings',   secondaryMuscles: ['glutes','back_thickness'],      equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
+      { id: 'kb-deadlift',           name: 'Soulevé de terre kettlebell',          primaryMuscle: 'back',         secondaryMuscles: ['hamstrings','glutes'],          equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
+      { id: 'kb-floor-press',        name: 'Floor press kettlebell',               primaryMuscle: 'chest',        secondaryMuscles: ['triceps','shoulders_front'],    equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 1 },
+      { id: 'kb-curl',               name: 'Curl kettlebell',                      primaryMuscle: 'biceps',       secondaryMuscles: [],                              equipment: 'kettlebell', category: 'isolation', trackingType: 'weight_reps', popularity: 1 },
+      { id: 'kb-overhead-extension', name: 'Extension triceps KB nuque',           primaryMuscle: 'triceps',      secondaryMuscles: [],                              equipment: 'kettlebell', category: 'isolation', trackingType: 'weight_reps', popularity: 1 },
+      { id: 'kb-pullover',           name: 'Pull-over kettlebell',                 primaryMuscle: 'back_width',   secondaryMuscles: ['chest'],                       equipment: 'kettlebell', category: 'isolation', trackingType: 'weight_reps', popularity: 1 },
+      { id: 'kb-calf-raise',         name: 'Mollets kettlebell',                   primaryMuscle: 'calves',       secondaryMuscles: [],                              equipment: 'kettlebell', category: 'isolation', trackingType: 'weight_reps', popularity: 1 },
+      { id: 'band-squat',            name: 'Squat élastique',                      primaryMuscle: 'quads',        secondaryMuscles: ['glutes'],                      equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'band-row',              name: 'Rowing élastique',                     primaryMuscle: 'back_thickness',secondaryMuscles: ['biceps'],                     equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'band-chest-press',      name: 'Développé poitrine élastique',         primaryMuscle: 'chest',        secondaryMuscles: ['triceps','shoulders_front'],    equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 1 },
+      { id: 'band-overhead-press',   name: 'Développé militaire élastique',        primaryMuscle: 'shoulders',    secondaryMuscles: ['triceps'],                     equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'band-curl',             name: 'Curl biceps élastique',                primaryMuscle: 'biceps',       secondaryMuscles: [],                              equipment: 'band',       category: 'isolation', trackingType: 'reps_only',   popularity: 2 },
+      { id: 'band-tricep-pushdown',  name: 'Extension triceps élastique',          primaryMuscle: 'triceps',      secondaryMuscles: [],                              equipment: 'band',       category: 'isolation', trackingType: 'reps_only',   popularity: 2 },
+      { id: 'band-good-morning',     name: 'Good morning élastique',               primaryMuscle: 'hamstrings',   secondaryMuscles: ['glutes','back'],               equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 1 },
+      { id: 'band-hip-thrust',       name: 'Hip thrust élastique',                 primaryMuscle: 'glutes',       secondaryMuscles: ['hamstrings'],                  equipment: 'band',       category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'bw-incline-pushup',     name: 'Pompes inclinées (pieds surélevés)',   primaryMuscle: 'chest_upper',  secondaryMuscles: ['triceps','shoulders_front'],    equipment: 'bodyweight', category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'bw-chinup',             name: 'Tractions prise supination',           primaryMuscle: 'biceps',       secondaryMuscles: ['back_width'],                  equipment: 'bodyweight', category: 'compound',  trackingType: 'weight_reps', popularity: 3 },
+      { id: 'bw-nordic-curl',        name: 'Nordic curl',                          primaryMuscle: 'hamstrings',   secondaryMuscles: ['glutes'],                      equipment: 'bodyweight', category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'bw-calf-raise',         name: 'Mollets poids du corps',               primaryMuscle: 'calves',       secondaryMuscles: [],                              equipment: 'bodyweight', category: 'isolation', trackingType: 'reps_only',   popularity: 2 },
+    ]
+    const now = Date.now()
+    let inserted = 0
+    for (const ex of NEW_EXERCISES) {
+      const data = {
+        id: ex.id, name: ex.name,
+        primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles,
+        equipment: ex.equipment, category: ex.category, trackingType: ex.trackingType,
+        isCustom: false, isWarmupExercise: false, popularity: ex.popularity,
+        usageCount: 0, createdAt: now, updatedAt: now, deleted: false, dirty: false,
+      }
+      const { rowCount } = await pool.query(
         `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         SELECT u.user_id, 'exercises', e.id,
-                e.data || '{"dirty":true}'::jsonb,
-                e.updated_at
-           FROM (
-             SELECT id, data, updated_at
-               FROM sync_records
-              WHERE user_id = $1
-                AND store = 'exercises'
-                AND (data->>'deleted')::boolean IS NOT TRUE
-           ) e
-           CROSS JOIN (
-             SELECT DISTINCT user_id FROM sync_records WHERE user_id != $1
-           ) u
-         ON CONFLICT (user_id, store, id) DO UPDATE
-           SET data       = EXCLUDED.data,
-               updated_at = EXCLUDED.updated_at,
-               server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
-         WHERE sync_records.updated_at < EXCLUDED.updated_at`,
-        [ADMIN_USER_ID],
+         VALUES ($1, 'exercises', $2, $3::jsonb, $4)
+         ON CONFLICT (user_id, store, id) DO NOTHING`,
+        [ADMIN_USER_ID, ex.id, JSON.stringify(data), now],
       )
-      console.log('[startup] Propagation admin exercices → OK')
-    } catch (err) {
-      console.error('[startup-propagate]', err.message)
+      inserted += rowCount
     }
-  })()
+    if (inserted > 0)
+      console.log(`[startup] ${inserted} nouvel(aux) exercice(s) ajouté(s) au compte admin`)
+
+    // Propagation immédiatement après la migration (même bloc, séquentiel).
+    // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
+    await pool.query(
+      `INSERT INTO sync_records (user_id, store, id, data, updated_at)
+       SELECT u.user_id, 'exercises', e.id,
+              e.data || '{"dirty":true}'::jsonb,
+              e.updated_at
+         FROM (
+           SELECT id, data, updated_at
+             FROM sync_records
+            WHERE user_id = $1
+              AND store = 'exercises'
+              AND (data->>'deleted')::boolean IS NOT TRUE
+         ) e
+         CROSS JOIN (
+           SELECT DISTINCT user_id FROM sync_records WHERE user_id != $1
+         ) u
+       ON CONFLICT (user_id, store, id) DO UPDATE
+         SET data       = EXCLUDED.data,
+             updated_at = EXCLUDED.updated_at,
+             server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
+       WHERE sync_records.updated_at < EXCLUDED.updated_at`,
+      [ADMIN_USER_ID],
+    )
+    console.log('[startup] Propagation admin exercices → OK')
+  })().catch((err) => console.error('[startup-migrate/propagate]', err.message))
 
   // POST /api/sync/push — { changes: [{ store, record }] }
   app.post('/api/sync/push', extractUser, requireUser, async (req, res) => {
