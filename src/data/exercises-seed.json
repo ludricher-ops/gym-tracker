@@ -1047,7 +1047,7 @@
     }
   },
   {
-    "id": "seed-glute-bridge",
+    "id": "seed-glute-bridge-warmup",
     "name": "Glute bridge",
     "primaryMuscle": "glutes",
     "secondaryMuscles": [

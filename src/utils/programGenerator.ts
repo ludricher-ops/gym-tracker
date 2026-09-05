@@ -353,7 +353,7 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
     targetRepsMax: spec.repsMax,
     restSec: spec.restSec,
     autoProgress: true,
-    progressStepKg: exercise.equipment === 'bodyweight' ? 0 : 2.5,
+    progressStepKg: (exercise.equipment === 'bodyweight' || exercise.equipment === 'band') ? 0 : 2.5,
   }
 }
 
