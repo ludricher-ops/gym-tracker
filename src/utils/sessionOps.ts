@@ -97,7 +97,6 @@ export async function startSessionFromTemplate(
     })
 
   const { programId, week } = currentProgramWeek(store)
-  const phase = activePhase(store)
   const sessionId = uuid()
   let totalSets = 0
 
@@ -122,16 +121,6 @@ export async function startSessionFromTemplate(
         ? generateWarmup(target.weightKg)
         : []
 
-    // Modificateurs de phase : appliqués sur les séries de travail uniquement
-    // (pas sur l'échauffement auto, mais bien sur les isAb).
-    const applyPhase = phase && !wet.isWarmup
-    const effectiveSets = applyPhase
-      ? Math.max(1, wet.targetSets + (phase.setsModifier ?? 0))
-      : wet.targetSets
-    const effectiveReps = applyPhase
-      ? Math.max(1, target.reps + (phase.repsOffset ?? 0))
-      : target.reps
-
     let idx = 0
     for (const ws of warmupSets) {
       await store.set.save({
@@ -146,13 +135,13 @@ export async function startSessionFromTemplate(
       })
       totalSets++
     }
-    for (let i = 0; i < effectiveSets; i++) {
+    for (let i = 0; i < wet.targetSets; i++) {
       await store.set.save({
         id: uuid(),
         sessionExerciseId: seId,
         index: idx++,
         weightKg: target.weightKg,
-        reps: effectiveReps,
+        reps: target.reps,
         isWarmup: false,
         isFailure: false,
         isPersonalRecord: false,
