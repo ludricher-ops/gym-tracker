@@ -3001,5 +3001,25 @@
       "mime": "image/gif",
       "aspectRatio": 1.0
     }
+  },
+  {
+    "id": "seed-chest-press-machine",
+    "name": "Presse poitrine (machine)",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": ["chest_upper", "triceps", "shoulders_front"],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000003,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Machine-Chest-Press.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   }
 ]
