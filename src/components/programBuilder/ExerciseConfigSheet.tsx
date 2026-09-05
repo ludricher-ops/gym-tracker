@@ -151,15 +151,29 @@ export function ExerciseConfigSheet({
             </Field>
 
             <Field label="Progression automatique">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <Switch
                   checked={d.autoProgress}
                   onChange={(on) => patch({ autoProgress: on })}
                   label="Progression automatique"
                 />
-                <span className="t-caption">
-                  +{d.progressStepKg} kg quand le haut de fourchette est atteint
-                </span>
+                {d.autoProgress && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Stepper
+                      value={d.progressStepKg}
+                      onChange={(v) => patch({ progressStepKg: v })}
+                      step={1.25}
+                      min={1.25}
+                      max={10}
+                      decimals={2}
+                      unit="kg"
+                      ariaLabel="Pas de progression"
+                    />
+                    <span className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+                      quand le haut de fourchette est atteint
+                    </span>
+                  </div>
+                )}
               </div>
             </Field>
           </>
