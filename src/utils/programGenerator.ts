@@ -375,9 +375,10 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
 
 // ── Périodisation par blocs ───────────────────────────────────────────────────
 // Moins de 8 semaines → pas de périodisation (trop court pour 4 phases).
-// 8-9 semaines : Adaptation 3 + Progression 3 + Intensification 2 + Décharge 1
-// 10-11 sem    : Adaptation 3 + Progression 4 + Intensification 2 + Décharge 1-2
-// 12+ sem      : Adaptation 4 + Progression (reste) + Intensification 3 + Décharge 1
+// 8-9 sem  : Adaptation 2 + Progression 3-4 + Intensification 2 + Décharge 1
+// 10-11 sem: Adaptation 2 + Progression 4-5 + Intensification 3 + Décharge 1
+// 12-15 sem: Adaptation 2 + Progression 5+  + Intensification 3 + Décharge 2
+// 16+ sem  : Adaptation 2 + Progression 8+  + Intensification 4 + Décharge 2
 //
 // Les modificateurs de séries/reps varient selon l'objectif :
 //   strength    → intensification via charge (−reps)
@@ -431,10 +432,10 @@ export function buildPhases(totalWeeks: number, goal: ProgramGoal = 'strength'):
   if (totalWeeks < 8) return undefined
 
   const cfg = PHASE_CONFIG_BY_GOAL[goal]
-  const deload = 1
-  const intensive = totalWeeks <= 9 ? 2 : 3
-  const adapt = totalWeeks <= 9 ? 3 : 4
-  const progress = Math.max(1, totalWeeks - deload - intensive - adapt)
+  const adapt     = 2                                              // max 2 semaines
+  const deload    = totalWeeks >= 12 ? 2 : 1
+  const intensive = totalWeeks <= 9 ? 2 : (totalWeeks >= 16 ? 4 : 3)
+  const progress  = Math.max(1, totalWeeks - adapt - intensive - deload)
 
   let w = 1
   const phases: DraftPhase[] = []
