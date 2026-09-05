@@ -268,7 +268,9 @@ export function DashboardScreen() {
           <Row
             icon="clock"
             label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
-            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            sub={visibleMissed.length <= 2
+              ? visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')
+              : undefined}
             chevron
             onClick={() => nav.navigate('rattrapages')}
           />
@@ -317,7 +319,9 @@ export function DashboardScreen() {
           <Row
             icon="clock"
             label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
-            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            sub={visibleMissed.length <= 2
+              ? visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')
+              : undefined}
             chevron
             onClick={() => nav.navigate('rattrapages')}
           />
@@ -363,9 +367,9 @@ export function DashboardScreen() {
 
         {/* ── Jour de repos avec rattrapages ──────────────────────────── */}
         {!resumable && activeProgram && card.type === 'missed' && (
-          <Card>
-            <p className="t-eyebrow">Jour de repos</p>
-            <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
+          <Card variant="accent">
+            <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
+            <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
             <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="plus" onClick={startFree}>
                 Séance libre
@@ -377,7 +381,9 @@ export function DashboardScreen() {
           <Row
             icon="clock"
             label={`${visibleMissed.length} rattrapage${visibleMissed.length > 1 ? 's' : ''} en attente`}
-            sub={visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')}
+            sub={visibleMissed.length <= 2
+              ? visibleMissed.map((s) => `${s.workoutName} · ${s.label}`).join(' — ')
+              : undefined}
             chevron
             onClick={() => nav.navigate('rattrapages')}
           />
@@ -385,11 +391,11 @@ export function DashboardScreen() {
 
         {/* ── Jour de repos — séance en avance possible ──────────────── */}
         {!resumable && activeProgram && card.type === 'early' && card.nextSession && (
-          <Card>
-            <p className="t-eyebrow">Jour de repos</p>
-            <p className="t-title" style={{ marginTop: 4 }}>Récupération</p>
+          <Card variant="accent">
+            <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
+            <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
             <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
-              <Button icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
+              <Button variant="secondary" icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
                 Commencer {card.nextSession!.workoutName} en avance
               </Button>
               <Button variant="secondary" icon="plus" onClick={startFree}>
@@ -401,11 +407,11 @@ export function DashboardScreen() {
 
         {/* ── Programme terminé / repos sans rattrapage ────────────────── */}
         {!resumable && activeProgram && card.type === 'rest_done' && (
-          <Card>
-            <p className="t-eyebrow">
+          <Card variant="accent">
+            <p className="t-eyebrow" style={{ opacity: 0.8 }}>
               {schedule.length > 0 ? 'Programme terminé' : 'Jour de repos'}
             </p>
-            <p className="t-title" style={{ marginTop: 4 }}>
+            <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
               {schedule.length > 0 ? 'Toutes les séances sont complètes 🎉' : 'Récupération'}
             </p>
             <div style={{ marginTop: 'var(--gap-tile)' }}>
