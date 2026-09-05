@@ -41,6 +41,10 @@ if (process.env.DATABASE_URL) {
       created_at    TIMESTAMPTZ DEFAULT NOW()
     )
   `)
+  // Migration : colonne dernière connexion (idempotent)
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ
+  `)
 
   // Table sync (nouvelle installation : avec user_id d'emblée)
   await pool.query(`
@@ -192,6 +196,8 @@ app.post('/auth/login', async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' })
     res.cookie(COOKIE_NAME, token, COOKIE_OPTS)
+    // Enregistre la date de dernière connexion (fire-and-forget)
+    pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]).catch(() => {})
     res.json({ id: user.id, email: email.toLowerCase().trim() })
   } catch (err) {
     console.error('auth/login:', err.message)

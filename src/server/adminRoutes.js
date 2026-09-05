@@ -56,6 +56,9 @@ export function registerAdminRoutes(app, pool, requireUser) {
               AND (s.data->>'deleted')::boolean IS NOT TRUE
           ), 0) AS exercises_used,
 
+          -- Dernière connexion
+          u.last_login_at,
+
           -- Dernière synchro (ms epoch)
           COALESCE((
             SELECT MAX(updated_at) FROM sync_records WHERE user_id = u.id

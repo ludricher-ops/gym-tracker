@@ -12,6 +12,7 @@ interface AdminUser {
   id: number
   email: string
   created_at: string
+  last_login_at: string | null
   sessions: number
   sets: number
   prs: number
@@ -42,7 +43,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function formatSync(ms: number) {
+function formatAgo(ms: number | null | undefined): string {
   if (!ms) return 'jamais'
   const diff = Date.now() - ms
   const mins = Math.floor(diff / 60000)
@@ -51,6 +52,13 @@ function formatSync(ms: number) {
   if (hours < 24) return `il y a ${hours} h`
   const days = Math.floor(hours / 24)
   return `il y a ${days} j`
+}
+
+function formatSync(ms: number) { return formatAgo(ms) }
+
+function formatLogin(iso: string | null): string {
+  if (!iso) return 'jamais'
+  return formatAgo(new Date(iso).getTime())
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -167,7 +175,7 @@ export function AdminScreen() {
                         {u.id === 1 && <span style={{ marginLeft: 6, fontSize: 10, background: 'var(--accent)', color: 'var(--accent-ink)', padding: '1px 5px', borderRadius: 4 }}>ADMIN</span>}
                       </div>
                       <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>
-                        Inscrit le {formatDate(u.created_at)} · sync {formatSync(u.last_sync_ms)}
+                        Connecté {formatLogin(u.last_login_at)} · sync {formatSync(u.last_sync_ms)}
                       </div>
                     </div>
                     <Icon name="chevron-right" size={16} style={{ transform: expanded === u.id ? 'rotate(90deg)' : 'none', transition: 'transform .2s', flexShrink: 0 }} />
