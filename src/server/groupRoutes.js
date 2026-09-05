@@ -133,7 +133,7 @@ export function registerGroupRoutes(app, pool, requireUser) {
            JOIN group_members gm  ON gm.group_id  = g.id AND gm.user_id = $1
            JOIN group_members gm2 ON gm2.group_id = g.id
           WHERE gm.user_id = $1
-          GROUP BY g.id, g.name, g.code, gm.display_name, g.created_at
+          GROUP BY g.id, g.name, g.code, gm.display_name, g.created_at, gm.joined_at
           ORDER BY gm.joined_at`,
         [req.userId],
       )
