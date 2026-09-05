@@ -152,7 +152,15 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Side-Lying-Clam.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-jump-rope",
@@ -260,7 +268,15 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://gymvisual.com/img/p/3/5/3/4/3/35343.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-curl-barbell",
@@ -1001,7 +1017,15 @@
     "equipment": "bodyweight",
     "trackingType": "time",
     "isWarmupExercise": false,
-    "popularity": 0
+    "popularity": 0,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Mountain-climber.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-side-plank",
@@ -1727,7 +1751,15 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/08/Kneeling-T-spine-Rotation.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-ab-wheel",
@@ -2189,35 +2221,536 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://gymvisual.com/img/p/2/4/5/0/2/24502.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
   },
-
-  { "id": "kb-swing",               "name": "Kettlebell swing",                      "primaryMuscle": "glutes",        "secondaryMuscles": ["hamstrings", "back_thickness"], "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 3, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-Swings.gif",                          "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-press",               "name": "Kettlebell press",                      "primaryMuscle": "shoulders",     "secondaryMuscles": ["triceps"],                      "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-One-Arm-Military-Press.gif",          "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-row",                 "name": "Rowing kettlebell",                     "primaryMuscle": "back_thickness","secondaryMuscles": ["biceps"],                       "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Kettlebell-Bent-Over-Row.gif",                   "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-rdl",                 "name": "Soulevé de terre KB jambes tendues",   "primaryMuscle": "hamstrings",    "secondaryMuscles": ["glutes", "back_thickness"],     "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Kettlebell-Single-Leg-Deadlift.gif",             "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-deadlift",            "name": "Soulevé de terre kettlebell",           "primaryMuscle": "back",          "secondaryMuscles": ["hamstrings", "glutes"],         "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/kettlebell-deadlift.gif",                         "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-floor-press",         "name": "Floor press kettlebell",                "primaryMuscle": "chest",         "secondaryMuscles": ["triceps", "shoulders_front"],   "equipment": "kettlebell", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 1, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Kettlebell-Chest-Press-on-the-Floor.gif",         "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "kb-curl",                "name": "Curl kettlebell",                       "primaryMuscle": "biceps",        "secondaryMuscles": [],                               "equipment": "kettlebell", "category": "isolation", "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 1 },
-  { "id": "kb-overhead-extension",  "name": "Extension triceps KB nuque",            "primaryMuscle": "triceps",       "secondaryMuscles": [],                               "equipment": "kettlebell", "category": "isolation", "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 1 },
-  { "id": "kb-pullover",            "name": "Pull-over kettlebell",                  "primaryMuscle": "back_width",    "secondaryMuscles": ["chest"],                        "equipment": "kettlebell", "category": "isolation", "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 1 },
-  { "id": "kb-calf-raise",          "name": "Mollets kettlebell",                    "primaryMuscle": "calves",        "secondaryMuscles": [],                               "equipment": "kettlebell", "category": "isolation", "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 1, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Single-Leg-Calf-Raises.gif",                    "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-
-  { "id": "band-squat",             "name": "Squat élastique",                       "primaryMuscle": "quads",         "secondaryMuscles": ["glutes"],                       "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Banded-Kettlebell-Goblet-Squat.gif",             "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-row",               "name": "Rowing élastique",                      "primaryMuscle": "back_thickness","secondaryMuscles": ["biceps"],                       "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2 },
-  { "id": "band-chest-press",       "name": "Développé poitrine élastique",          "primaryMuscle": "chest",         "secondaryMuscles": ["triceps", "shoulders_front"],   "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 1, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/05/Standing-incline-chest-press.gif",               "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-overhead-press",    "name": "Développé militaire élastique",         "primaryMuscle": "shoulders",     "secondaryMuscles": ["triceps"],                      "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Resistance-Band-Seated-Shoulder-Press.gif",    "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-curl",              "name": "Curl biceps élastique",                 "primaryMuscle": "biceps",        "secondaryMuscles": [],                               "equipment": "band",       "category": "isolation", "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/06/Seated-Bicep-Curl-With-Resistance-Band.gif",    "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-tricep-pushdown",   "name": "Extension triceps élastique",           "primaryMuscle": "triceps",       "secondaryMuscles": [],                               "equipment": "band",       "category": "isolation", "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Band-Pushdown.gif",                             "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-good-morning",      "name": "Good morning élastique",                "primaryMuscle": "hamstrings",    "secondaryMuscles": ["glutes", "back"],               "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 1, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif",          "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "band-hip-thrust",        "name": "Hip thrust élastique",                  "primaryMuscle": "glutes",        "secondaryMuscles": ["hamstrings"],                   "equipment": "band",       "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2022/09/Resistance-Band-Hip-Thrust.gif",                 "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-
-  { "id": "bw-incline-pushup",     "name": "Pompes inclinées (pieds surélevés)",    "primaryMuscle": "chest_upper",   "secondaryMuscles": ["triceps", "shoulders_front"],   "equipment": "bodyweight", "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2015/07/Decline-Push-Up.gif",                             "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "bw-chinup",             "name": "Tractions prise supination",             "primaryMuscle": "biceps",        "secondaryMuscles": ["back_width"],                   "equipment": "bodyweight", "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 3, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Close-Grip-Chin-Up.gif",                        "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "bw-nordic-curl",        "name": "Nordic curl",                            "primaryMuscle": "hamstrings",    "secondaryMuscles": ["glutes"],                       "equipment": "bodyweight", "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2, "media": { "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Nordic-Hamstring-Curl.gif",                     "mime": "image/gif", "type": "gif", "sizeBytes": 0, "importedAt": 1788480000000, "aspectRatio": 1 } },
-  { "id": "bw-calf-raise",         "name": "Mollets poids du corps",                 "primaryMuscle": "calves",        "secondaryMuscles": [],                               "equipment": "bodyweight", "category": "isolation", "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2 },
-
-  { "id": "bw-squat",              "name": "Squat poids du corps",                   "primaryMuscle": "quads",         "secondaryMuscles": ["glutes"],                       "equipment": "bodyweight", "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 3 },
-  { "id": "bw-lunge",              "name": "Fentes poids du corps",                  "primaryMuscle": "quads",         "secondaryMuscles": ["glutes", "hamstrings"],          "equipment": "bodyweight", "category": "compound",  "trackingType": "reps_only",   "isWarmupExercise": false, "popularity": 2 },
-  { "id": "dumbbell-rdl",          "name": "Soulevé de terre jambes tendues haltères","primaryMuscle": "hamstrings",    "secondaryMuscles": ["glutes", "back_thickness"],      "equipment": "dumbbell",   "category": "compound",  "trackingType": "weight_reps", "isWarmupExercise": false, "popularity": 2 }
+  {
+    "id": "kb-swing",
+    "name": "Kettlebell swing",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings",
+      "back_thickness"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-Swings.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-press",
+    "name": "Kettlebell press",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-One-Arm-Military-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-row",
+    "name": "Rowing kettlebell",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Kettlebell-Bent-Over-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-rdl",
+    "name": "Soulevé de terre KB jambes tendues",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back_thickness"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Kettlebell-Single-Leg-Deadlift.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-deadlift",
+    "name": "Soulevé de terre kettlebell",
+    "primaryMuscle": "back",
+    "secondaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/kettlebell-deadlift.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-floor-press",
+    "name": "Floor press kettlebell",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Kettlebell-Chest-Press-on-the-Floor.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-curl",
+    "name": "Curl kettlebell",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "kettlebell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://gymvisual.com/img/p/2/6/2/2/2/26222.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-overhead-extension",
+    "name": "Extension triceps KB nuque",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "kettlebell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://gymvisual.com/img/p/2/6/2/2/8/26228.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-pullover",
+    "name": "Pull-over kettlebell",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "equipment": "kettlebell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Pullover.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-calf-raise",
+    "name": "Mollets kettlebell",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "kettlebell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Single-Leg-Calf-Raises.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-squat",
+    "name": "Squat élastique",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Banded-Kettlebell-Goblet-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-row",
+    "name": "Rowing élastique",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Band-Seated-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-chest-press",
+    "name": "Développé poitrine élastique",
+    "primaryMuscle": "chest",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/05/Standing-incline-chest-press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-overhead-press",
+    "name": "Développé militaire élastique",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Resistance-Band-Seated-Shoulder-Press.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-curl",
+    "name": "Curl biceps élastique",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [],
+    "equipment": "band",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/06/Seated-Bicep-Curl-With-Resistance-Band.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-tricep-pushdown",
+    "name": "Extension triceps élastique",
+    "primaryMuscle": "triceps",
+    "secondaryMuscles": [],
+    "equipment": "band",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Band-Pushdown.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-good-morning",
+    "name": "Good morning élastique",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-hip-thrust",
+    "name": "Hip thrust élastique",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "band",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/09/Resistance-Band-Hip-Thrust.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-incline-pushup",
+    "name": "Pompes inclinées (pieds surélevés)",
+    "primaryMuscle": "chest_upper",
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2015/07/Decline-Push-Up.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-chinup",
+    "name": "Tractions prise supination",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "back_width"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Close-Grip-Chin-Up.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-nordic-curl",
+    "name": "Nordic curl",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Nordic-Hamstring-Curl.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-calf-raise",
+    "name": "Mollets poids du corps",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Calf-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-squat",
+    "name": "Squat poids du corps",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/bodyweight-squat-full-version.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-lunge",
+    "name": "Fentes poids du corps",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "category": "compound",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/07/bodyweight-lunges.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "dumbbell-rdl",
+    "name": "Soulevé de terre jambes tendues haltères",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": [
+      "glutes",
+      "back_thickness"
+    ],
+    "equipment": "dumbbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Romanian-Deadlift.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788095000000,
+      "aspectRatio": 1
+    }
+  }
 ]
