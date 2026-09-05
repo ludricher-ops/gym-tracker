@@ -219,7 +219,8 @@ export function GroupDetailScreen({ params }: ScreenProps) {
   const myEntry = members.find((m) => m.isMe)
   // Niveau calculé depuis le totalXp serveur — agrège tous les appareils, plus complet
   const myLevel = myEntry ? levelFromXp(myEntry.totalXp) : 1
-  const periodOptions: Period[] = ['week', ...seasons]
+  const currentMonth = currentMonthPeriod()
+  const periodOptions: Period[] = ['week', currentMonth, ...seasons.filter((s) => s !== currentMonth)]
 
   return (
     <div className="gt-screen">
