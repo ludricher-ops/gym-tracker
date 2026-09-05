@@ -64,6 +64,10 @@ const ISOLATION_SPEC: Record<ProgramGoal, SetSpec> = {
   fat_loss:    { sets: 3, repsMin: 12, repsMax: 15, restSec: 60,  range: true  },
 }
 
+// Specs fixes pour l'échauffement et les abdos (ajoutés systématiquement)
+const WARMUP_SPEC: SetSpec = { sets: 2, repsMin: 10, repsMax: 10, restSec: 0,  range: false }
+const CORE_SPEC:   SetSpec = { sets: 3, repsMin: 15, repsMax: 15, restSec: 60, range: false }
+
 // ── Définition de slots ───────────────────────────────────────────────────────
 // compound: true  → filtrer sur category === 'compound' uniquement
 // compound: false → préférer isolation, fallback compound si aucun résultat
@@ -306,6 +310,12 @@ export function generateProgramDraft(
     (ex) => !ex.deleted && !ex.isWarmupExercise && allowed.has(ex.equipment),
   )
 
+  // Pools pour échauffement et abdos — indépendants de l'équipement (bodyweight)
+  const warmupPool = exercises.filter((ex) => !ex.deleted && ex.isWarmupExercise)
+  const corePool = exercises.filter(
+    (ex) => !ex.deleted && !ex.isWarmupExercise && ex.primaryMuscle === 'core',
+  )
+
   const split = selectSplit(params)
   // Jours choisis par l'utilisateur ou défaut par nombre de séances
   const days: Weekday[] = (selectedDays && selectedDays.length === daysPerWeek)
@@ -341,6 +351,24 @@ export function generateProgramDraft(
       usedInWorkout.add(ex.id)
       usedGlobally.add(ex.id)
       draftExercises.push(makeDraftWE(ex, spec))
+    }
+
+    // Échauffement en tête — varie par rotation entre les séances
+    if (warmupPool.length > 0) {
+      const warmupEx = warmupPool[workouts.length % warmupPool.length]
+      if (warmupEx) {
+        const we = makeDraftWE(warmupEx, WARMUP_SPEC)
+        we.autoProgress = false
+        draftExercises.unshift(we)
+      }
+    }
+
+    // Abdos en queue — varie par rotation entre les séances
+    if (corePool.length > 0) {
+      const coreEx = corePool[workouts.length % corePool.length]
+      if (coreEx) {
+        draftExercises.push(makeDraftWE(coreEx, CORE_SPEC))
+      }
     }
 
     // Nommage : suffixe A/B/C si le type apparaît plusieurs fois dans la semaine
