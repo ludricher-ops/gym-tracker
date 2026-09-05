@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigation } from '../../nav/useNavigation'
 import { setCompetitionEnabled } from '../../nav/navigation'
+import { useStore } from '../../hooks/useStore'
+import { computeStreak } from '../../utils/streak'
+import { localDayKey } from '../../utils/dates'
 import { Button, Card, Icon } from '../ui'
 
 // ── Système de niveaux RPG ────────────────────────────────────────────────────
@@ -215,6 +218,15 @@ type View = 'loading' | 'noGroup' | 'leaderboard'
 
 export function GroupScreen() {
   const nav = useNavigation()
+  const store = useStore()
+
+  // Streak — même calcul que le Dashboard
+  const streak = useMemo(
+    () => computeStreak(
+      store.sessions.filter((s) => s.endedAt != null).map((s) => localDayKey(s.startedAt)),
+    ),
+    [store.sessions],
+  )
 
   const [view,         setView]         = useState<View>('loading')
   const [group,        setGroup]        = useState<GroupInfo | null>(null)
@@ -347,30 +359,25 @@ export function GroupScreen() {
           {group?.name}
         </h1>
       </div>
-      {/* Chip code d'invitation — même style que le chip streak du Dashboard */}
-      <button
-        onClick={copyCode}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 'var(--gap-tile)',
-          background: 'var(--surface)', borderRadius: 'var(--radius-card)',
-          padding: 'var(--gap-tile)', border: 'none', cursor: 'pointer',
-          color: copied ? 'var(--accent)' : 'var(--fg)',
-        }}
-        title="Copier le code d'invitation"
-      >
-        <div style={{ color: 'var(--accent)', display: 'flex' }}>
-          <Icon name={copied ? 'check' : 'copy'} size={20} />
-        </div>
-        <div>
-          <div
-            className="t-num gt-stat__label"
-            style={{ lineHeight: 1, fontFamily: 'var(--font-mono)', letterSpacing: 2 }}
-          >
-            {group?.code}
+      {/* Chip streak — identique au Dashboard */}
+      {streak > 0 && (
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--gap-tile)',
+            background: 'var(--surface)', borderRadius: 'var(--radius-card)',
+            padding: 'var(--gap-tile)',
+          }}
+          title="Jours consécutifs"
+        >
+          <div style={{ color: 'var(--accent)', display: 'flex' }}>
+            <Icon name="flame" size={20} />
           </div>
-          <div className="gt-stat__label">{copied ? 'COPIÉ !' : 'INVITER'}</div>
+          <div>
+            <div className="t-num gt-stat__label" style={{ lineHeight: 1 }}>{streak}</div>
+            <div className="gt-stat__label">JOURS</div>
+          </div>
         </div>
-      </button>
+      )}
     </div>
   )
 
@@ -541,6 +548,23 @@ export function GroupScreen() {
         {error && (
           <p className="t-caption" style={{ color: 'var(--danger)', marginBottom: 8 }}>{error}</p>
         )}
+
+        {/* Code d'invitation compact */}
+        <button
+          onClick={copyCode}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            width: '100%', padding: '8px 12px',
+            borderRadius: 'var(--radius-card)', border: '1px solid var(--border)',
+            background: 'var(--surface)', cursor: 'pointer',
+            color: copied ? 'var(--accent)' : 'var(--fg-muted)',
+          }}
+        >
+          <Icon name={copied ? 'check' : 'copy'} size={15} />
+          <span className="t-caption" style={{ fontWeight: 600 }}>
+            {copied ? 'Code copié !' : `Inviter — code ${group?.code}`}
+          </span>
+        </button>
 
         {/* Mon niveau */}
         {myEntry && (
