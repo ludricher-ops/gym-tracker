@@ -13,7 +13,7 @@ import type {
 } from '../types'
 import { DEFAULT_ACCENT } from '../theme/accents'
 import { buildTemplateRecords } from '../data/program-templates'
-import { idbTx, idbGet } from './idb'
+import { idbTx, idbGet, idbGetAll } from './idb'
 import { OUTBOX_STORE } from './schema'
 
 interface SeedExercise {
@@ -56,15 +56,18 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 // (1 ms) afin que toute donnée serveur (timestamp réel) gagne le LWW au pull.
 const SEED_UPDATED_AT = 1
 
-export async function ensureSeed(): Promise<void> {
-  const existing = await idbGet<Settings>('settings', 'singleton')
-  if (existing) return
+/**
+ * Injecte les exercices built-in manquants dans l'IDB (idempotent).
+ * S'exécute à chaque lancement pour que les nouveaux exercices ajoutés
+ * dans exercises-seed.json soient disponibles pour les utilisateurs existants.
+ */
+async function ensureBuiltinExercises(now: number): Promise<void> {
+  const allExercises = await idbGetAll<{ id: string }>('exercises')
+  const existingIds = new Set(allExercises.map((e) => e.id))
+  const missing = SEED_EXERCISES.filter((ex) => !existingIds.has(ex.id))
+  if (missing.length === 0) return
 
-  const now = Date.now()
-
-  // Insertion en masse des exercices : une seule transaction (entité +
-  // outbox) au lieu de 70+ — plus rapide et toujours atomique.
-  const exercises: Exercise[] = SEED_EXERCISES.map((ex) => ({
+  const newExercises: Exercise[] = missing.map((ex) => ({
     id: ex.id,
     name: ex.name,
     primaryMuscle: ex.primaryMuscle,
@@ -86,11 +89,26 @@ export async function ensureSeed(): Promise<void> {
   await idbTx(['exercises', OUTBOX_STORE], 'readwrite', (tx) => {
     const store = tx.objectStore('exercises')
     const outbox = tx.objectStore(OUTBOX_STORE)
-    for (const ex of exercises) {
+    for (const ex of newExercises) {
       store.put(ex)
       outbox.add({ store: 'exercises', id: ex.id, updatedAt: SEED_UPDATED_AT })
     }
   })
+}
+
+export async function ensureSeed(): Promise<void> {
+  const now = Date.now()
+
+  // Toujours vérifier les exercices manquants (nouveaux exercices ajoutés au seed
+  // après l'installation initiale) — idempotent, ne touche pas aux données existantes.
+  await ensureBuiltinExercises(now)
+
+  // Le reste (settings, programmes) ne s'applique qu'au premier lancement.
+  const existing = await idbGet<Settings>('settings', 'singleton')
+  if (existing) return
+
+  // Les exercices sont déjà insérés par ensureBuiltinExercises() ci-dessus.
+  // Il reste à créer les programmes et les settings (premier lancement uniquement).
 
   // Programmes built-in (templates) — updatedAt remplacé par SEED_UPDATED_AT.
   const tpl = buildTemplateRecords(now)

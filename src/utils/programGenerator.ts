@@ -105,13 +105,14 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
     { muscles: ['calves'],               compound: false },
   ],
   upper: [
-    { muscles: ['chest', 'chest_upper'],               compound: true  },
-    { muscles: ['back_width', 'back'],                  compound: true  },
-    { muscles: ['shoulders', 'shoulders_front'],        compound: true  },
-    { muscles: ['back_thickness', 'back'],              compound: false },
-    { muscles: ['chest', 'chest_lower'],                compound: false },
-    { muscles: ['biceps'],                              compound: false },
-    { muscles: ['triceps'],                             compound: false },
+    { muscles: ['chest', 'chest_upper'],                          compound: true  },
+    { muscles: ['back_width', 'back'],                            compound: true  },
+    { muscles: ['shoulders', 'shoulders_front'],                  compound: true  }, // OHP
+    { muscles: ['shoulders_lateral', 'shoulders_rear'],           compound: false }, // écarté / face pull
+    { muscles: ['back_thickness', 'back'],                        compound: false },
+    { muscles: ['chest', 'chest_lower'],                          compound: false },
+    { muscles: ['biceps'],                                        compound: false },
+    { muscles: ['triceps'],                                       compound: false },
   ],
   lower: [
     { muscles: ['quads'],                compound: true  },
@@ -122,13 +123,14 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
     { muscles: ['calves'],               compound: false },
   ],
   fullbody: [
-    { muscles: ['quads', 'glutes'],              compound: true  },
-    { muscles: ['chest', 'chest_upper'],          compound: true  },
-    { muscles: ['back_width', 'back'],            compound: true  },
-    { muscles: ['hamstrings', 'glutes'],          compound: false },
-    { muscles: ['shoulders', 'shoulders_front'],  compound: true  }, // OHP compound, pas isolation
-    { muscles: ['biceps'],                        compound: false },
-    { muscles: ['triceps'],                       compound: false }, // slot indépendant des biceps
+    { muscles: ['quads', 'glutes'],                              compound: true  }, // squat / leg press
+    { muscles: ['chest', 'chest_upper'],                         compound: true  }, // développé couché
+    { muscles: ['back_width', 'back'],                           compound: true  }, // tirage / tractions
+    { muscles: ['hamstrings', 'glutes'],                         compound: false }, // RDL / hip thrust
+    { muscles: ['shoulders_lateral', 'shoulders_rear', 'shoulders'], compound: false }, // écarté / face pull
+    { muscles: ['shoulders', 'shoulders_front'],                 compound: true  }, // OHP (60-90 min)
+    { muscles: ['biceps'],                                       compound: false },
+    { muscles: ['triceps'],                                      compound: false },
   ],
 }
 

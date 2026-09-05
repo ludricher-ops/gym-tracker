@@ -2752,5 +2752,47 @@
       "importedAt": 1788095000000,
       "aspectRatio": 1
     }
+  },
+  {
+    "id": "seed-upright-row-barbell",
+    "name": "Tirage au menton barre",
+    "primaryMuscle": "shoulders_lateral",
+    "secondaryMuscles": ["back_thickness", "biceps"],
+    "equipment": "barbell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757000000000
+  },
+  {
+    "id": "seed-upright-row-cable",
+    "name": "Tirage au menton câble",
+    "primaryMuscle": "shoulders_lateral",
+    "secondaryMuscles": ["back_thickness", "biceps"],
+    "equipment": "cable",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757000000000
+  },
+  {
+    "id": "seed-leg-curl-standing",
+    "name": "Leg curl debout",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscles": ["glutes"],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757000000000
   }
 ]
