@@ -74,6 +74,19 @@ Après la simulation, évalue en tant que coach :
 - L'équipement est-il exploité de façon optimale ?
   (ex. ne pas choisir dumbbell bench quand barbell est disponible pour un programme `strength`)
 
+### Variété inter-sessions ⚠️ (critère obligatoire)
+- Les séances du même type (ex. fullbody A, B, C) ont-elles une structure **différenciée** ou sont-elles
+  **structurellement identiques** (mêmes slots, même ordre musculaire, seuls les exercices changent) ?
+- Le pool d'exercices par slot est-il suffisamment large pour permettre la rotation sur N séances ?
+  (Si pool < N séances du même type → certaines séances auront des répétitions inévitables)
+- Verdict : "Variété structurelle" (slots différents) ou "Variété d'exercices seulement" ou "Répétition complète".
+
+### Couverture isolation par groupe musculaire ⚠️ (critère obligatoire)
+- Lister les groupes musculaires **sans slot isolation dédié** dans ce type de séance.
+  (ex. fullbody : pas de slot chest_isol, quads_isol, calves)
+- Pour chaque groupe absent en isolation : est-ce acceptable compte tenu du split et de l'objectif ?
+- Verdict : "Couverture isolation complète" / "Lacunes acceptables" / "Lacunes problématiques".
+
 ---
 
 ## Équipements abrégés

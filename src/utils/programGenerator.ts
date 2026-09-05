@@ -602,6 +602,6 @@ export function generateProgramDraft(
     color: PROGRAM_COLORS[GOAL_COLOR_INDEX[goal]!] ?? PROGRAM_COLORS[0]!,
     workouts,
     week,
-    phases: buildPhases(durationWeeks),
+    phases: buildPhases(durationWeeks, goal),
   }
 }
