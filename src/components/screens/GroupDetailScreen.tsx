@@ -173,6 +173,27 @@ export function GroupDetailScreen({ params }: ScreenProps) {
     [store.sessions],
   )
 
+  // XP local (IndexedDB = source de vérité) — évite l'incohérence serveur partial-sync
+  const localXp = useMemo(() => {
+    let xp = 0
+    for (const s of store.sets) {
+      if (s.isWarmup || s.completedAt == null) continue
+      if (s.weightKg > 0) {
+        xp += Math.max(1, Math.floor(s.weightKg * s.reps / 10))
+        if (s.weightKg >= 80) xp += Math.floor(s.weightKg * s.reps / 20)
+      } else { xp += s.reps * 3 }
+      if (s.isPersonalRecord) xp += 150
+    }
+    for (const sess of store.sessions) {
+      if (sess.endedAt == null) continue
+      xp += 100
+      const dur = sess.endedAt - sess.startedAt
+      if (dur > 3600000) xp += 150
+      else if (dur > 2700000) xp += 75
+    }
+    return xp
+  }, [store.sets, store.sessions])
+
   const [members,   setMembers]   = useState<LeaderboardEntry[]>([])
   const [seasons,   setSeasons]   = useState<string[]>([])
   const [period,    setPeriod]    = useState<Period>(currentMonthPeriod())
@@ -216,7 +237,8 @@ export function GroupDetailScreen({ params }: ScreenProps) {
 
   const sorted = [...members].sort((a, b) => b.periodXp - a.periodXp || b.totalXp - a.totalXp)
   const myEntry = members.find((m) => m.isMe)
-  const myLevel = myEntry ? levelFromXp(myEntry.totalXp) : 1
+  // Niveau calculé depuis l'XP LOCAL (source de vérité) pour éviter partial-sync
+  const myLevel = levelFromXp(localXp)
   const periodOptions: Period[] = ['week', ...seasons]
 
   return (
@@ -286,7 +308,8 @@ export function GroupDetailScreen({ params }: ScreenProps) {
               </div>
               <div style={{ width: 1, background: 'var(--accent-ink)', opacity: 0.3 }} />
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 20 }}>{myEntry.totalXp.toLocaleString('fr-FR')}</div>
+                {/* localXp = source de vérité (IndexedDB), évite partial-sync server */}
+                <div style={{ fontWeight: 800, fontSize: 20 }}>{localXp.toLocaleString('fr-FR')}</div>
                 <div className="t-caption" style={{ opacity: 0.8 }}>XP total</div>
               </div>
               <div style={{ width: 1, background: 'var(--accent-ink)', opacity: 0.3 }} />

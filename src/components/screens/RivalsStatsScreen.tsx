@@ -8,6 +8,20 @@ import { localDayKey } from '../../utils/dates'
 import { Card, Icon } from '../ui'
 import { computeBadges, levelFromXp, RANKS, rankForLevel, xpToNextLevel } from './rivalsRpg'
 
+// ── Helpers date ──────────────────────────────────────────────────────────────
+
+function currentMonthBounds(): { start: number; end: number } {
+  const now = new Date()
+  const y = now.getUTCFullYear()
+  const m = now.getUTCMonth()
+  return { start: Date.UTC(y, m, 1), end: Date.UTC(y, m + 1, 1) - 1 }
+}
+
+function currentMonthLabel(): string {
+  const now = new Date()
+  return now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
+
 // ── Formule XP locale (miroir de groupRoutes.js) ──────────────────────────────
 
 function useLocalXpBreakdown(store: ReturnType<typeof useStore>) {
@@ -41,6 +55,38 @@ function useLocalXpBreakdown(store: ReturnType<typeof useStore>) {
   }, [store.sets, store.sessions])
 }
 
+function useMonthlyXp(store: ReturnType<typeof useStore>) {
+  return useMemo(() => {
+    const { start, end } = currentMonthBounds()
+    let xp = 0; let setsXp = 0; let heavyBonus = 0; let prBonus = 0
+    let sessXp = 0; let durBonus = 0; let sessCount = 0
+
+    for (const s of store.sets) {
+      if (s.isWarmup || s.completedAt == null) continue
+      if (s.completedAt < start || s.completedAt > end) continue
+      let base = 0
+      if (s.weightKg > 0) {
+        base = Math.max(1, Math.floor(s.weightKg * s.reps / 10))
+        if (s.weightKg >= 80) { const hb = Math.floor(s.weightKg * s.reps / 20); heavyBonus += hb; base += hb }
+      } else { base = s.reps * 3 }
+      setsXp += base
+      if (s.isPersonalRecord) { prBonus += 150; setsXp += 150 }
+    }
+
+    for (const sess of store.sessions) {
+      if (sess.endedAt == null) continue
+      if (sess.endedAt < start || sess.endedAt > end) continue
+      sessXp += 100; sessCount += 1
+      const dur = sess.endedAt - sess.startedAt
+      if (dur > 3600000) { durBonus += 150; sessXp += 150 }
+      else if (dur > 2700000) { durBonus += 75; sessXp += 75 }
+    }
+
+    xp = setsXp + sessXp
+    return { xp, setsXp, heavyBonus, prBonus, sessXp, durBonus, sessCount }
+  }, [store.sets, store.sessions])
+}
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function RivalsStatsScreen() {
@@ -48,6 +94,7 @@ export function RivalsStatsScreen() {
   const store = useStore()
 
   const { setsXp, sessXp, heavyBonus, prBonus, durBonus, totalXp } = useLocalXpBreakdown(store)
+  const monthly = useMonthlyXp(store)
 
   const level    = levelFromXp(totalXp)
   const myRank   = rankForLevel(level)
@@ -118,8 +165,52 @@ export function RivalsStatsScreen() {
           ))}
         </div>
 
+        {/* Stats du mois en cours */}
+        <p className="t-eyebrow">Ce mois — {currentMonthLabel()}</p>
+        <Card>
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: monthly.xp > 0 ? 14 : 0 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: 800, fontSize: 22, color: 'var(--accent)' }}>
+                {monthly.xp.toLocaleString('fr-FR')}
+              </div>
+              <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>XP ce mois</div>
+            </div>
+            <div style={{ width: 1, background: 'var(--border)' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: 800, fontSize: 22 }}>{monthly.sessCount}</div>
+              <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>Séances</div>
+            </div>
+          </div>
+          {monthly.xp > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+              {[
+                ['⚡', 'Tonnage', monthly.setsXp - monthly.heavyBonus - monthly.prBonus],
+                ['💪', 'Bonus lourd', monthly.heavyBonus],
+                ['🏅', 'Bonus records', monthly.prBonus],
+                ['🎯', 'Séances', monthly.sessXp - monthly.durBonus],
+                ['⏱️', 'Bonus durée', monthly.durBonus],
+              ].filter(([, , val]) => (val as number) > 0).map(([emoji, label, val]) => (
+                <div key={label as string} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 16 }}>{emoji}</span>
+                    <span className="t-caption">{label}</span>
+                  </div>
+                  <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
+                    {(val as number).toLocaleString('fr-FR')} XP
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          {monthly.xp === 0 && (
+            <p className="t-caption" style={{ color: 'var(--fg-muted)', textAlign: 'center', padding: '4px 0' }}>
+              Pas encore de séance ce mois-ci.
+            </p>
+          )}
+        </Card>
+
         {/* Détail XP */}
-        <p className="t-eyebrow">Détail de l'XP</p>
+        <p className="t-eyebrow">Détail de l'XP (tout temps)</p>
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
