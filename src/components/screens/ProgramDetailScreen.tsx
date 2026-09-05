@@ -61,7 +61,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
 
   // Phases de périodisation (undefined si programme < 8 semaines)
   const programPhases = useMemo(
-    () => (program ? buildPhases(program.durationWeeks) : undefined),
+    () => (program ? buildPhases(program.durationWeeks, program.goal) : undefined),
     [program],
   )
 

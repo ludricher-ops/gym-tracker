@@ -378,10 +378,47 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
 // 8-9 semaines : Adaptation 3 + Progression 3 + Intensification 2 + Décharge 1
 // 10-11 sem    : Adaptation 3 + Progression 4 + Intensification 2 + Décharge 1-2
 // 12+ sem      : Adaptation 4 + Progression (reste) + Intensification 3 + Décharge 1
+//
+// Les modificateurs de séries/reps varient selon l'objectif :
+//   strength    → intensification via charge (−reps)
+//   hypertrophy → intensification via volume dense (+série, −reps légères)
+//   endurance   → intensification via travail total (+série, +reps)
+//   fat_loss    → intensification via densité (même séries, +reps)
 
-export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
+type PhaseModSet = { setsModifier: number; repsOffset: number }
+type GoalPhaseConfig = {
+  adaptation: PhaseModSet & { description: string }
+  intensification: PhaseModSet & { description: string }
+  deload: PhaseModSet & { description: string }
+}
+
+const PHASE_CONFIG_BY_GOAL: Record<ProgramGoal, GoalPhaseConfig> = {
+  strength: {
+    adaptation:      { setsModifier: -1, repsOffset: +3, description: 'Maîtrise des mouvements, charges légères, volume modéré' },
+    intensification: { setsModifier:  0, repsOffset: -3, description: 'Charges maximales, répétitions faibles' },
+    deload:          { setsModifier: -2, repsOffset: +4, description: 'Récupération active, 50 % du volume habituel' },
+  },
+  hypertrophy: {
+    adaptation:      { setsModifier: -1, repsOffset: +2, description: 'Volume modéré, apprentissage des patterns' },
+    intensification: { setsModifier: +1, repsOffset: -2, description: 'Volume maximal, densité accrue, charges lourdes' },
+    deload:          { setsModifier: -2, repsOffset:  0, description: 'Récupération, volume minimal' },
+  },
+  endurance: {
+    adaptation:      { setsModifier: -1, repsOffset: -2, description: 'Initiation progressive, travail léger' },
+    intensification: { setsModifier: +1, repsOffset: +3, description: 'Volume et répétitions maximaux, endurance peak' },
+    deload:          { setsModifier: -2, repsOffset:  0, description: 'Récupération active, volume réduit' },
+  },
+  fat_loss: {
+    adaptation:      { setsModifier: -1, repsOffset:  0, description: 'Circuits légers, prise en main du rythme' },
+    intensification: { setsModifier:  0, repsOffset: +3, description: 'Densité maximale, répétitions élevées' },
+    deload:          { setsModifier: -1, repsOffset:  0, description: 'Récupération active, intensité réduite' },
+  },
+}
+
+export function buildPhases(totalWeeks: number, goal: ProgramGoal = 'strength'): DraftPhase[] | undefined {
   if (totalWeeks < 8) return undefined
 
+  const cfg = PHASE_CONFIG_BY_GOAL[goal]
   const deload = 1
   const intensive = totalWeeks <= 9 ? 2 : 3
   const adapt = totalWeeks <= 9 ? 3 : 4
@@ -395,9 +432,9 @@ export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
     focus: 'adaptation',
     weekStart: w,
     weekEnd: w + adapt - 1,
-    description: 'Maîtrise des mouvements, charges légères, volume modéré',
-    setsModifier: -1,
-    repsOffset: +3,
+    description: cfg.adaptation.description,
+    setsModifier: cfg.adaptation.setsModifier,
+    repsOffset: cfg.adaptation.repsOffset,
   })
   w += adapt
 
@@ -406,7 +443,7 @@ export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
     focus: 'progression',
     weekStart: w,
     weekEnd: w + progress - 1,
-    description: 'Montée en charge régulière, volume standard',
+    description: 'Volume et charge standards, montée progressive',
   })
   w += progress
 
@@ -415,9 +452,9 @@ export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
     focus: 'intensification',
     weekStart: w,
     weekEnd: w + intensive - 1,
-    description: 'Charges maximales, volume réduit',
-    setsModifier: 0,
-    repsOffset: -3,
+    description: cfg.intensification.description,
+    setsModifier: cfg.intensification.setsModifier,
+    repsOffset: cfg.intensification.repsOffset,
   })
   w += intensive
 
@@ -426,9 +463,9 @@ export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
     focus: 'deload',
     weekStart: w,
     weekEnd: totalWeeks,
-    description: 'Récupération active, 50 % du volume habituel',
-    setsModifier: -2,
-    repsOffset: +4,
+    description: cfg.deload.description,
+    setsModifier: cfg.deload.setsModifier,
+    repsOffset: cfg.deload.repsOffset,
   })
 
   return phases

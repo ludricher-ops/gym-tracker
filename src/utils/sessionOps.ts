@@ -67,11 +67,12 @@ function currentProgramWeek(store: StoreApi): { programId?: string; week?: numbe
 /**
  * Phase de périodisation en cours pour le programme actif.
  * Retourne undefined si pas de programme actif, pas encore démarré, ou < 8 semaines.
+ * Les modificateurs tiennent compte de l'objectif du programme.
  */
 export function activePhase(store: StoreApi): DraftPhase | undefined {
   const program = store.programs.find((p) => p.isActive)
   if (!program?.startedAt) return undefined
-  const phases = buildPhases(program.durationWeeks)
+  const phases = buildPhases(program.durationWeeks, program.goal)
   if (!phases) return undefined
   const week = Math.floor(daysBetween(program.startedAt, Date.now()) / 7) + 1
   const currentWeek = Math.min(Math.max(1, week), program.durationWeeks)
@@ -97,6 +98,7 @@ export async function startSessionFromTemplate(
     })
 
   const { programId, week } = currentProgramWeek(store)
+  const phase = activePhase(store)
   const sessionId = uuid()
   let totalSets = 0
 
@@ -121,6 +123,16 @@ export async function startSessionFromTemplate(
         ? generateWarmup(target.weightKg)
         : []
 
+    // Modificateurs de phase selon l'objectif du programme — séries de travail
+    // uniquement (pas l'échauffement template isWarmup, mais bien les isAb).
+    const applyPhase = phase && !wet.isWarmup
+    const effectiveSets = applyPhase
+      ? Math.max(1, wet.targetSets + (phase.setsModifier ?? 0))
+      : wet.targetSets
+    const effectiveReps = applyPhase
+      ? Math.max(1, target.reps + (phase.repsOffset ?? 0))
+      : target.reps
+
     let idx = 0
     for (const ws of warmupSets) {
       await store.set.save({
@@ -135,13 +147,13 @@ export async function startSessionFromTemplate(
       })
       totalSets++
     }
-    for (let i = 0; i < wet.targetSets; i++) {
+    for (let i = 0; i < effectiveSets; i++) {
       await store.set.save({
         id: uuid(),
         sessionExerciseId: seId,
         index: idx++,
         weightKg: target.weightKg,
-        reps: target.reps,
+        reps: effectiveReps,
         isWarmup: false,
         isFailure: false,
         isPersonalRecord: false,
