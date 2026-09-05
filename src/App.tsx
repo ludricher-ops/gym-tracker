@@ -5,7 +5,7 @@ import { StoreProvider, useStore } from './hooks/useStore'
 import { NavProvider, useNavigation } from './nav/useNavigation'
 import { TABS, TABS_COMPETITION, isCompetitionEnabled } from './nav/navigation'
 import { SCREENS } from './nav/screenRegistry'
-import { TabBar, EmptyState, UpdateBanner, ChromeGate } from './components/ui'
+import { TabBar, EmptyState, UpdateBanner } from './components/ui'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { SessionModal } from './components/screens/SessionModal/SessionModal'
 import { AuthProvider, useAuth } from './auth/AuthContext'
@@ -14,11 +14,9 @@ import { RESUME_WINDOW_MS } from './utils/sessionOps'
 
 export function App() {
   return (
-    <ChromeGate>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
-    </ChromeGate>
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   )
 }
 
