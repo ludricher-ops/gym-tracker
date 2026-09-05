@@ -393,7 +393,7 @@ type GoalPhaseConfig = {
   deload: PhaseModSet & { description: string }
 }
 
-const PHASE_CONFIG_BY_GOAL: Record<ProgramGoal, GoalPhaseConfig> = {
+export const PHASE_CONFIG_BY_GOAL: Record<ProgramGoal, GoalPhaseConfig> = {
   strength: {
     adaptation:      { setsModifier: -1, repsOffset: +3, description: 'Maîtrise des mouvements, charges légères, volume modéré' },
     intensification: { setsModifier:  0, repsOffset: -3, description: 'Charges maximales, répétitions faibles' },

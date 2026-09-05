@@ -8,6 +8,8 @@ import { useNavigation } from '../../nav/useNavigation'
 import { Icon } from '../ui'
 import {
   generateProgramDraft,
+  buildPhases,
+  PHASE_CONFIG_BY_GOAL,
   type FocusMuscle,
   type GeneratorParams,
 } from '../../utils/programGenerator'
@@ -473,14 +475,18 @@ export function ProgramGeneratorScreen() {
   function renderProgramWeeksPicker() {
     const options = programWeeksOptions(level)
 
-    // Étiquette de la phase de périodisation pour informer l'utilisateur
+    // Étiquette de la phase de périodisation — délègue à buildPhases (source de vérité)
     function phaseLabel(weeks: number): string {
-      if (weeks < 8) return ''
-      const d = 1
-      const i = weeks <= 9 ? 2 : 3
-      const a = weeks <= 9 ? 3 : 4
-      const p = Math.max(1, weeks - d - i - a)
-      return `${a} sem. adaptation · ${p} sem. progression · ${i} sem. intensification · ${d} sem. décharge`
+      const phases = buildPhases(weeks)
+      if (!phases) return ''
+      return phases.map((ph) => {
+        const dur = ph.weekEnd - ph.weekStart + 1
+        const names: Record<string, string> = {
+          adaptation: 'adaptation', progression: 'progression',
+          intensification: 'intensification', deload: 'décharge',
+        }
+        return `${dur} sem. ${names[ph.focus] ?? ph.focus}`
+      }).join(' · ')
     }
 
     return (
@@ -727,18 +733,23 @@ export function ProgramGeneratorScreen() {
       deload:          'var(--fg-muted)',
     }
 
-    // Modificateurs par objectif (Progression = base, toujours ±0)
-    const GOAL_PHASES: Record<ProgramGoal, {
-      adaptation: string
-      intensification: string
-      intensLabel: string
-      deload: string
-    }> = {
-      strength:   { adaptation: '−1 série, +3 reps', intensification: '±0 série, −3 reps', intensLabel: 'Charge lourde, reps faibles', deload: '−2 séries, +4 reps' },
-      hypertrophy:{ adaptation: '−1 série, +2 reps', intensification: '+1 série, −2 reps',  intensLabel: 'Volume dense, un peu plus lourd', deload: '−2 séries' },
-      endurance:  { adaptation: '−1 série, −2 reps', intensification: '+1 série, +3 reps',  intensLabel: 'Plus de travail total',  deload: '−2 séries' },
-      fat_loss:   { adaptation: '−1 série',           intensification: '±0 série, +3 reps',  intensLabel: 'Densité max, cardio',     deload: '−1 série' },
+    // Modificateurs par objectif — dérivés de PHASE_CONFIG_BY_GOAL (source de vérité)
+    function fmtMod(sets: number, reps: number): string {
+      const parts: string[] = []
+      if (sets !== 0) parts.push(`${sets > 0 ? '+' : ''}${sets} série${Math.abs(sets) > 1 ? 's' : ''}`)
+      if (reps !== 0) parts.push(`${reps > 0 ? '+' : ''}${reps} reps`)
+      return parts.length ? parts.join(', ') : 'Specs inchangées'
     }
+    type GoalPhaseRow = Record<'adaptation' | 'intensification' | 'deload', string>
+    const GOAL_PHASES = (Object.keys(PHASE_CONFIG_BY_GOAL) as ProgramGoal[]).reduce<Record<ProgramGoal, GoalPhaseRow>>((acc, g) => {
+      const cfg = PHASE_CONFIG_BY_GOAL[g]
+      acc[g] = {
+        adaptation:      fmtMod(cfg.adaptation.setsModifier,      cfg.adaptation.repsOffset),
+        intensification: fmtMod(cfg.intensification.setsModifier, cfg.intensification.repsOffset),
+        deload:          fmtMod(cfg.deload.setsModifier,          cfg.deload.repsOffset),
+      }
+      return acc
+    }, {} as Record<ProgramGoal, GoalPhaseRow>)
 
     const PHASE_ROWS: { key: keyof typeof PHASE_COLORS; emoji: string; name: string }[] = [
       { key: 'adaptation',      emoji: '🌱', name: 'Adaptation' },
