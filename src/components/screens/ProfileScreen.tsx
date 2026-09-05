@@ -143,15 +143,6 @@ export function ProfileScreen() {
             </label>
           }
         />
-        {rivalsOn && (
-          <Row
-            icon="trophy"
-            label="Voir mon groupe"
-            chevron
-            onClick={() => nav.navigate('group')}
-          />
-        )}
-
         {/* ── Réglages ─────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Réglages</p>
         <Row
