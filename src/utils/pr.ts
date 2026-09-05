@@ -27,8 +27,9 @@ export function isAnyPR(r: PRResult): boolean {
 
 /**
  * Détecte les PR d'une série par rapport à `history` (séries de travail déjà
- * réalisées sur le MÊME exercice, hors échauffement). Une toute première
- * série valide est un PR sur tous les axes.
+ * réalisées sur le MÊME exercice, hors échauffement). La toute première série
+ * d'un exercice n'est PAS un PR — il faut un historique existant pour battre
+ * un record.
  */
 export function detectPRs(
   current: PerformedSet,
@@ -47,12 +48,13 @@ export function detectPRs(
     }
   }
   if (history.length === 0) {
+    // Pas d'historique = rien à battre : ce n'est pas un record.
     return {
       estimated1RM,
       previousBest1RM: 0,
-      is1RM: true,
-      isVolumeSet: true,
-      isRepsAtWeight: true,
+      is1RM: false,
+      isVolumeSet: false,
+      isRepsAtWeight: false,
     }
   }
 

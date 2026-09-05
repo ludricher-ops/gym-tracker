@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { detectPRs, isAnyPR, type PerformedSet } from '../src/utils/pr'
 
 describe('detectPRs', () => {
-  it('la toute première série valide est un PR sur tous les axes', () => {
+  it('la toute première série valide n\'est PAS un PR (rien à battre)', () => {
     const r = detectPRs({ weightKg: 100, reps: 5 }, [])
-    expect(r.is1RM).toBe(true)
-    expect(r.isVolumeSet).toBe(true)
-    expect(r.isRepsAtWeight).toBe(true)
+    expect(r.is1RM).toBe(false)
+    expect(r.isVolumeSet).toBe(false)
+    expect(r.isRepsAtWeight).toBe(false)
   })
 
   it('détecte un nouveau 1RM', () => {
