@@ -266,9 +266,10 @@ describe('strengthEquipmentPrio', () => {
   })
 })
 
-// ── Slots fullbody (7 slots — biceps ET triceps indépendants) ─────────────────
+// ── Slots fullbody (8 slots — biceps ET triceps indépendants) ─────────────────
+// SLOTS.fullbody : quads, chest, back, ham/glutes, sh_lat/rear, shoulders OHP, biceps, triceps
 
-describe('fullbody — 7 slots (biceps et triceps séparés)', () => {
+describe('fullbody — 8 slots (biceps et triceps séparés)', () => {
   const params = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, sessionDuration: 60 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
   it('le workout fullbody contient un exercice biceps', () => {
@@ -283,9 +284,9 @@ describe('fullbody — 7 slots (biceps et triceps séparés)', () => {
     expect(ids.some((id) => tricepsExs.includes(id))).toBe(true)
   })
 
-  it('fullbody 60 min = 7 slots + 1 warmup + 1 core = 9 exercices', () => {
+  it('fullbody 60 min = 8 slots + 1 warmup + 1 core = 10 exercices', () => {
     const ids = firstWorkoutIds(params)
-    expect(ids).toHaveLength(9)
+    expect(ids).toHaveLength(10)
   })
 })
 
@@ -348,29 +349,29 @@ describe('workout naming', () => {
 // ── Ajustement de durée ───────────────────────────────────────────────────────
 
 describe('adjustedSlotCount — durée de séance', () => {
-  // Fullbody base = 7 slots
+  // Fullbody base = 8 slots (après ajout slot back_thickness)
   const base = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
-  it('20 min → max(2, floor(7×0.5)) = 3 slots + warmup + core = 5 exercices', () => {
+  it('20 min → max(2, floor(8×0.5)) = 4 slots + warmup + core = 6 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 20 })
-    expect(ids).toHaveLength(5)
+    expect(ids).toHaveLength(6)
   })
 
-  it('45 min → max(3, floor(7×0.75)) = 5 slots + warmup + core = 7 exercices', () => {
+  it('45 min → max(3, floor(8×0.75)) = 6 slots + warmup + core = 8 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 45 })
-    expect(ids).toHaveLength(7)
+    expect(ids).toHaveLength(8)
   })
 
-  it('60 min → 7 slots + warmup + core = 9 exercices', () => {
+  it('60 min → 8 slots + warmup + core = 10 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 60 })
-    expect(ids).toHaveLength(9)
+    expect(ids).toHaveLength(10)
   })
 
-  it('90 min → min(7+2,8)=8 mais slice limité à 7 éléments → idem 60 min = 9 exercices', () => {
-    // adjustedSlotCount(7, 90) = min(9,8) = 8, mais SLOTS.fullbody n'a que 7 entrées
-    // → slice(0,8) retourne toujours 7 éléments → pas d'exercice supplémentaire
+  it('90 min → min(8+2,8)=8 → slice limité à 8 éléments → idem 60 min = 10 exercices', () => {
+    // adjustedSlotCount(8, 90) = min(10,8) = 8 (cap à 8)
+    // SLOTS.fullbody a exactement 8 entrées → même résultat qu'à 60 min
     const ids = firstWorkoutIds({ ...base, sessionDuration: 90 })
-    expect(ids).toHaveLength(9)
+    expect(ids).toHaveLength(10)
   })
 })
 
@@ -408,5 +409,109 @@ describe('generateProgramDraft — propriétés générales', () => {
         expect(we.progressStepKg).toBe(0)
       }
     }
+  })
+})
+
+// ── workoutTypeFromFocus — comportement sémantique ────────────────────────────
+// Vérifié via splitTypes() : workoutTypeFromFocus contrôle le type de TOUTES les
+// séances quand il retourne une valeur non-null.
+//
+// FocusMuscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core'
+//   hasLower = includes('legs')
+//   hasPush  = includes('chest') || includes('shoulders')
+//   hasPull  = includes('back')
+//   hasArms  = includes('arms')
+//   hasUpper = hasPush || hasPull || hasArms
+//
+// Règles :
+//   legs (± core), !upper        → 'lower'
+//   core seul, !lower, !upper    → null  (fullbody équilibré — FIX BUG #3)
+//   push seul, !pull, !legs      → 'push'
+//   pull seul, !push, !legs      → 'pull'
+//   upper mixte, !legs           → 'upper'
+//   ambiguë / tout le corps      → null  (split par défaut)
+
+describe('workoutTypeFromFocus — via splitTypes', () => {
+  // Base : beginner 2j → sans focus = fullbody × 2
+  const base = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, sessionDuration: 60 as const, equipment: FULL_GYM, level: 'beginner' as const }
+
+  it('[BUG #3 fix] core seul → null → split fullbody (pas lower)', () => {
+    // Régression critique : avant le fix, core seul retournait 'lower' (squats pour du gainage).
+    expect(splitTypes({ ...base, focusMuscles: ['core'] }))
+      .toEqual(['fullbody', 'fullbody'])
+  })
+
+  it('legs seul → lower × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + core → lower × 2 (core ne neutralise pas legs)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'core'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('chest seul → push × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['chest'] }))
+      .toEqual(['push', 'push'])
+  })
+
+  it('shoulders seul → push × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['shoulders'] }))
+      .toEqual(['push', 'push'])
+  })
+
+  it('back seul → pull × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['back'] }))
+      .toEqual(['pull', 'pull'])
+  })
+
+  it('arms seul → upper × 2 (bras = haut du corps mixte)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['arms'] }))
+      .toEqual(['upper', 'upper'])
+  })
+
+  it('chest + back → upper × 2 (push + pull = haut mixte)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['chest', 'back'] }))
+      .toEqual(['upper', 'upper'])
+  })
+
+  it('chest + back + legs (tout le corps) → null → split par défaut fullbody', () => {
+    // Ambiguïté totale → workoutTypeFromFocus retourne null → selectSplit par défaut
+    expect(splitTypes({ ...base, focusMuscles: ['chest', 'back', 'legs'] }))
+      .toEqual(['fullbody', 'fullbody'])
+  })
+
+  it('sans focusMuscles → split par défaut fullbody (contrôle)', () => {
+    expect(splitTypes({ ...base }))
+      .toEqual(['fullbody', 'fullbody'])
+  })
+})
+
+// ── selectSplit — focusMuscles override indépendant du daysPerWeek ────────────
+// Quand workoutTypeFromFocus retourne un type non-null, il remplace le split
+// normal quel que soit le nombre de jours ou le niveau.
+
+describe('selectSplit — focusMuscles override', () => {
+  it('legs, 3j, beginner → lower × 3 (override PPL/fullbody)', () => {
+    expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['legs'] }))
+      .toEqual(['lower', 'lower', 'lower'])
+  })
+
+  it('chest, 4j, beginner → push × 4 (override upper/lower)', () => {
+    expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['chest'] }))
+      .toEqual(['push', 'push', 'push', 'push'])
+  })
+
+  it('chest + back, 5j, intermediate → upper × 5 (override PPL+upper+lower)', () => {
+    expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest', 'back'] }))
+      .toEqual(['upper', 'upper', 'upper', 'upper', 'upper'])
+  })
+
+  it('core seul, 4j, beginner → null → upper/lower par défaut (pas lower)', () => {
+    // [BUG #3 fix] le split par défaut 4j beginner est upper/lower alternés,
+    // pas lower × 4. Vérification que core seul ne force PAS lower.
+    expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['core'] }))
+      .toEqual(['upper', 'lower', 'upper', 'lower'])
   })
 })
