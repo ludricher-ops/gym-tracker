@@ -127,10 +127,13 @@ export function registerGroupRoutes(app, pool, requireUser) {
   app.get('/api/groups/mine', requireUser, async (req, res) => {
     try {
       const { rows } = await pool.query(
-        `SELECT g.id, g.name, g.code, gm.display_name, g.created_at
+        `SELECT g.id, g.name, g.code, gm.display_name, g.created_at,
+                COUNT(gm2.user_id)::int AS member_count
            FROM groups g
-           JOIN group_members gm ON gm.group_id = g.id
+           JOIN group_members gm  ON gm.group_id  = g.id AND gm.user_id = $1
+           JOIN group_members gm2 ON gm2.group_id = g.id
           WHERE gm.user_id = $1
+          GROUP BY g.id, g.name, g.code, gm.display_name, g.created_at
           ORDER BY gm.joined_at`,
         [req.userId],
       )
@@ -289,9 +292,16 @@ export function registerGroupRoutes(app, pool, requireUser) {
 
       const entries = await Promise.all(
         members.map(async (m) => {
-          const [periodXp, totalXp] = await Promise.all([
+          const [periodXp, totalXp, sessRes] = await Promise.all([
             computeXp(pool, m.user_id, sinceMs, untilMs),
             computeXp(pool, m.user_id, 0, Date.now()),
+            pool.query(
+              `SELECT COUNT(*)::int AS cnt FROM sync_records
+                WHERE user_id = $1 AND store = 'sessions'
+                  AND data->>'endedAt' IS NOT NULL
+                  AND (data->>'endedAt')::bigint BETWEEN $2 AND $3`,
+              [m.user_id, sinceMs, untilMs],
+            ),
           ])
           return {
             userId: m.user_id,
@@ -299,6 +309,7 @@ export function registerGroupRoutes(app, pool, requireUser) {
             isMe: m.user_id === req.userId,
             periodXp,
             totalXp,
+            sessionCount: sessRes.rows[0]?.cnt ?? 0,
           }
         }),
       )

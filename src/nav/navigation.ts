@@ -25,6 +25,8 @@ export type ScreenName =
   | 'programGenerator'
   | 'rattrapages'
   | 'group'
+  | 'groupDetail'
+  | 'rivalsStats'
 
 export interface ScreenEntry {
   name: ScreenName

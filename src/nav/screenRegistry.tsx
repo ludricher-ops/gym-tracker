@@ -17,6 +17,8 @@ import { BodyScreen } from '../components/screens/BodyScreen'
 import { RattrapagesScreen } from '../components/screens/RattrapagesScreen'
 import { ProgramGeneratorScreen } from '../components/screens/ProgramGeneratorScreen'
 import { GroupScreen } from '../components/screens/GroupScreen'
+import { GroupDetailScreen } from '../components/screens/GroupDetailScreen'
+import { RivalsStatsScreen } from '../components/screens/RivalsStatsScreen'
 
 /** Props reçues par tout composant d'écran. */
 export interface ScreenProps {
@@ -46,4 +48,6 @@ export const SCREENS: Partial<Record<ScreenName, ScreenComponent>> = {
   rattrapages: RattrapagesScreen,
   programGenerator: ProgramGeneratorScreen,
   group: GroupScreen,
+  groupDetail: GroupDetailScreen,
+  rivalsStats: RivalsStatsScreen,
 }
