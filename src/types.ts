@@ -183,6 +183,9 @@ export interface WorkoutExerciseTemplate extends Syncable {
   notes?: string
   isWarmup?: boolean
   isAb?: boolean
+  /** Phase à partir de laquelle l'exercice est inclus dans la séance.
+   *  Absent = toujours présent. Ignoré si le programme < 8 semaines (pas de phases). */
+  startPhase?: 'adaptation' | 'progression' | 'intensification' | 'deload'
 }
 
 export interface Session extends Syncable {

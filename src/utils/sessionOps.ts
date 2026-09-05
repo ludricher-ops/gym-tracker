@@ -13,7 +13,7 @@ import { detectPRs, isAnyPR } from './pr'
 import type { PRResult } from './pr'
 import { daysBetween } from './dates'
 import { generateWarmup } from './warmup'
-import { buildPhases } from './programGenerator'
+import { buildPhases, phaseAtLeast } from './programGenerator'
 import type { DraftPhase } from '../components/programBuilder/programDraft'
 
 const BARBELL_WEIGHT = 20
@@ -89,8 +89,16 @@ export async function startSessionFromTemplate(
   programSessionLabel?: string,
 ): Promise<Session> {
   const now = Date.now()
+  const phase = activePhase(store)
+
   const wets = store.workoutExerciseTemplates
-    .filter((e) => e.workoutTemplateId === workoutTemplate.id)
+    .filter((e) => {
+      if (e.workoutTemplateId !== workoutTemplate.id) return false
+      // Exercice verrouillé : startPhase défini et phase courante insuffisante
+      if (e.startPhase && phase && !phaseAtLeast(phase.focus, e.startPhase)) return false
+      // Pas de phase active (programme court < 8 sem.) : inclure tous les exercices
+      return true
+    })
     .sort((a, b) => {
       const rank = (w: typeof a) => w.isWarmup ? 0 : w.isAb ? 2 : 1
       if (rank(a) !== rank(b)) return rank(a) - rank(b)
@@ -98,7 +106,6 @@ export async function startSessionFromTemplate(
     })
 
   const { programId, week } = currentProgramWeek(store)
-  const phase = activePhase(store)
   const sessionId = uuid()
   let totalSets = 0
 

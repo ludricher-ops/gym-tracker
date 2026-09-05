@@ -415,6 +415,18 @@ const PHASE_CONFIG_BY_GOAL: Record<ProgramGoal, GoalPhaseConfig> = {
   },
 }
 
+/** Clé de focus de phase — même union que DraftPhase['focus']. */
+export type PhaseKey = 'adaptation' | 'progression' | 'intensification' | 'deload'
+
+const PHASE_ORDER: Record<PhaseKey, number> = {
+  adaptation: 1, progression: 2, intensification: 3, deload: 4,
+}
+
+/** Retourne true si `current` est au moins aussi avancée que `required`. */
+export function phaseAtLeast(current: PhaseKey, required: PhaseKey): boolean {
+  return PHASE_ORDER[current] >= PHASE_ORDER[required]
+}
+
 export function buildPhases(totalWeeks: number, goal: ProgramGoal = 'strength'): DraftPhase[] | undefined {
   if (totalWeeks < 8) return undefined
 

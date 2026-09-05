@@ -10,7 +10,8 @@ import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 import type { DraftPhase } from '../programBuilder/programDraft'
 import type { WorkoutTemplate } from '../../types'
-import { buildPhases } from '../../utils/programGenerator'
+import { buildPhases, phaseAtLeast } from '../../utils/programGenerator'
+import type { PhaseKey } from '../../utils/programGenerator'
 
 const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
   adaptation: 'var(--accent)',
@@ -434,7 +435,10 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           title={previewWorkout.name}
           onClose={() => setPreviewWorkout(null)}
         >
-          <ExercisePreviewList infos={previewInfos} />
+          <ExercisePreviewList
+            infos={previewInfos}
+            currentPhase={currentPhase?.focus}
+          />
         </Sheet>
       )}
 
@@ -515,11 +519,22 @@ type WetInfo = {
   ex: import('../../types').Exercise | undefined
 }
 
-/** Liste complète des exercices dans le bottom sheet, groupée par type. */
-function ExercisePreviewList({ infos }: { infos: WetInfo[] }) {
-  const warmup = infos.filter(({ wet }) => wet.isWarmup)
-  const abs = infos.filter(({ wet }) => wet.isAb)
-  const main = infos.filter(({ wet }) => !wet.isWarmup && !wet.isAb)
+/** Liste complète des exercices dans le bottom sheet, groupée par type.
+ *  `currentPhase` : focus de la phase active (undefined si pas de phase). */
+function ExercisePreviewList({
+  infos,
+  currentPhase,
+}: {
+  infos: WetInfo[]
+  currentPhase?: PhaseKey
+}) {
+  const isLocked = (wet: WetInfo['wet']) =>
+    !!wet.startPhase && (!currentPhase || !phaseAtLeast(currentPhase, wet.startPhase))
+
+  const warmup  = infos.filter(({ wet }) => wet.isWarmup)
+  const main    = infos.filter(({ wet }) => !wet.isWarmup && !wet.isAb && !isLocked(wet))
+  const abs     = infos.filter(({ wet }) => wet.isAb && !isLocked(wet))
+  const locked  = infos.filter(({ wet }) => !wet.isWarmup && isLocked(wet))
 
   return (
     <div>
@@ -539,6 +554,12 @@ function ExercisePreviewList({ infos }: { infos: WetInfo[] }) {
         <>
           <SectionLabel>Abdominaux</SectionLabel>
           {abs.map((info) => <ExRow key={info.wet.id} info={info} />)}
+        </>
+      )}
+      {locked.length > 0 && (
+        <>
+          <SectionLabel>Se débloque plus tard</SectionLabel>
+          {locked.map((info) => <ExRow key={info.wet.id} info={info} locked />)}
         </>
       )}
     </div>
@@ -624,7 +645,14 @@ function EmojiPicker({
   )
 }
 
-function ExRow({ info: { wet, ex } }: { info: WetInfo }) {
+const PHASE_NAME_FR: Record<PhaseKey, string> = {
+  adaptation: 'Adaptation',
+  progression: 'Progression',
+  intensification: 'Intensification',
+  deload: 'Décharge',
+}
+
+function ExRow({ info: { wet, ex }, locked = false }: { info: WetInfo; locked?: boolean }) {
   const setsLabel = fmtSets(
     wet.targetSets,
     wet.targetRepsMin,
@@ -641,6 +669,7 @@ function ExRow({ info: { wet, ex } }: { info: WetInfo }) {
         gap: 12,
         padding: '8px 20px',
         borderBottom: '0.5px solid var(--border)',
+        opacity: locked ? 0.5 : 1,
       }}
     >
       <ExThumb url={ex?.media?.url} />
@@ -655,11 +684,14 @@ function ExRow({ info: { wet, ex } }: { info: WetInfo }) {
             whiteSpace: 'nowrap',
           }}
         >
+          {locked && <span style={{ marginRight: 4 }}>🔒</span>}
           {ex?.name ?? '—'}
         </div>
         <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 1 }}>
-          {setsLabel}
-          {hasSupersetBadge && (
+          {locked && wet.startPhase
+            ? `Dispo en ${PHASE_EMOJI[wet.startPhase]} ${PHASE_NAME_FR[wet.startPhase]}`
+            : setsLabel}
+          {!locked && hasSupersetBadge && (
             <span
               style={{
                 marginLeft: 6,
