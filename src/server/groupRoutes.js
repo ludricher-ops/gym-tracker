@@ -56,6 +56,7 @@ async function computeXp(pool, userId, sinceMs, untilMs) {
        WHERE user_id = $1
          AND store = 'sets'
          AND data->>'completedAt' IS NOT NULL
+         AND (data->>'deleted')::boolean IS NOT TRUE
          AND (data->>'completedAt')::bigint BETWEEN $2 AND $3`,
       [userId, sinceMs, until],
     ),
@@ -73,6 +74,7 @@ async function computeXp(pool, userId, sinceMs, untilMs) {
        WHERE user_id = $1
          AND store = 'sessions'
          AND data->>'endedAt' IS NOT NULL
+         AND (data->>'deleted')::boolean IS NOT TRUE
          AND (data->>'endedAt')::bigint BETWEEN $2 AND $3`,
       [userId, sinceMs, until],
     ),
@@ -299,6 +301,7 @@ export function registerGroupRoutes(app, pool, requireUser) {
               `SELECT COUNT(*)::int AS cnt FROM sync_records
                 WHERE user_id = $1 AND store = 'sessions'
                   AND data->>'endedAt' IS NOT NULL
+                  AND (data->>'deleted')::boolean IS NOT TRUE
                   AND (data->>'endedAt')::bigint BETWEEN $2 AND $3`,
               [m.user_id, sinceMs, untilMs],
             ),
