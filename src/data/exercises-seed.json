@@ -2768,7 +2768,13 @@
     "popularity": 2,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757000000000
+    "createdAt": 1757000000000,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Upright-Row.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-upright-row-cable",
@@ -2785,7 +2791,13 @@
     "popularity": 2,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757000000000
+    "createdAt": 1757000000000,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Upright-Row.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-leg-curl-standing",
@@ -2801,13 +2813,22 @@
     "popularity": 2,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757000000000
+    "createdAt": 1757000000000,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/05/Standing-leg-curl.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-glute-bridge",
     "name": "Glute bridge",
     "primaryMuscle": "glutes",
-    "secondaryMuscles": ["hamstrings", "core"],
+    "secondaryMuscles": [
+      "hamstrings",
+      "core"
+    ],
     "equipment": "bodyweight",
     "category": "isolation",
     "trackingType": "reps_only",
@@ -2815,13 +2836,22 @@
     "popularity": 3,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757100000010
+    "createdAt": 1757100000010,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge-.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-shoulder-press-machine",
     "name": "Développé épaules machine",
     "primaryMuscle": "shoulders",
-    "secondaryMuscles": ["triceps", "shoulders_front"],
+    "secondaryMuscles": [
+      "triceps",
+      "shoulders_front"
+    ],
     "equipment": "machine",
     "category": "compound",
     "trackingType": "weight_reps",
@@ -2829,7 +2859,13 @@
     "popularity": 3,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757100000011
+    "createdAt": 1757100000011,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Lever-Shoulder-Press.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-pullover-dumbbell",
@@ -2846,7 +2882,13 @@
     "popularity": 3,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757100000000
+    "createdAt": 1757100000000,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Pullover.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-pullover-cable",
@@ -2863,7 +2905,13 @@
     "popularity": 2,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757100000001
+    "createdAt": 1757100000001,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/10/Cable-Seated-Pullover.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   },
   {
     "id": "seed-straight-arm-pulldown",
@@ -2880,6 +2928,12 @@
     "popularity": 2,
     "isCustom": false,
     "usageCount": 0,
-    "createdAt": 1757100000002
+    "createdAt": 1757100000002,
+    "media": {
+      "type": "gif",
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cable-Straight-Arm-Pulldown.gif",
+      "mime": "image/gif",
+      "aspectRatio": 1.0
+    }
   }
 ]
