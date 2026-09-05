@@ -1,207 +1,325 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigation } from '../../nav/useNavigation'
-import { Button, Card, Icon, Row } from '../ui'
+import { setCompetitionEnabled } from '../../nav/navigation'
+import { Button, Card, Icon } from '../ui'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Système de niveaux RPG ────────────────────────────────────────────────────
+// XP total requis pour atteindre le niveau n : 100 × n × (n-1) / 2
+// Passer du niveau n au niveau n+1 coûte 100n XP.
 
-interface GroupInfo {
-  id: number
-  name: string
-  code: string
+export function xpForLevel(n: number): number {
+  return Math.round(100 * n * (n - 1) / 2)
 }
+
+export function levelFromXp(totalXp: number): number {
+  // Résolution algébrique : n² - n - 2×xp/100 = 0 → n = (1 + √(1+8xp/100)) / 2
+  return Math.max(1, Math.floor((1 + Math.sqrt(1 + 8 * totalXp / 100)) / 2))
+}
+
+export function xpToNextLevel(totalXp: number): { level: number; current: number; needed: number; pct: number } {
+  const level  = levelFromXp(totalXp)
+  const floorXp = xpForLevel(level)
+  const ceilXp  = xpForLevel(level + 1)
+  const current = totalXp - floorXp
+  const needed  = ceilXp - floorXp
+  return { level, current, needed, pct: Math.round((current / needed) * 100) }
+}
+
+interface Rank { label: string; color: string; emoji: string; minLevel: number }
+const RANKS: Rank[] = [
+  { minLevel: 1,  emoji: '🩶', color: '#94a3b8', label: 'Recrue'       },
+  { minLevel: 6,  emoji: '🥉', color: '#cd7f32', label: 'Combattant'   },
+  { minLevel: 11, emoji: '⚔️', color: '#71717a', label: 'Guerrier'     },
+  { minLevel: 16, emoji: '🥈', color: '#c0c0c0', label: 'Vétéran'      },
+  { minLevel: 21, emoji: '🏆', color: '#f59e0b', label: 'Champion'     },
+  { minLevel: 26, emoji: '🌟', color: '#f97316', label: 'Élite'        },
+  { minLevel: 31, emoji: '💎', color: '#06b6d4', label: 'Maître'       },
+  { minLevel: 36, emoji: '🔮', color: '#a855f7', label: 'Grand Maître' },
+  { minLevel: 41, emoji: '🔥', color: '#ef4444', label: 'Légende'      },
+  { minLevel: 46, emoji: '⭐', color: '#fbbf24', label: 'Icône'        },
+  { minLevel: 50, emoji: '👑', color: '#f59e0b', label: 'Transcendant' },
+]
+
+export function rankForLevel(level: number): Rank {
+  let rank = RANKS[0]!
+  for (const r of RANKS) { if (level >= r.minLevel) rank = r }
+  return rank
+}
+
+// ── Types API ─────────────────────────────────────────────────────────────────
+
+interface GroupInfo { id: number; name: string; code: string }
 
 interface LeaderboardEntry {
-  userId: number
-  displayName: string
-  isMe: boolean
-  weekXp: number
-  totalXp: number
+  userId: number; displayName: string; isMe: boolean
+  periodXp: number; totalXp: number
 }
 
-interface MineEntry {
-  id: number
-  name: string
-  code: string
-  display_name: string
-}
-
-type View = 'loading' | 'noGroup' | 'leaderboard'
+type Period = 'week' | string // 'week' | 'YYYY-MM'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function apiFetch(path: string, opts?: RequestInit) {
   const res = await fetch(path, { credentials: 'include', ...opts })
   const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.error ?? 'Erreur réseau')
+  if (!res.ok) throw new Error((json as { error?: string }).error ?? 'Erreur réseau')
   return json
 }
 
-function RankBadge({ rank }: { rank: number }) {
-  const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null
-  if (medal) return <span style={{ fontSize: 20 }}>{medal}</span>
+function currentMonthPeriod(): string {
+  const d = new Date()
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+function formatPeriod(p: Period): string {
+  if (p === 'week') return '7 derniers jours'
+  const [y, m] = p.split('-')
+  const date = new Date(Number(y), Number(m) - 1)
+  const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const cur = currentMonthPeriod()
+  return p === cur ? `${label} (en cours)` : label
+}
+
+// ── Sous-composants ───────────────────────────────────────────────────────────
+
+function RankBadge({ rank, size = 20 }: { rank: number; size?: number }) {
+  if (rank === 1) return <span style={{ fontSize: size }}>🥇</span>
+  if (rank === 2) return <span style={{ fontSize: size }}>🥈</span>
+  if (rank === 3) return <span style={{ fontSize: size }}>🥉</span>
   return (
-    <span
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: '50%',
-        background: 'var(--surface-raised)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 12,
-        fontWeight: 700,
-        color: 'var(--fg-muted)',
-        flexShrink: 0,
-      }}
-    >
+    <span style={{
+      width: size + 8, height: size + 8, borderRadius: '50%',
+      background: 'var(--surface-raised)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.65, fontWeight: 700, color: 'var(--fg-muted)', flexShrink: 0,
+    }}>
       {rank}
     </span>
   )
 }
 
-function Avatar({ name, isMe }: { name: string; isMe: boolean }) {
-  const letter = name[0]?.toUpperCase() ?? '?'
+function LevelBadge({ level, totalXp }: { level: number; totalXp: number }) {
+  const rank = rankForLevel(level)
+  const { current, needed, pct } = xpToNextLevel(totalXp)
   return (
-    <span
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: '50%',
-        background: isMe ? 'var(--accent)' : 'var(--surface-raised)',
-        color: isMe ? 'var(--accent-ink)' : 'var(--fg-muted)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 700,
-        fontSize: 14,
-        flexShrink: 0,
-      }}
-    >
-      {letter}
-    </span>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 36, lineHeight: 1 }}>{rank.emoji}</div>
+      <div style={{ fontWeight: 800, fontSize: 18, marginTop: 4 }}>
+        Niv. {level}
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', marginLeft: 6 }}>
+          {rank.label}
+        </span>
+      </div>
+      <div style={{ marginTop: 6 }}>
+        <div style={{
+          height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%', width: `${pct}%`,
+            background: rank.color, borderRadius: 3, transition: 'width 0.5s ease',
+          }} />
+        </div>
+        <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+          {current.toLocaleString('fr-FR')} / {needed.toLocaleString('fr-FR')} XP → Niv.{level + 1}
+        </div>
+      </div>
+    </div>
   )
 }
 
-function XpBar({ value, max }: { value: number; max: number }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0
+function MemberRow({ entry, rank }: { entry: LeaderboardEntry; rank: number }) {
+  const { level, pct } = xpToNextLevel(entry.totalXp)
+  const r = rankForLevel(level)
   return (
-    <div
-      style={{
-        height: 4,
-        background: 'var(--border)',
-        borderRadius: 2,
-        overflow: 'hidden',
-        marginTop: 4,
-      }}
-    >
-      <div
-        style={{
-          height: '100%',
-          width: `${pct}%`,
-          background: 'var(--accent)',
-          borderRadius: 2,
-          transition: 'width 0.4s ease',
-        }}
-      />
+    <div style={{
+      background: entry.isMe ? 'var(--accent-subtle)' : 'var(--surface)',
+      border: `1px solid ${entry.isMe ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-card)',
+      padding: '12px 14px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <RankBadge rank={rank} />
+
+        {/* Avatar + rang */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <span style={{
+            width: 38, height: 38, borderRadius: '50%',
+            background: entry.isMe ? 'var(--accent)' : 'var(--surface-raised)',
+            color: entry.isMe ? 'var(--accent-ink)' : 'var(--fg-muted)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 700, fontSize: 15,
+          }}>
+            {entry.displayName[0]?.toUpperCase() ?? '?'}
+          </span>
+          <span style={{
+            position: 'absolute', bottom: -4, right: -4,
+            fontSize: 14, lineHeight: 1,
+          }}>
+            {r.emoji}
+          </span>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{
+              fontWeight: entry.isMe ? 700 : 600,
+              fontSize: 'var(--fs-body)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {entry.displayName}
+            </span>
+            {entry.isMe && (
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                background: 'var(--accent)', color: 'var(--accent-ink)',
+                padding: '1px 5px', borderRadius: 4, flexShrink: 0,
+              }}>
+                MOI
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span className="t-caption" style={{ color: r.color, fontWeight: 700, flexShrink: 0 }}>
+              Niv.{level}
+            </span>
+            {/* Barre XP de niveau */}
+            <div style={{
+              flex: 1, height: 4, background: 'var(--border)',
+              borderRadius: 2, overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%', width: `${pct}%`,
+                background: r.color, borderRadius: 2,
+              }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 72 }}>
+          <div style={{ fontWeight: 800, fontSize: 16 }}>
+            {entry.periodXp.toLocaleString('fr-FR')}
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-muted)', marginLeft: 2 }}>XP</span>
+          </div>
+          <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+            {entry.totalXp.toLocaleString('fr-FR')} tot.
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
 // ── Écran principal ───────────────────────────────────────────────────────────
 
+type View = 'loading' | 'noGroup' | 'leaderboard'
+
 export function GroupScreen() {
   const nav = useNavigation()
 
-  const [view, setView] = useState<View>('loading')
-  const [, setGroups] = useState<MineEntry[]>([])
-  const [activeGroup, setActiveGroup] = useState<GroupInfo | null>(null)
-  const [members, setMembers] = useState<LeaderboardEntry[]>([])
-  const [tab, setTab] = useState<'week' | 'total'>('week')
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [view,         setView]         = useState<View>('loading')
+  const [group,        setGroup]        = useState<GroupInfo | null>(null)
+  const [members,      setMembers]      = useState<LeaderboardEntry[]>([])
+  const [seasons,      setSeasons]      = useState<string[]>([])
+  const [period,       setPeriod]       = useState<Period>(currentMonthPeriod())
+  const [copied,       setCopied]       = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+  const [loadingBoard, setLoadingBoard] = useState(false)
 
   // Formulaires
-  const [mode, setMode] = useState<'create' | 'join' | null>(null)
-  const [groupName, setGroupName] = useState('')
-  const [code, setCode] = useState('')
+  const [mode,        setMode]        = useState<'create' | 'join' | null>(null)
+  const [groupName,   setGroupName]   = useState('')
+  const [code,        setCode]        = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [formError,   setFormError]   = useState<string | null>(null)
 
-  const loadLeaderboard = useCallback(async (groupCode: string) => {
+  const loadLeaderboard = useCallback(async (groupCode: string, p: Period) => {
+    setLoadingBoard(true)
+    setError(null)
     try {
-      const data = await apiFetch(`/api/groups/${groupCode}/leaderboard`)
-      setActiveGroup(data.group)
+      const data = await apiFetch(`/api/groups/${groupCode}/leaderboard?period=${p}`)
+      setGroup(data.group)
       setMembers(data.members)
       setView('leaderboard')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setLoadingBoard(false)
     }
   }, [])
 
+  const loadSeasons = useCallback(async (groupCode: string) => {
+    try {
+      const data = await apiFetch(`/api/groups/${groupCode}/seasons`)
+      setSeasons(data.seasons ?? [])
+    } catch { /* ignore */ }
+  }, [])
+
+  // Charge le groupe de l'utilisateur au montage
   useEffect(() => {
     apiFetch('/api/groups/mine')
       .then((data) => {
-        const g: MineEntry[] = data.groups ?? []
-        setGroups(g)
-        if (g.length > 0 && g[0]) {
-          loadLeaderboard(g[0].code)
+        const g = data.groups?.[0]
+        if (g) {
+          const p = currentMonthPeriod()
+          setPeriod(p)
+          loadLeaderboard(g.code, p)
+          loadSeasons(g.code)
         } else {
           setView('noGroup')
         }
       })
       .catch(() => setView('noGroup'))
-  }, [loadLeaderboard])
+  }, [loadLeaderboard, loadSeasons])
+
+  // Changement de période
+  const handlePeriodChange = (p: Period) => {
+    if (!group) return
+    setPeriod(p)
+    void loadLeaderboard(group.code, p)
+  }
 
   const copyCode = async () => {
-    if (!activeGroup) return
-    try {
-      await navigator.clipboard.writeText(activeGroup.code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* ignore */
-    }
+    if (!group) return
+    try { await navigator.clipboard.writeText(group.code); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+    catch { /* ignore */ }
   }
 
   const handleLeave = async () => {
-    if (!activeGroup) return
-    if (!window.confirm(`Quitter le groupe « ${activeGroup.name} » ?`)) return
+    if (!group) return
+    if (!window.confirm(`Quitter le groupe « ${group.name} » ?`)) return
     try {
-      await apiFetch(`/api/groups/${activeGroup.id}/leave`, { method: 'DELETE' })
-      setGroups([])
-      setActiveGroup(null)
-      setMembers([])
-      setView('noGroup')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur')
-    }
+      await apiFetch(`/api/groups/${group.id}/leave`, { method: 'DELETE' })
+      setGroup(null); setMembers([]); setSeasons([]); setView('noGroup')
+    } catch (e) { setError(e instanceof Error ? e.message : 'Erreur') }
   }
 
   const handleSubmit = async () => {
     setFormError(null)
     setSubmitting(true)
     try {
+      let data: { group: { code: string } }
       if (mode === 'create') {
-        if (!groupName.trim()) { setFormError('Nom du groupe requis'); setSubmitting(false); return }
-        if (!displayName.trim()) { setFormError('Pseudo requis'); setSubmitting(false); return }
-        const data = await apiFetch('/api/groups/create', {
+        if (!groupName.trim()) { setFormError('Nom du groupe requis'); return }
+        if (!displayName.trim()) { setFormError('Pseudo requis'); return }
+        data = await apiFetch('/api/groups/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: groupName.trim(), displayName: displayName.trim() }),
         })
-        await loadLeaderboard(data.group.code)
       } else {
-        if (!code.trim()) { setFormError('Code requis'); setSubmitting(false); return }
-        if (!displayName.trim()) { setFormError('Pseudo requis'); setSubmitting(false); return }
-        const data = await apiFetch('/api/groups/join', {
+        if (!code.trim()) { setFormError('Code requis'); return }
+        if (!displayName.trim()) { setFormError('Pseudo requis'); return }
+        data = await apiFetch('/api/groups/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: code.trim(), displayName: displayName.trim() }),
         })
-        await loadLeaderboard(data.group.code)
       }
+      const p = currentMonthPeriod()
+      setPeriod(p)
+      await loadLeaderboard(data.group.code, p)
+      await loadSeasons(data.group.code)
       setMode(null)
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Erreur')
@@ -210,48 +328,47 @@ export function GroupScreen() {
     }
   }
 
-  // ── Render : loading ────────────────────────────────────────────────────────
+  const topBar = (
+    <div className="gt-topbar">
+      <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
+        <Icon name="arrow" size={22} strokeWidth={1.8} />
+      </button>
+      <h1 className="gt-topbar__title">{group?.name ?? 'Rivals'}</h1>
+      {view === 'leaderboard' && (
+        <button className="gt-iconbtn" onClick={handleLeave} aria-label="Quitter">
+          <Icon name="logout" size={20} strokeWidth={1.8} />
+        </button>
+      )}
+    </div>
+  )
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
   if (view === 'loading') {
     return (
       <div className="gt-screen">
-        <div className="gt-topbar">
-          <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
-            <Icon name="arrow" size={22} strokeWidth={1.8} />
-          </button>
-          <h1 className="gt-topbar__title">Mode Compétition</h1>
-        </div>
-        <div className="gt-screen__scroll" style={{ alignItems: 'center', paddingTop: 40 }}>
+        {topBar}
+        <div className="gt-screen__scroll" style={{ alignItems: 'center', paddingTop: 48 }}>
           <p className="t-caption">Chargement…</p>
         </div>
       </div>
     )
   }
 
-  // ── Render : pas de groupe ──────────────────────────────────────────────────
+  // ── Pas de groupe ───────────────────────────────────────────────────────────
   if (view === 'noGroup') {
     return (
       <div className="gt-screen">
-        <div className="gt-topbar">
-          <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
-            <Icon name="arrow" size={22} strokeWidth={1.8} />
-          </button>
-          <h1 className="gt-topbar__title">Mode Compétition</h1>
-        </div>
-
+        {topBar}
         <div className="gt-screen__scroll">
-          {/* Hero */}
           {!mode && (
             <>
               <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
-                <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 12 }}>🏆</div>
-                <p className="t-title" style={{ marginBottom: 6 }}>
-                  Défiez vos amis
-                </p>
-                <p className="t-caption" style={{ color: 'var(--fg-muted)', maxWidth: 260, margin: '0 auto' }}>
-                  Gagnez de l'XP à chaque séance, montez dans le classement, battez vos PRs.
+                <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 14 }}>🏆</div>
+                <p className="t-title" style={{ marginBottom: 6 }}>Rivals</p>
+                <p className="t-caption" style={{ color: 'var(--fg-muted)', maxWidth: 270, margin: '0 auto' }}>
+                  Montez en niveau, grimpez dans le classement, battez vos records.
                 </p>
               </div>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Button icon="plus" onClick={() => { setMode('create'); setDisplayName('') }}>
                   Créer un groupe
@@ -261,16 +378,33 @@ export function GroupScreen() {
                 </Button>
               </div>
 
-              {/* Comment ça marche */}
-              <p className="t-eyebrow" style={{ marginTop: 24 }}>Comment ça marche</p>
+              {/* Rangs */}
+              <p className="t-eyebrow" style={{ marginTop: 24 }}>Système de rangs</p>
+              <Card>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {RANKS.map((r) => (
+                    <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 18, width: 26, textAlign: 'center' }}>{r.emoji}</span>
+                      <span style={{ fontWeight: 700, color: r.color, minWidth: 56, fontSize: 13 }}>
+                        Niv.{r.minLevel}+
+                      </span>
+                      <span style={{ fontSize: 'var(--fs-body)' }}>{r.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Formule XP */}
+              <p className="t-eyebrow">Comment gagner de l'XP</p>
               <Card>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    ['⚡', 'Sets & tonnage', "Chaque série validée rapporte de l'XP selon le poids soulevé"],
-                    ['🏅', 'Records personnels', '+100 XP par PR battu'],
-                    ['💪', 'Séances complètes', '+50 XP par séance terminée'],
+                    ['⚡', 'Tonnage', "floor(kg × reps ÷ 10) par série — ×1.5 si kg ≥ 80"],
+                    ['💪', 'Poids du corps', 'reps × 3 XP par série'],
+                    ['🏅', 'Record personnel', '+150 XP par PR battu'],
+                    ['🎯', 'Séance complète', '+100 XP + bonus durée (75 si 45min, 150 si 60min)'],
                   ].map(([emoji, title, desc]) => (
-                    <div key={title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div key={title as string} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                       <span style={{ fontSize: 20, flexShrink: 0 }}>{emoji}</span>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{title}</div>
@@ -280,16 +414,29 @@ export function GroupScreen() {
                   ))}
                 </div>
               </Card>
+
+              {/* Note saison */}
+              <Card>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 20 }}>📅</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>Saisons mensuelles</div>
+                    <div className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+                      Le classement se réinitialise chaque 1er du mois. L'historique complet reste
+                      accessible dans l'onglet Rivals.
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </>
           )}
 
-          {/* Formulaire créer / rejoindre */}
+          {/* Formulaire */}
           {mode && (
             <>
               <p className="t-eyebrow">
                 {mode === 'create' ? 'Créer un groupe' : 'Rejoindre un groupe'}
               </p>
-
               {mode === 'create' && (
                 <div className="gt-field">
                   <span className="gt-field__label">Nom du groupe</span>
@@ -302,7 +449,6 @@ export function GroupScreen() {
                   />
                 </div>
               )}
-
               {mode === 'join' && (
                 <div className="gt-field">
                   <span className="gt-field__label">Code du groupe</span>
@@ -312,11 +458,10 @@ export function GroupScreen() {
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     placeholder="ABC123"
                     maxLength={8}
-                    style={{ fontFamily: 'var(--font-mono)', letterSpacing: 2 }}
+                    style={{ fontFamily: 'var(--font-mono)', letterSpacing: 3 }}
                   />
                 </div>
               )}
-
               <div className="gt-field">
                 <span className="gt-field__label">Ton pseudo dans ce groupe</span>
                 <input
@@ -327,13 +472,11 @@ export function GroupScreen() {
                   maxLength={20}
                 />
               </div>
-
               {formError && (
                 <p className="t-caption" style={{ color: 'var(--danger)', marginTop: -4 }}>
                   {formError}
                 </p>
               )}
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
                 <Button icon="check" onClick={handleSubmit} disabled={submitting}>
                   {submitting ? 'En cours…' : mode === 'create' ? 'Créer' : 'Rejoindre'}
@@ -349,171 +492,135 @@ export function GroupScreen() {
     )
   }
 
-  // ── Render : classement ─────────────────────────────────────────────────────
-  const sorted =
-    tab === 'week'
-      ? [...members].sort((a, b) => b.weekXp - a.weekXp || b.totalXp - a.totalXp)
-      : [...members].sort((a, b) => b.totalXp - a.totalXp || b.weekXp - a.weekXp)
-
-  const maxXp = sorted[0]?.[tab === 'week' ? 'weekXp' : 'totalXp'] ?? 1
-
+  // ── Classement ──────────────────────────────────────────────────────────────
   const myEntry = members.find((m) => m.isMe)
+  const myLevel = myEntry ? levelFromXp(myEntry.totalXp) : 1
+
+  // Tri selon la période sélectionnée
+  const sorted = [...members].sort((a, b) => b.periodXp - a.periodXp || b.totalXp - a.totalXp)
+
+  // Périodes disponibles : semaine + tous les mois
+  const periodOptions: Period[] = ['week', ...seasons]
 
   return (
     <div className="gt-screen">
-      <div className="gt-topbar">
-        <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
-          <Icon name="arrow" size={22} strokeWidth={1.8} />
-        </button>
-        <h1 className="gt-topbar__title">{activeGroup?.name ?? 'Groupe'}</h1>
-        <button className="gt-iconbtn" onClick={handleLeave} aria-label="Quitter le groupe">
-          <Icon name="logout" size={20} strokeWidth={1.8} />
-        </button>
-      </div>
-
+      {topBar}
       <div className="gt-screen__scroll">
         {error && (
-          <p className="t-caption" style={{ color: 'var(--danger)' }}>{error}</p>
+          <p className="t-caption" style={{ color: 'var(--danger)', marginBottom: 8 }}>{error}</p>
         )}
 
-        {/* Code du groupe */}
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 2 }}>
-                Code d'invitation
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 22,
-                  fontWeight: 700,
-                  letterSpacing: 4,
-                }}
-              >
-                {activeGroup?.code}
-              </div>
+        {/* Code d'invitation */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+          <Card style={{ flex: 1, padding: '10px 14px' }}>
+            <div className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 2 }}>
+              Code d'invitation
             </div>
-            <button
-              className="gt-iconbtn"
-              onClick={copyCode}
-              aria-label="Copier le code"
-              style={{ color: copied ? 'var(--accent)' : undefined }}
-            >
-              <Icon name={copied ? 'check' : 'copy'} size={20} />
-            </button>
-          </div>
-        </Card>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, letterSpacing: 4 }}>
+              {group?.code}
+            </div>
+          </Card>
+          <button
+            onClick={copyCode}
+            style={{
+              padding: '0 16px', borderRadius: 'var(--radius-card)',
+              border: '1px solid var(--border)', background: 'var(--surface)',
+              color: copied ? 'var(--accent)' : 'var(--fg-muted)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-caption)',
+              fontWeight: 600, flexShrink: 0,
+            }}
+          >
+            <Icon name={copied ? 'check' : 'copy'} size={18} />
+            {copied ? 'Copié' : 'Copier'}
+          </button>
+        </div>
 
-        {/* Mon XP */}
+        {/* Mon niveau */}
         {myEntry && (
           <Card variant="accent">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div className="t-caption" style={{ opacity: 0.8, marginBottom: 2 }}>
-                  Ton XP cette semaine
+            <div style={{ marginBottom: 12 }}>
+              <LevelBadge level={myLevel} totalXp={myEntry.totalXp} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: 800, fontSize: 22 }}>
+                  {myEntry.periodXp.toLocaleString('fr-FR')}
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 28 }}>
-                  {myEntry.weekXp.toLocaleString('fr-FR')}
-                  <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 4, opacity: 0.8 }}>XP</span>
-                </div>
+                <div className="t-caption" style={{ opacity: 0.8 }}>XP ce mois</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="t-caption" style={{ opacity: 0.8, marginBottom: 2 }}>Total</div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>
-                  {myEntry.totalXp.toLocaleString('fr-FR')} XP
+              <div style={{ width: 1, background: 'var(--accent-ink)', opacity: 0.3 }} />
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: 800, fontSize: 22 }}>
+                  {myEntry.totalXp.toLocaleString('fr-FR')}
                 </div>
+                <div className="t-caption" style={{ opacity: 0.8 }}>XP total</div>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Onglets semaine / total */}
-        <div className="gt-chips" style={{ marginTop: 4 }}>
-          <button
-            type="button"
-            className={`gt-chip ${tab === 'week' ? 'gt-chip--active' : ''}`}
-            onClick={() => setTab('week')}
-          >
-            Cette semaine
-          </button>
-          <button
-            type="button"
-            className={`gt-chip ${tab === 'total' ? 'gt-chip--active' : ''}`}
-            onClick={() => setTab('total')}
-          >
-            All-time
-          </button>
+        {/* Sélecteur de période */}
+        <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+          <div className="gt-chips" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
+            {periodOptions.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
+                onClick={() => handlePeriodChange(p)}
+              >
+                {p === 'week' ? '7 jours' : formatPeriod(p)}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Label de la période active */}
+        <p className="t-eyebrow" style={{ marginTop: 0 }}>
+          {formatPeriod(period)} {loadingBoard && '…'}
+        </p>
 
         {/* Classement */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {sorted.map((entry, i) => {
-            const xp = tab === 'week' ? entry.weekXp : entry.totalXp
-            return (
-              <div
-                key={entry.userId}
-                style={{
-                  background: entry.isMe ? 'var(--accent-subtle)' : 'var(--surface)',
-                  border: `1px solid ${entry.isMe ? 'var(--accent)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius-card)',
-                  padding: '12px 14px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <RankBadge rank={i + 1} />
-                  <Avatar name={entry.displayName} isMe={entry.isMe} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: entry.isMe ? 700 : 600,
-                        fontSize: 'var(--fs-body)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {entry.displayName}
-                      {entry.isMe && (
-                        <span
-                          style={{
-                            marginLeft: 6,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            background: 'var(--accent)',
-                            color: 'var(--accent-ink)',
-                            padding: '1px 5px',
-                            borderRadius: 4,
-                            verticalAlign: 'middle',
-                          }}
-                        >
-                          MOI
-                        </span>
-                      )}
-                    </div>
-                    <XpBar value={xp} max={maxXp} />
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: 16, flexShrink: 0, minWidth: 64, textAlign: 'right' }}>
-                    {xp.toLocaleString('fr-FR')}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-muted)', marginLeft: 2 }}>
-                      XP
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+          {sorted.length === 0 && !loadingBoard && (
+            <p className="t-caption" style={{ color: 'var(--fg-muted)', textAlign: 'center', padding: '20px 0' }}>
+              Aucune séance enregistrée sur cette période.
+            </p>
+          )}
+          {sorted.map((entry, i) => (
+            <MemberRow key={entry.userId} entry={entry} rank={i + 1} />
+          ))}
         </div>
 
         {/* Rejoindre un autre groupe */}
         <div style={{ marginTop: 8 }}>
-          <Row
-            icon="link"
-            label="Rejoindre un autre groupe"
-            chevron
+          <button
             onClick={() => { setView('noGroup'); setMode('join'); setDisplayName('') }}
-          />
+            style={{
+              width: '100%', padding: '12px 14px',
+              borderRadius: 'var(--radius-card)', border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--fg-muted)',
+              fontSize: 'var(--fs-body)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <Icon name="link" size={18} />
+            Rejoindre un autre groupe
+          </button>
         </div>
+
+        {/* Désactiver Rivals */}
+        <button
+          onClick={() => { setCompetitionEnabled(false); window.location.reload() }}
+          style={{
+            width: '100%', padding: '10px 14px',
+            borderRadius: 'var(--radius-card)', border: 'none',
+            background: 'transparent', color: 'var(--fg-muted)',
+            fontSize: 'var(--fs-caption)', cursor: 'pointer',
+          }}
+        >
+          Désactiver Rivals
+        </button>
       </div>
     </div>
   )

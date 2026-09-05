@@ -7,6 +7,8 @@ import {
   type ScreenName, type Tab,
 } from './navigation'
 
+type NavProviderProps = { children: ReactNode; initialTab?: Tab }
+
 interface NavApi {
   activeTab: Tab
   /** Écran au sommet de la pile de l'onglet actif. */
@@ -25,14 +27,15 @@ interface NavApi {
 const NavContext = createContext<NavApi | null>(null)
 
 const initialStacks = (): Record<Tab, ScreenEntry[]> => ({
-  today: [{ name: TAB_ROOT.today }],
+  today:   [{ name: TAB_ROOT.today }],
   history: [{ name: TAB_ROOT.history }],
-  stats: [{ name: TAB_ROOT.stats }],
+  stats:   [{ name: TAB_ROOT.stats }],
   profile: [{ name: TAB_ROOT.profile }],
+  group:   [{ name: TAB_ROOT.group }],
 })
 
-export function NavProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<Tab>('today')
+export function NavProvider({ children, initialTab = 'today' }: NavProviderProps) {
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [stacks, setStacks] = useState(initialStacks)
   const [modal, setModal] = useState<ModalEntry | null>(null)
 

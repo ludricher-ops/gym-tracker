@@ -3,7 +3,7 @@ import { useTheme } from './hooks/useTheme'
 import { useSync } from './hooks/useSync'
 import { StoreProvider, useStore } from './hooks/useStore'
 import { NavProvider, useNavigation } from './nav/useNavigation'
-import { TABS } from './nav/navigation'
+import { TABS, TABS_COMPETITION, isCompetitionEnabled } from './nav/navigation'
 import { SCREENS } from './nav/screenRegistry'
 import { TabBar, EmptyState, UpdateBanner, ChromeGate } from './components/ui'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
@@ -50,16 +50,17 @@ function AuthGate() {
 
   if (!user) return <LoginScreen />
 
+  const competition = isCompetitionEnabled()
   return (
     <StoreProvider>
-      <NavProvider>
-        <AppShell />
+      <NavProvider initialTab={competition ? 'group' : 'today'}>
+        <AppShell competition={competition} />
       </NavProvider>
     </StoreProvider>
   )
 }
 
-function AppShell() {
+function AppShell({ competition }: { competition: boolean }) {
   const store = useStore()
   useTheme(store.settings.preferences.theme, store.settings.preferences.accentColor)
   useSync(store.reload)
@@ -105,7 +106,7 @@ function AppShell() {
         </ErrorBoundary>
       </div>
       {!nav.modal && (
-        <TabBar tabs={TABS} active={nav.activeTab} onSelect={nav.switchTab} />
+        <TabBar tabs={competition ? TABS_COMPETITION : TABS} active={nav.activeTab} onSelect={nav.switchTab} />
       )}
       {nav.modal?.name === 'session' && typeof nav.modal.params?.sessionId === 'string' && (
         <ErrorBoundary>

@@ -1,10 +1,11 @@
-﻿import { useMemo } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { computeStreak, longestStreak } from '../../utils/streak'
 import { localDayKey } from '../../utils/dates'
 import { formatVolume } from '../../utils/format'
 import { Card, Row, StatTile } from '../ui'
+import { isCompetitionEnabled, setCompetitionEnabled } from '../../nav/navigation'
 
 export function ProfileScreen() {
   const store = useStore()
@@ -23,6 +24,14 @@ export function ProfileScreen() {
       tonnage: ended.reduce((sum, s) => sum + (s.totalVolumeKg ?? 0), 0),
     }
   }, [ended])
+
+  const [rivalsOn, setRivalsOn] = useState(isCompetitionEnabled())
+
+  const toggleRivals = (on: boolean) => {
+    setCompetitionEnabled(on)
+    setRivalsOn(on)
+    window.location.reload()
+  }
 
   const fullName =
     `${settings.firstName} ${settings.lastName}`.trim() || 'Athlète Gym Track'
@@ -103,15 +112,45 @@ export function ProfileScreen() {
           onClick={() => nav.navigate('body')}
         />
 
-        {/* ── Compétition ──────────────────────────────────────────────── */}
-        <p className="t-eyebrow">Compétition</p>
+        {/* ── Rivals ───────────────────────────────────────────────────── */}
+        <p className="t-eyebrow">Rivals</p>
         <Row
           icon="trophy"
-          label="Mode Compétition"
-          sub="Classement XP avec vos amis"
-          chevron
-          onClick={() => nav.navigate('group')}
+          label="Rivals"
+          sub={rivalsOn ? 'Activé — onglet épinglé en premier' : 'Classement XP avec vos amis'}
+          trailing={
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={rivalsOn}
+                onChange={(e) => toggleRivals(e.target.checked)}
+                style={{ display: 'none' }}
+              />
+              <span style={{
+                display: 'inline-flex', alignItems: 'center',
+                width: 42, height: 24, borderRadius: 12,
+                background: rivalsOn ? 'var(--accent)' : 'var(--border)',
+                padding: 2, transition: 'background 0.2s', flexShrink: 0,
+              }}>
+                <span style={{
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,.25)',
+                  transform: rivalsOn ? 'translateX(18px)' : 'translateX(0)',
+                  transition: 'transform 0.2s',
+                }} />
+              </span>
+            </label>
+          }
         />
+        {rivalsOn && (
+          <Row
+            icon="trophy"
+            label="Voir mon groupe"
+            chevron
+            onClick={() => nav.navigate('group')}
+          />
+        )}
 
         {/* ── Réglages ─────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Réglages</p>
