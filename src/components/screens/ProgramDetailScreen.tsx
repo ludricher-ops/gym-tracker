@@ -8,7 +8,22 @@ import { Button, Card, EmptyState, Icon, Pill, PrimaryBar, Sheet } from '../ui'
 import { deleteProgram, deactivateProgram } from '../../utils/programOps'
 import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
+import type { DraftPhase } from '../programBuilder/programDraft'
 import type { WorkoutTemplate } from '../../types'
+import { buildPhases } from '../../utils/programGenerator'
+
+const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
+  adaptation: 'var(--accent)',
+  progression: '#5b9dff',
+  intensification: '#ff8a3d',
+  deload: 'var(--fg-muted)',
+}
+const PHASE_EMOJI: Record<DraftPhase['focus'], string> = {
+  adaptation: '🌱',
+  progression: '📈',
+  intensification: '🔥',
+  deload: '🔄',
+}
 
 /** Formate les séries + reps d'un WET pour l'affichage dans le sheet. */
 function fmtSets(sets: number, repsMin: number, repsMax?: number, durSec?: number): string {
@@ -43,6 +58,27 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   }, [store, program])
 
   // ── Hooks déplacés avant le return anticipé pour respecter les rules-of-hooks ──
+
+  // Phases de périodisation (undefined si programme < 8 semaines)
+  const programPhases = useMemo(
+    () => (program ? buildPhases(program.durationWeeks) : undefined),
+    [program],
+  )
+
+  // Semaine courante (null si le programme n'a pas encore démarré)
+  const currentWeekNumber = useMemo(() => {
+    if (!program?.startedAt) return null
+    return Math.max(1, Math.ceil((Date.now() - program.startedAt) / (7 * 24 * 60 * 60 * 1000)))
+  }, [program?.startedAt])
+
+  // Phase en cours selon la semaine courante
+  const currentPhase = useMemo((): DraftPhase | null => {
+    if (!programPhases || !currentWeekNumber) return null
+    return programPhases.find(
+      (p) => currentWeekNumber >= p.weekStart && currentWeekNumber <= p.weekEnd,
+    ) ?? null
+  }, [programPhases, currentWeekNumber])
+
   // Associe chaque workoutTemplate à son jour de semaine pour le tri et l'affichage
   const workoutsWithDay = useMemo(() => {
     if (!program) return []
@@ -134,6 +170,73 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             <Metric value={LEVEL_LABEL[program.level]} label="niveau" />
           </div>
         </Card>
+
+        {programPhases && programPhases.length > 0 && (
+          <div>
+            <p className="t-eyebrow" style={{ marginBottom: 8 }}>Périodisation</p>
+            {programPhases.map((phase) => {
+              const isCurrent = currentPhase?.name === phase.name
+              const color = PHASE_COLORS[phase.focus]
+              const phaseWeeks = phase.weekEnd - phase.weekStart + 1
+              const widthPct = (phaseWeeks / program.durationWeeks) * 100
+              return (
+                <div
+                  key={phase.name}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    background: isCurrent ? 'var(--surface2)' : 'transparent',
+                    border: `1.5px solid ${isCurrent ? color : 'transparent'}`,
+                    marginBottom: 4,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>{PHASE_EMOJI[phase.focus]}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color }}>{phase.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--dim)' }}>
+                      S{phase.weekStart}–S{phase.weekEnd}
+                    </span>
+                    {isCurrent && (
+                      <span
+                        style={{
+                          marginLeft: 'auto',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                          color,
+                        }}
+                      >
+                        EN COURS
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 6 }}>
+                    {phase.description}
+                  </div>
+                  <div
+                    style={{
+                      height: 3,
+                      borderRadius: 2,
+                      background: 'var(--surface2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${widthPct}%`,
+                        height: '100%',
+                        borderRadius: 2,
+                        background: color,
+                        opacity: isCurrent ? 1 : 0.35,
+                      }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div>
           <p className="t-eyebrow" style={{ marginBottom: 8 }}>
