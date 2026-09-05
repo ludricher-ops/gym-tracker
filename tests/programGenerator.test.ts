@@ -231,10 +231,6 @@ describe('warmup/core — filtrage par équipement', () => {
   })
 
   it('user avec élastique : warmup élastique accessible', () => {
-    const ids = firstWorkoutIds({
-      goal: 'endurance', daysPerWeek: 2, sessionDuration: 60,
-      equipment: ['band', 'bodyweight'], level: 'beginner',
-    })
     // wu-bw (pop 5) et wu-band (pop 4) sont tous les deux dans le pool
     // premier workout → warmupPool[0 % 2] = wu-bw (premier dans POOL)
     // vérifie au moins que wu-band n'est PAS exclu du pool via le 2e workout

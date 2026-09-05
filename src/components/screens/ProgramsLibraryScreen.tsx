@@ -69,7 +69,7 @@ export function ProgramsLibraryScreen() {
                 Générer mon programme
               </div>
               <div style={{ fontSize: 'var(--fs-caption)', opacity: 0.8 }}>
-                7 questions — programme prêt en 1 min
+                8 questions — programme prêt en 1 min
               </div>
             </div>
           </div>

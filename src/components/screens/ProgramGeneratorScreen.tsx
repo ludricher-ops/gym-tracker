@@ -1,5 +1,5 @@
 // Wizard de génération automatique de programme.
-// 6 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
+// 8 questions en chips → génère un DraftProgram → ouvre le builder à l'étape Revue.
 
 import { useEffect, useState } from 'react'
 import type { Equipment, ProgramGoal, ProgramLevel, Weekday } from '../../types'
@@ -64,30 +64,66 @@ const STEP_DURATION: Step<20 | 45 | 60 | 90> = {
   ],
 }
 
-// ── Options équipement (multi-select) ────────────────────────────────────────
+// ── Étape Lieu ────────────────────────────────────────────────────────────────
+
+type Lieu = 'gym' | 'home' | 'outdoor' | 'custom'
+
+interface LieuOption {
+  value: Lieu
+  emoji: string
+  label: string
+  sub: string
+  preset: Equipment[]
+}
+
+const LIEU_OPTIONS: LieuOption[] = [
+  {
+    value: 'gym',
+    emoji: '🏟️',
+    label: 'Salle de sport',
+    sub: 'Barre, haltères, câbles, machines',
+    preset: ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight'],
+  },
+  {
+    value: 'home',
+    emoji: '🏠',
+    label: 'Home gym',
+    sub: 'Haltères, kettlebell, élastiques',
+    preset: ['dumbbell', 'kettlebell', 'band', 'bodyweight'],
+  },
+  {
+    value: 'outdoor',
+    emoji: '🤸',
+    label: 'Extérieur / Calisthenics',
+    sub: 'Poids du corps uniquement',
+    preset: ['bodyweight'],
+  },
+  {
+    value: 'custom',
+    emoji: '✏️',
+    label: 'Setup sur-mesure',
+    sub: 'Je choisis moi-même',
+    preset: [],
+  },
+]
+
+// ── Options équipement (multi-select, étape 5b) ──────────────────────────────
 
 interface EquipmentOption {
   value: Equipment
   emoji: string
   label: string
+  sub: string
 }
 
 const EQUIPMENT_OPTIONS: EquipmentOption[] = [
-  { value: 'barbell',    emoji: '🏋️', label: 'Barre olympique'  },
-  { value: 'dumbbell',   emoji: '🔩',  label: 'Haltères'         },
-  { value: 'cable',      emoji: '🔗',  label: 'Câbles / poulie'  },
-  { value: 'machine',    emoji: '⚙️',  label: 'Machines'         },
-  { value: 'bodyweight', emoji: '🤸',  label: 'Poids du corps'   },
-  { value: 'kettlebell', emoji: '🫙',  label: 'Kettlebell'       },
-  { value: 'band',       emoji: '🪢',  label: 'Élastiques'       },
-]
-
-interface EquipmentPreset { label: string; items: Equipment[] }
-
-const EQUIPMENT_PRESETS: EquipmentPreset[] = [
-  { label: '🏟️ Salle',   items: ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'kettlebell', 'band'] },
-  { label: '🏠 Maison',  items: ['dumbbell', 'bodyweight', 'kettlebell', 'band'] },
-  { label: '🤸 Cardio',  items: ['bodyweight', 'band'] },
+  { value: 'barbell',    emoji: '🏋️', label: 'Barre + rack',        sub: 'Squat, développé couché, SDT…'     },
+  { value: 'dumbbell',   emoji: '🔩',  label: 'Haltères',            sub: 'Unilatéral, rowing, press…'        },
+  { value: 'cable',      emoji: '🔗',  label: 'Station câbles',      sub: 'Tirage, face pull, cable cross…'   },
+  { value: 'machine',    emoji: '⚙️',  label: 'Appareils guidés',    sub: 'Leg press, pec deck, hack squat…'  },
+  { value: 'bodyweight', emoji: '🤸',  label: 'Poids du corps',      sub: 'Pompes, tractions, dips…'          },
+  { value: 'kettlebell', emoji: '🫙',  label: 'Kettlebell',          sub: 'Swing, goblet squat, press…'       },
+  { value: 'band',       emoji: '🪢',  label: 'Élastiques',          sub: 'Résistance, activation, mobilité'  },
 ]
 
 const STEP_LEVEL: Step<ProgramLevel> = {
@@ -118,9 +154,9 @@ const FOCUS_OPTIONS: FocusOption[] = [
 ]
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Équipement  5: Niveau  6: Muscles
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Équipement', 'Niveau', 'Muscles']
-const TOTAL = 7
+// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Lieu  5: Équipement  6: Niveau  7: Muscles
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Muscles']
+const TOTAL = 8
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -128,15 +164,16 @@ export function ProgramGeneratorScreen() {
   const store = useStore()
   const nav = useNavigation()
 
-  const [stepIndex, setStepIndex] = useState(0)
-  const [goal, setGoal]           = useState<ProgramGoal | null>(null)
-  const [days, setDays]           = useState<2 | 3 | 4 | 5 | null>(null)
-  const [selectedDays, setSelectedDays] = useState<Weekday[]>([])
-  const [duration, setDuration]   = useState<20 | 45 | 60 | 90 | null>(null)
-  const [equipment, setEquipment] = useState<Equipment[]>([])
-  const [level, setLevel]         = useState<ProgramLevel | null>(null)
-  const [focusMuscles, setFocusMuscles] = useState<FocusMuscle[]>([])
-  const [advancing, setAdvancing] = useState(false)
+  const [stepIndex, setStepIndex]               = useState(0)
+  const [goal, setGoal]                         = useState<ProgramGoal | null>(null)
+  const [days, setDays]                         = useState<2 | 3 | 4 | 5 | null>(null)
+  const [selectedDays, setSelectedDays]         = useState<Weekday[]>([])
+  const [duration, setDuration]                 = useState<20 | 45 | 60 | 90 | null>(null)
+  const [lieu, setLieu]                         = useState<Lieu | null>(null)
+  const [equipment, setEquipment]               = useState<Equipment[]>([])
+  const [level, setLevel]                       = useState<ProgramLevel | null>(null)
+  const [focusMuscles, setFocusMuscles]         = useState<FocusMuscle[]>([])
+  const [advancing, setAdvancing]               = useState(false)
 
   function advance() {
     if (stepIndex < TOTAL - 1) {
@@ -156,7 +193,6 @@ export function ProgramGeneratorScreen() {
   function handleGenerate() {
     if (!goal || !days || !duration || equipment.length === 0 || !level) return
 
-    // Trier les jours dans l'ordre de la semaine
     const orderedDays = WEEKDAY_OPTIONS
       .filter((d) => selectedDays.includes(d.value))
       .map((d) => d.value)
@@ -179,8 +215,6 @@ export function ProgramGeneratorScreen() {
 
   // ── Sélection des jours (étape 2) ──────────────────────────────────────────
 
-  // Auto-avance quand exactement N jours sont sélectionnés.
-  // Effet hors de l'updater pour éviter les doubles timers en React Strict Mode.
   useEffect(() => {
     if (days !== null && selectedDays.length === days) {
       setAdvancing(true)
@@ -196,7 +230,7 @@ export function ProgramGeneratorScreen() {
     if (days === null) return
     setSelectedDays((prev) => {
       if (prev.includes(day)) return prev.filter((d) => d !== day)
-      if (prev.length >= days) return prev  // déjà au max
+      if (prev.length >= days) return prev
       return [...prev, day]
     })
   }
@@ -205,39 +239,96 @@ export function ProgramGeneratorScreen() {
 
   function renderStep() {
     if (stepIndex === 0) {
-      return renderChips(STEP_GOAL, goal, (v: ProgramGoal) => {
-        setGoal(v); advance()
-      })
+      return renderChips(STEP_GOAL, goal, (v: ProgramGoal) => { setGoal(v); advance() })
     }
     if (stepIndex === 1) {
       return renderChips(STEP_DAYS, days, (v: 2 | 3 | 4 | 5) => {
         setDays(v)
-        // Reset la sélection de jours quand on change le compte
         setSelectedDays([])
         advance()
       })
     }
-    if (stepIndex === 2) {
-      return renderDayPicker()
-    }
+    if (stepIndex === 2) return renderDayPicker()
     if (stepIndex === 3) {
-      return renderChips(STEP_DURATION, duration, (v: 20 | 45 | 60 | 90) => {
-        setDuration(v); advance()
-      })
+      return renderChips(STEP_DURATION, duration, (v: 20 | 45 | 60 | 90) => { setDuration(v); advance() })
     }
-    if (stepIndex === 4) {
-      return renderEquipmentPicker()
+    if (stepIndex === 4) return renderLieuPicker()
+    if (stepIndex === 5) return renderEquipmentPicker()
+    if (stepIndex === 6) {
+      return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
     }
-    if (stepIndex === 5) {
-      return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => {
-        setLevel(v); advance()
-      })
-    }
-    // Étape 7 — Muscles prioritaires : multi-select + bouton Générer
     return renderMusclePicker()
   }
 
-  // Sélecteur d'équipement — raccourcis + multi-select + bouton Continuer
+  // ── Sélecteur de lieu ─────────────────────────────────────────────────────
+
+  function renderLieuPicker() {
+    return (
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
+          Où t'entraînes-tu ?
+        </p>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 20 }}>
+          On pré-sélectionne l'équipement, tu pourras ajuster ensuite.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {LIEU_OPTIONS.map((opt) => {
+            const active = lieu === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  setLieu(opt.value)
+                  // Pour custom : go directement à l'étape équipement, équipement vide
+                  // Pour les autres : pré-rempli + avance
+                  setEquipment(opt.preset)
+                  setAdvancing(true)
+                  setTimeout(() => {
+                    setStepIndex((s) => s + 1)
+                    setAdvancing(false)
+                  }, 160)
+                }}
+                disabled={advancing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '14px 16px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: 'var(--fg)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.12s, background 0.12s',
+                  width: '100%',
+                }}
+              >
+                <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+                    {opt.sub}
+                  </div>
+                </div>
+                {active && (
+                  <div style={{ color: 'var(--accent)', flexShrink: 0 }}>
+                    <Icon name="check" size={20} strokeWidth={2.5} />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Sélecteur d'équipement ────────────────────────────────────────────────
+
   function renderEquipmentPicker() {
     function toggleEquipment(e: Equipment) {
       setEquipment((prev) =>
@@ -245,46 +336,30 @@ export function ProgramGeneratorScreen() {
       )
     }
 
-    // Nombre d'exercices disponibles pour l'équipement sélectionné (non-warmup, actifs)
     const availableCount = equipment.length === 0 ? 0 :
       store.exercises.filter(
         (ex) => !ex.deleted && !ex.isWarmupExercise && equipment.includes(ex.equipment),
       ).length
 
+    // Label selon le lieu choisi
+    const lieuLabel = lieu === 'gym' ? 'Salle de sport'
+      : lieu === 'home' ? 'Home gym'
+      : lieu === 'outdoor' ? 'Extérieur'
+      : null
+
     return (
       <div style={{ padding: '0 16px' }}>
         <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
-          Quel équipement as-tu ?
+          {lieuLabel ? `Équipement — ${lieuLabel}` : 'Quel équipement as-tu ?'}
         </p>
         <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 16 }}>
-          Sélectionne tout ce qui est disponible.
+          {lieu && lieu !== 'custom'
+            ? 'Pré-rempli selon ton lieu. Ajuste si besoin.'
+            : 'Sélectionne tout ce qui est disponible.'}
         </p>
 
-        {/* Raccourcis */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          {EQUIPMENT_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              onClick={() => setEquipment(preset.items)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 100,
-                border: '1.5px solid var(--border)',
-                background: 'var(--surface)',
-                color: 'var(--fg)',
-                fontSize: 'var(--fs-caption)',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'border-color 0.12s',
-              }}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Multi-select équipements */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+        {/* Grille équipements */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
           {EQUIPMENT_OPTIONS.map((opt) => {
             const active = equipment.includes(opt.value)
             return (
@@ -294,7 +369,7 @@ export function ProgramGeneratorScreen() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
+                  gap: 12,
                   padding: '12px 14px',
                   borderRadius: 'var(--radius-card)',
                   border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
@@ -305,10 +380,21 @@ export function ProgramGeneratorScreen() {
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'border-color 0.12s, background 0.12s',
+                  width: '100%',
                 }}
               >
-                <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
-                <span style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</span>
+                <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 1 }}>
+                    {opt.sub}
+                  </div>
+                </div>
+                {active && (
+                  <div style={{ color: 'var(--accent)', flexShrink: 0 }}>
+                    <Icon name="check" size={18} strokeWidth={2.5} />
+                  </div>
+                )}
               </button>
             )
           })}
@@ -329,13 +415,12 @@ export function ProgramGeneratorScreen() {
             <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
             <span className="t-caption" style={{ color: 'var(--fg)' }}>
               {availableCount === 0
-                ? 'Aucun exercice disponible pour cet équipement — le programme sera vide.'
-                : `Seulement ${availableCount} exercice${availableCount > 1 ? 's' : ''} disponibles — certains slots de séance seront vides.`}
+                ? 'Aucun exercice disponible — le programme sera vide.'
+                : `Seulement ${availableCount} exercice${availableCount > 1 ? 's' : ''} disponibles — certains slots seront vides.`}
             </span>
           </div>
         )}
 
-        {/* Bouton Continuer */}
         <button
           onClick={() => { if (equipment.length > 0) advance() }}
           disabled={equipment.length === 0}
@@ -360,7 +445,8 @@ export function ProgramGeneratorScreen() {
     )
   }
 
-  // Sélecteur de muscles prioritaires — multi-select + bouton Générer
+  // ── Sélecteur de muscles prioritaires ────────────────────────────────────
+
   function renderMusclePicker() {
     return (
       <div style={{ padding: '0 16px' }}>
@@ -430,7 +516,8 @@ export function ProgramGeneratorScreen() {
     )
   }
 
-  // Sélecteur de jours — grille 7 boutons + compteur
+  // ── Sélecteur de jours ────────────────────────────────────────────────────
+
   function renderDayPicker() {
     const needed = days ?? 0
     const remaining = needed - selectedDays.length
@@ -446,7 +533,6 @@ export function ProgramGeneratorScreen() {
             : 'Parfait !'}
         </p>
 
-        {/* Grille des jours */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
           {WEEKDAY_OPTIONS.map((opt) => {
             const active = selectedDays.includes(opt.value)
@@ -477,7 +563,6 @@ export function ProgramGeneratorScreen() {
           })}
         </div>
 
-        {/* Résumé des jours sélectionnés */}
         {selectedDays.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {WEEKDAY_OPTIONS

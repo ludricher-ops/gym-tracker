@@ -1436,11 +1436,13 @@
   {
     "id": "seed-hip-adduction-machine",
     "name": "Machine adducteurs",
+    "primaryMuscle": "glutes",
     "secondaryMuscles": [],
     "equipment": "machine",
+    "category": "isolation",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 0,
+    "popularity": 2,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/HIP-ADDUCTION-MACHINE.gif",
       "mime": "image/gif",

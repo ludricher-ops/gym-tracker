@@ -129,6 +129,17 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     if (inserted > 0)
       console.log(`[startup] ${inserted} nouvel(aux) exercice(s) ajouté(s) au compte admin`)
 
+    // Patch seed-hip-adduction-machine : primaryMuscle et category manquants dans le seed initial.
+    // DO UPDATE ciblé → updated_at = now pour passer le LWW lors de la propagation.
+    await pool.query(
+      `UPDATE sync_records
+          SET data = data || $1::jsonb,
+              updated_at = $2
+        WHERE user_id = $3 AND store = 'exercises' AND id = 'seed-hip-adduction-machine'
+          AND (data->>'primaryMuscle' IS NULL OR data->>'category' IS NULL)`,
+      [JSON.stringify({ primaryMuscle: 'glutes', category: 'isolation', popularity: 2 }), now, ADMIN_USER_ID],
+    )
+
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
     await pool.query(
