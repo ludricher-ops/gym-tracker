@@ -27,9 +27,9 @@ function syncable(id) {
 async function upsert(client, store, id, data) {
   if (DRY) { console.log(`  [DRY] upsert ${store} ${id}`); return }
   await client.query(
-    `INSERT INTO sync_records (store, id, data, updated_at, user_id)
-     VALUES ($1, $2, $3, $4, 1)
-     ON CONFLICT (store, id) DO UPDATE
+    `INSERT INTO sync_records (user_id, store, id, data, updated_at)
+     VALUES (1, $1, $2, $3, $4)
+     ON CONFLICT (user_id, store, id) DO UPDATE
        SET data = $3, updated_at = $4,
            server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))`,
     [store, id, JSON.stringify({ ...syncable(id), ...data }), NOW],
