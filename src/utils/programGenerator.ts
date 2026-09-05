@@ -154,8 +154,12 @@ function workoutTypeFromFocus(focusMuscles: FocusMuscle[]): Exclude<WorkoutType,
   const hasCore  = focusMuscles.includes('core')
   const hasUpper = hasPush || hasPull || hasArms
 
-  // Jambes (± core uniquement) → séances bas du corps
-  if ((hasLower || hasCore) && !hasUpper) return 'lower'
+  // Jambes (± core) → séances bas du corps
+  if (hasLower && !hasUpper) return 'lower'
+  // Core seul → null : le générateur produit un fullbody équilibré avec un exercice
+  // core ajouté en queue de chaque séance (corePool). Retourner 'lower' ici serait
+  // sémantiquement faux (l'utilisateur veut du gainage, pas des squats).
+  if (hasCore && !hasLower && !hasUpper) return null
   // Push pur (poitrine / épaules, sans tirage ni jambes)
   if (hasPush && !hasPull && !hasLower) return 'push'
   // Pull pur (dos, sans poussée ni jambes)

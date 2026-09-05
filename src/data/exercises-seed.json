@@ -2794,5 +2794,47 @@
     "isCustom": false,
     "usageCount": 0,
     "createdAt": 1757000000000
+  },
+  {
+    "id": "seed-pullover-dumbbell",
+    "name": "Pull-over haltère",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": ["chest", "triceps"],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000000
+  },
+  {
+    "id": "seed-pullover-cable",
+    "name": "Pull-over poulie haute",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": ["back_width", "chest"],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000001
+  },
+  {
+    "id": "seed-straight-arm-pulldown",
+    "name": "Tirage bras tendus poulie",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": ["back_width", "triceps"],
+    "equipment": "cable",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000002
   }
 ]
