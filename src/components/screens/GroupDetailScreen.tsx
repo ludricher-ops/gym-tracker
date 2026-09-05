@@ -20,16 +20,6 @@ interface LeaderboardEntry {
   sessionCount: number
 }
 
-interface FeedEntry {
-  display_name: string
-  user_id: number
-  name: string
-  started_at: number
-  ended_at: number
-  volume_kg: number | null
-  set_count: number
-}
-
 type Period = 'week' | string
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -39,27 +29,6 @@ async function apiFetch(path: string, opts?: RequestInit) {
   const json = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error((json as { error?: string }).error ?? 'Erreur réseau')
   return json
-}
-
-/** Durée en ms → "1h 23min" */
-function formatDuration(ms: number): string {
-  const totalMin = Math.round(ms / 60000)
-  if (totalMin < 60) return `${totalMin} min`
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return m > 0 ? `${h}h ${m}min` : `${h}h`
-}
-
-/** Timestamp → "il y a X" ou date courte */
-function formatAgo(ts: number): string {
-  const diff = Date.now() - ts
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `il y a ${mins} min`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `il y a ${hours} h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `il y a ${days} j`
-  return new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
 function currentMonthPeriod(): string {
@@ -90,71 +59,6 @@ function RankBadge({ rank, size = 20 }: { rank: number; size?: number }) {
     }}>
       {rank}
     </span>
-  )
-}
-
-function FeedCard({ item, myUserId }: { item: FeedEntry; myUserId: number | null }) {
-  const isMe = item.user_id === myUserId
-  const dur = item.ended_at && item.started_at ? item.ended_at - item.started_at : 0
-  return (
-    <div style={{
-      background: 'var(--surface)', border: `1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}`,
-      borderRadius: 'var(--radius-card)', padding: '10px 14px',
-      display: 'flex', gap: 12, alignItems: 'flex-start',
-    }}>
-      {/* Avatar */}
-      <div style={{
-        width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-        background: isMe ? 'var(--accent)' : 'var(--surface-raised)',
-        color: isMe ? 'var(--accent-ink)' : 'var(--fg-muted)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontWeight: 700, fontSize: 14,
-      }}>
-        {item.display_name[0]?.toUpperCase() ?? '?'}
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Ligne 1 : nom + heure */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 2 }}>
-          <span style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>
-            {isMe ? 'Moi' : item.display_name}
-          </span>
-          <span className="t-caption" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}>
-            {formatAgo(item.ended_at)}
-          </span>
-        </div>
-
-        {/* Ligne 2 : nom de séance */}
-        <div className="t-caption" style={{ fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          🏋️ {item.name || 'Séance'}
-        </div>
-
-        {/* Ligne 3 : stats chips */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {dur > 0 && (
-            <span className="t-caption" style={{
-              background: 'var(--surface-raised)', borderRadius: 4, padding: '2px 6px', color: 'var(--fg-muted)',
-            }}>
-              ⏱ {formatDuration(dur)}
-            </span>
-          )}
-          {item.set_count > 0 && (
-            <span className="t-caption" style={{
-              background: 'var(--surface-raised)', borderRadius: 4, padding: '2px 6px', color: 'var(--fg-muted)',
-            }}>
-              ⚡ {item.set_count} séries
-            </span>
-          )}
-          {item.volume_kg != null && item.volume_kg > 0 && (
-            <span className="t-caption" style={{
-              background: 'var(--surface-raised)', borderRadius: 4, padding: '2px 6px', color: 'var(--fg-muted)',
-            }}>
-              🏔 {Math.round(item.volume_kg).toLocaleString('fr-FR')} kg
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -277,7 +181,6 @@ export function GroupDetailScreen({ params }: ScreenProps) {
   const [error,     setError]     = useState<string | null>(null)
   const [copied,    setCopied]    = useState(false)
   const [groupId,   setGroupId]   = useState<number | null>(null)
-  const [feed,      setFeed]      = useState<FeedEntry[]>([])
 
   const loadLeaderboard = useCallback(async (p: Period) => {
     setLoading(true); setError(null)
@@ -294,9 +197,6 @@ export function GroupDetailScreen({ params }: ScreenProps) {
     apiFetch(`/api/groups/${code}/seasons`)
       .then((d) => setSeasons(d.seasons ?? []))
       .catch(() => { /* ignore */ })
-    apiFetch(`/api/groups/${code}/feed?limit=20`)
-      .then((d) => setFeed(d.feed ?? []))
-      .catch(() => { /* ignore — le feed est optionnel */ })
   }, [code, loadLeaderboard])
 
   const handlePeriodChange = (p: Period) => { setPeriod(p); void loadLeaderboard(p) }
@@ -434,18 +334,6 @@ export function GroupDetailScreen({ params }: ScreenProps) {
         <p className="t-caption" style={{ color: 'var(--fg-muted)', textAlign: 'center' }}>
           Tapez un membre pour voir ses stats détaillées
         </p>
-
-        {/* Fil d'activité */}
-        {feed.length > 0 && (
-          <>
-            <p className="t-eyebrow" style={{ marginTop: 8 }}>Activité récente</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {feed.map((item, i) => (
-                <FeedCard key={`${item.user_id}-${item.ended_at}-${i}`} item={item} myUserId={myEntry?.userId ?? null} />
-              ))}
-            </div>
-          </>
-        )}
 
         {/* Quitter */}
         <button
