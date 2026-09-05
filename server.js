@@ -143,6 +143,9 @@ function requireUser(req, res, next) {
   next()
 }
 
+// Applique extractUser sur toutes les routes API (pose req.userId pour requireUser).
+app.use('/api', extractUser)
+
 // ── Routes santé ─────────────────────────────────────────────────────────────
 
 app.get('/api/health', async (_req, res) => {
