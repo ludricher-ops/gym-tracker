@@ -589,6 +589,38 @@ export function ProgramGeneratorScreen() {
           })}
         </div>
 
+        {/* Warning déséquilibre musculaire */}
+        {focusMuscles.length > 0 && (() => {
+          const noBack = !focusMuscles.includes('back')
+          const noLegs = !focusMuscles.includes('legs')
+          if (!noBack && !noLegs) return null
+          const missing = [noBack && 'dos', noLegs && 'jambes'].filter(Boolean).join(' ni ')
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 8,
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-card)',
+              background: 'color-mix(in oklch, var(--warn, #f59e0b) 12%, var(--surface))',
+              border: '1.5px solid color-mix(in oklch, var(--warn, #f59e0b) 40%, transparent)',
+              marginBottom: 12,
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+              <div>
+                <div className="t-caption" style={{ color: 'var(--fg)', fontWeight: 700 }}>
+                  Pas de {missing} dans ta sélection.
+                </div>
+                <div className="t-caption" style={{ color: 'var(--fg)', marginTop: 2 }}>
+                  {level === 'beginner'
+                    ? `Pour un débutant, négliger le ${missing} crée un déséquilibre qui ralentit la progression globale.`
+                    : `Un programme sans ${missing} peut entraîner des déséquilibres musculaires à terme.`}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
         <button
           onClick={handleGenerate}
           style={{
