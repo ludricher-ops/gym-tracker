@@ -936,7 +936,7 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 2,
+    "popularity": 1,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2023/09/curtsy-lunge.gif",
       "mime": "image/gif",
@@ -1250,7 +1250,7 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 2,
+    "popularity": 4,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2022/04/bodyweight-hip-thrust.gif",
       "mime": "image/gif",
@@ -2199,7 +2199,7 @@
     "category": "isolation",
     "trackingType": "time",
     "isWarmupExercise": false,
-    "popularity": 0,
+    "popularity": 2,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png",
       "mime": "image/png",
@@ -2757,7 +2757,10 @@
     "id": "seed-upright-row-barbell",
     "name": "Tirage au menton barre",
     "primaryMuscle": "shoulders_lateral",
-    "secondaryMuscles": ["back_thickness", "biceps"],
+    "secondaryMuscles": [
+      "back_thickness",
+      "biceps"
+    ],
     "equipment": "barbell",
     "category": "compound",
     "trackingType": "weight_reps",
@@ -2771,7 +2774,10 @@
     "id": "seed-upright-row-cable",
     "name": "Tirage au menton câble",
     "primaryMuscle": "shoulders_lateral",
-    "secondaryMuscles": ["back_thickness", "biceps"],
+    "secondaryMuscles": [
+      "back_thickness",
+      "biceps"
+    ],
     "equipment": "cable",
     "category": "compound",
     "trackingType": "weight_reps",
@@ -2785,7 +2791,9 @@
     "id": "seed-leg-curl-standing",
     "name": "Leg curl debout",
     "primaryMuscle": "hamstrings",
-    "secondaryMuscles": ["glutes"],
+    "secondaryMuscles": [
+      "glutes"
+    ],
     "equipment": "machine",
     "category": "isolation",
     "trackingType": "weight_reps",
@@ -2796,10 +2804,41 @@
     "createdAt": 1757000000000
   },
   {
+    "id": "seed-glute-bridge",
+    "name": "Glute bridge",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": ["hamstrings", "core"],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000010
+  },
+  {
+    "id": "seed-shoulder-press-machine",
+    "name": "Développé épaules machine",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscles": ["triceps", "shoulders_front"],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "isCustom": false,
+    "usageCount": 0,
+    "createdAt": 1757100000011
+  },
+  {
     "id": "seed-pullover-dumbbell",
     "name": "Pull-over haltère",
     "primaryMuscle": "back_thickness",
-    "secondaryMuscles": ["chest", "triceps"],
+    "secondaryMuscles": [
+      "chest",
+      "triceps"
+    ],
     "equipment": "dumbbell",
     "category": "isolation",
     "trackingType": "weight_reps",
@@ -2813,7 +2852,10 @@
     "id": "seed-pullover-cable",
     "name": "Pull-over poulie haute",
     "primaryMuscle": "back_thickness",
-    "secondaryMuscles": ["back_width", "chest"],
+    "secondaryMuscles": [
+      "back_width",
+      "chest"
+    ],
     "equipment": "cable",
     "category": "isolation",
     "trackingType": "weight_reps",
@@ -2827,7 +2869,10 @@
     "id": "seed-straight-arm-pulldown",
     "name": "Tirage bras tendus poulie",
     "primaryMuscle": "back_thickness",
-    "secondaryMuscles": ["back_width", "triceps"],
+    "secondaryMuscles": [
+      "back_width",
+      "triceps"
+    ],
     "equipment": "cable",
     "category": "isolation",
     "trackingType": "weight_reps",

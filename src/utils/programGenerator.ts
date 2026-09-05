@@ -106,7 +106,7 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
   ],
   upper: [
     { muscles: ['chest', 'chest_upper'],                          compound: true  },
-    { muscles: ['back_width', 'back'],                            compound: true  },
+    { muscles: ['back_width', 'back_thickness', 'back'],           compound: true  }, // tirage vertical ou rowing selon équipement
     { muscles: ['shoulders', 'shoulders_front'],                  compound: true  }, // OHP
     { muscles: ['shoulders_lateral', 'shoulders_rear'],           compound: false }, // écarté / face pull
     { muscles: ['back_thickness', 'back'],                        compound: false },
@@ -125,7 +125,7 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
   fullbody: [
     { muscles: ['quads', 'glutes'],                              compound: true  }, // squat / leg press
     { muscles: ['chest', 'chest_upper'],                         compound: true  }, // développé couché
-    { muscles: ['back_width', 'back'],                           compound: true  }, // tirage / tractions
+    { muscles: ['back_width', 'back_thickness', 'back'],          compound: true  }, // tirage vertical ou rowing selon équipement
     { muscles: ['hamstrings', 'glutes'],                         compound: false }, // RDL / hip thrust
     { muscles: ['shoulders_lateral', 'shoulders_rear', 'shoulders'], compound: false }, // écarté / face pull
     { muscles: ['shoulders', 'shoulders_front'],                 compound: true  }, // OHP (60-90 min)
