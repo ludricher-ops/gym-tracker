@@ -138,10 +138,46 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
 
 type Split = Exclude<WorkoutType, 'custom'>[]
 
+/**
+ * Déduit le type de séance dominant à partir des muscles ciblés.
+ * Si l'utilisateur cible exclusivement un sous-groupe (ex. legs+core),
+ * toutes les séances du programme seront de ce type.
+ * Retourne null si les muscles couvrent trop de groupes (→ split par défaut).
+ */
+function workoutTypeFromFocus(focusMuscles: FocusMuscle[]): Exclude<WorkoutType, 'custom' | 'fullbody'> | null {
+  if (focusMuscles.length === 0) return null
+
+  const hasLower = focusMuscles.includes('legs')
+  const hasPush  = focusMuscles.includes('chest') || focusMuscles.includes('shoulders')
+  const hasPull  = focusMuscles.includes('back')
+  const hasArms  = focusMuscles.includes('arms')
+  const hasCore  = focusMuscles.includes('core')
+  const hasUpper = hasPush || hasPull || hasArms
+
+  // Jambes (± core uniquement) → séances bas du corps
+  if ((hasLower || hasCore) && !hasUpper) return 'lower'
+  // Push pur (poitrine / épaules, sans tirage ni jambes)
+  if (hasPush && !hasPull && !hasLower) return 'push'
+  // Pull pur (dos, sans poussée ni jambes)
+  if (hasPull && !hasPush && !hasLower) return 'pull'
+  // Haut du corps mixte (sans jambes)
+  if (hasUpper && !hasLower) return 'upper'
+  // Ambigü ou tout le corps → split par défaut
+  return null
+}
+
 function selectSplit(params: GeneratorParams): Split {
-  const { goal, daysPerWeek, level } = params
+  const { goal, daysPerWeek, level, focusMuscles = [] } = params
   const isMass = goal === 'strength' || goal === 'hypertrophy'
 
+  // Si les muscles ciblés désignent clairement un type de séance, l'utiliser
+  // pour toutes les séances (ex. "legs + core" → lower × N jours).
+  const focusType = workoutTypeFromFocus(focusMuscles)
+  if (focusType) {
+    return Array.from({ length: daysPerWeek }, () => focusType) as Split
+  }
+
+  // Split par défaut basé sur l'objectif et la fréquence
   switch (daysPerWeek) {
     case 2: return ['fullbody', 'fullbody']
     case 3:
