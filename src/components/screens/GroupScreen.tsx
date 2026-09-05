@@ -72,7 +72,7 @@ function currentMonthPeriod(): string {
 }
 
 function formatPeriod(p: Period): string {
-  if (p === 'week') return '7 derniers jours'
+  if (p === 'week') return 'Semaine en cours'
   const [y, m] = p.split('-')
   const date = new Date(Number(y), Number(m) - 1)
   const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -576,7 +576,7 @@ export function GroupScreen() {
                 className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
                 onClick={() => handlePeriodChange(p)}
               >
-                {p === 'week' ? '7 jours' : formatPeriod(p)}
+                {p === 'week' ? 'Semaine' : formatPeriod(p)}
               </button>
             ))}
           </div>

@@ -106,9 +106,18 @@ function monthsBetween(fromMs, toMs) {
   return months.reverse() // plus récent en premier
 }
 
-/** XP de la semaine glissante (7 derniers jours). */
-async function computeWeekXp(pool, userId) {
-  return computeXp(pool, userId, Date.now() - 7 * 24 * 60 * 60 * 1000, Date.now())
+/** Bornes UTC de la semaine ISO en cours (lundi 00:00 → dimanche 23:59:59). */
+function currentWeekBounds() {
+  const now = new Date()
+  const day = now.getUTCDay()                // 0=dim, 1=lun … 6=sam
+  const daysFromMonday = (day + 6) % 7       // lun=0 … dim=6
+  const monday = new Date(now)
+  monday.setUTCDate(now.getUTCDate() - daysFromMonday)
+  monday.setUTCHours(0, 0, 0, 0)
+  const sunday = new Date(monday)
+  sunday.setUTCDate(monday.getUTCDate() + 6)
+  sunday.setUTCHours(23, 59, 59, 999)
+  return { start: monday.getTime(), end: sunday.getTime() }
 }
 
 export function registerGroupRoutes(app, pool, requireUser) {
@@ -267,8 +276,9 @@ export function registerGroupRoutes(app, pool, requireUser) {
       // Plage de temps
       let sinceMs, untilMs
       if (period === 'week') {
-        sinceMs = Date.now() - 7 * 24 * 60 * 60 * 1000
-        untilMs = Date.now()
+        const wb = currentWeekBounds()
+        sinceMs = wb.start
+        untilMs = wb.end
       } else {
         const now = new Date()
         const p = period ?? `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
