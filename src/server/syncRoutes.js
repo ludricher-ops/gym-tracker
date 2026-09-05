@@ -103,6 +103,9 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       { id: 'bw-chinup',             name: 'Tractions prise supination',          primaryMuscle: 'biceps',        secondaryMuscles: ['back_width'],                  equipment: 'bodyweight', category: 'compound',  trackingType: 'weight_reps', popularity: 3, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Close-Grip-Chin-Up.gif' },
       { id: 'bw-nordic-curl',        name: 'Nordic curl',                         primaryMuscle: 'hamstrings',    secondaryMuscles: ['glutes'],                      equipment: 'bodyweight', category: 'compound',  trackingType: 'reps_only',   popularity: 2, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Nordic-Hamstring-Curl.gif' },
       { id: 'bw-calf-raise',         name: 'Mollets poids du corps',              primaryMuscle: 'calves',        secondaryMuscles: [],                              equipment: 'bodyweight', category: 'isolation', trackingType: 'reps_only',   popularity: 2 },
+      { id: 'bw-squat',              name: 'Squat poids du corps',                primaryMuscle: 'quads',         secondaryMuscles: ['glutes'],                       equipment: 'bodyweight', category: 'compound',  trackingType: 'reps_only',   popularity: 3 },
+      { id: 'bw-lunge',              name: 'Fentes poids du corps',               primaryMuscle: 'quads',         secondaryMuscles: ['glutes', 'hamstrings'],          equipment: 'bodyweight', category: 'compound',  trackingType: 'reps_only',   popularity: 2 },
+      { id: 'dumbbell-rdl',          name: 'Soulevé de terre jambes tendues haltères', primaryMuscle: 'hamstrings', secondaryMuscles: ['glutes', 'back_thickness'],    equipment: 'dumbbell',   category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
     ]
     const now = Date.now()
     let inserted = 0

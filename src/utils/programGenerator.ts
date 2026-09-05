@@ -94,7 +94,7 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
     { muscles: ['back_thickness', 'back_width', 'back'], compound: false },
     { muscles: ['biceps'],                               compound: false },
     { muscles: ['shoulders_rear'],                       compound: false },
-    { muscles: ['biceps', 'forearms'],                   compound: false },
+    { muscles: ['forearms'],                             compound: false },
   ],
   legs: [
     { muscles: ['quads'],                compound: true  },
@@ -122,12 +122,13 @@ const SLOTS: Record<Exclude<WorkoutType, 'custom'>, Slot[]> = {
     { muscles: ['calves'],               compound: false },
   ],
   fullbody: [
-    { muscles: ['quads', 'glutes'],          compound: true  },
-    { muscles: ['chest', 'chest_upper'],     compound: true  },
-    { muscles: ['back_width', 'back'],       compound: true  },
-    { muscles: ['hamstrings', 'glutes'],     compound: false },
-    { muscles: ['shoulders', 'shoulders_front'], compound: false },
-    { muscles: ['biceps', 'triceps'],        compound: false },
+    { muscles: ['quads', 'glutes'],              compound: true  },
+    { muscles: ['chest', 'chest_upper'],          compound: true  },
+    { muscles: ['back_width', 'back'],            compound: true  },
+    { muscles: ['hamstrings', 'glutes'],          compound: false },
+    { muscles: ['shoulders', 'shoulders_front'],  compound: true  }, // OHP compound, pas isolation
+    { muscles: ['biceps'],                        compound: false },
+    { muscles: ['triceps'],                       compound: false }, // slot indépendant des biceps
   ],
 }
 
@@ -231,6 +232,20 @@ function reorderSlotsByFocus(slots: Slot[], focused: Set<MuscleGroup>): Slot[] {
 
 // ── Sélection d'un exercice pour un slot ──────────────────────────────────────
 
+// Priorité d'équipement pour les slots compound en objectif force.
+// Barbell > Machine/câble > Haltères/KB > Élastique > Poids du corps.
+function strengthEquipmentPrio(eq: Equipment): number {
+  switch (eq) {
+    case 'barbell':    return 0
+    case 'machine':    return 1
+    case 'cable':      return 1
+    case 'dumbbell':   return 2
+    case 'kettlebell': return 2
+    case 'band':       return 3
+    default:           return 4 // bodyweight
+  }
+}
+
 function pickExercise(
   slot: Slot,
   available: Exercise[],
@@ -238,6 +253,7 @@ function pickExercise(
   usedGlobally: Set<string>,
   level: ProgramLevel,
   focused: Set<MuscleGroup>,
+  goal: ProgramGoal,
 ): Exercise | null {
   // Filtrer par muscle cible
   let candidates = available.filter(
@@ -255,12 +271,17 @@ function pickExercise(
     if (isolationFirst.length > 0) candidates = isolationFirst
   }
 
-  // Trier : muscles ciblés d'abord, puis non-utilisé globalement, puis popularité desc
+  // Trier : muscles ciblés d'abord, puis (force+compound) équipement chargé,
+  // puis non-utilisé globalement, puis popularité desc.
   candidates.sort((a, b) => {
     if (focused.size > 0) {
       const aF = focused.has(a.primaryMuscle) ? 0 : 1
       const bF = focused.has(b.primaryMuscle) ? 0 : 1
       if (aF !== bF) return aF - bF
+    }
+    if (goal === 'strength' && slot.compound) {
+      const eqDiff = strengthEquipmentPrio(a.equipment) - strengthEquipmentPrio(b.equipment)
+      if (eqDiff !== 0) return eqDiff
     }
     const aUsed = usedGlobally.has(a.id) ? 1 : 0
     const bUsed = usedGlobally.has(b.id) ? 1 : 0
@@ -310,10 +331,15 @@ export function generateProgramDraft(
     (ex) => !ex.deleted && !ex.isWarmupExercise && allowed.has(ex.equipment),
   )
 
-  // Pools pour échauffement et abdos — indépendants de l'équipement (bodyweight)
-  const warmupPool = exercises.filter((ex) => !ex.deleted && ex.isWarmupExercise)
+  // Pools pour échauffement et abdos — filtrés par équipement disponible ou bodyweight.
+  // Garantit qu'un user poids du corps ne voit pas "Band pull-apart" ou "Crunch poulie".
+  const warmupPool = exercises.filter(
+    (ex) => !ex.deleted && ex.isWarmupExercise &&
+    (allowed.has(ex.equipment) || ex.equipment === 'bodyweight'),
+  )
   const corePool = exercises.filter(
-    (ex) => !ex.deleted && !ex.isWarmupExercise && ex.primaryMuscle === 'core',
+    (ex) => !ex.deleted && !ex.isWarmupExercise && ex.primaryMuscle === 'core' &&
+    (allowed.has(ex.equipment) || ex.equipment === 'bodyweight'),
   )
 
   const split = selectSplit(params)
@@ -345,7 +371,7 @@ export function generateProgramDraft(
 
     for (const slot of slots) {
       const spec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
-      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level, focusedMuscles)
+      const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level, focusedMuscles, goal)
       if (!ex) continue
 
       usedInWorkout.add(ex.id)
