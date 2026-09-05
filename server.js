@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { registerSyncRoutes } from './src/server/syncRoutes.js'
+import { registerGroupRoutes } from './src/server/groupRoutes.js'
 
 const { Pool } = pg
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -72,6 +73,26 @@ if (process.env.DATABASE_URL) {
   await pool.query(
     `CREATE INDEX IF NOT EXISTS idx_sync_seq ON sync_records (user_id, server_seq)`,
   )
+
+  // Tables mode compétition
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS groups (
+      id         SERIAL PRIMARY KEY,
+      code       VARCHAR(8) UNIQUE NOT NULL,
+      name       TEXT NOT NULL,
+      created_by INTEGER REFERENCES users(id),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS group_members (
+      group_id     INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      display_name TEXT NOT NULL,
+      joined_at    TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (group_id, user_id)
+    )
+  `)
 
   // Crée le compte initial si INITIAL_USER_EMAIL + INITIAL_USER_PASSWORD sont définis
   // (Railway : à n'utiliser qu'au premier déploiement, puis supprimer les variables)
@@ -235,6 +256,7 @@ app.post('/auth/logout', (_req, res) => {
 // ── Sync (protégé) ────────────────────────────────────────────────────────────
 
 registerSyncRoutes(app, pool, extractUser, requireUser)
+registerGroupRoutes(app, pool, requireUser)
 
 // ── Bundle React + SPA ────────────────────────────────────────────────────────
 

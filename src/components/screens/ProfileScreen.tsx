@@ -103,6 +103,16 @@ export function ProfileScreen() {
           onClick={() => nav.navigate('body')}
         />
 
+        {/* ── Compétition ──────────────────────────────────────────────── */}
+        <p className="t-eyebrow">Compétition</p>
+        <Row
+          icon="trophy"
+          label="Mode Compétition"
+          sub="Classement XP avec vos amis"
+          chevron
+          onClick={() => nav.navigate('group')}
+        />
+
         {/* ── Réglages ─────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Réglages</p>
         <Row
