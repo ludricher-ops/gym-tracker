@@ -326,4 +326,73 @@ export function registerGroupRoutes(app, pool, requireUser) {
       res.status(500).json({ error: 'Erreur serveur' })
     }
   })
+
+  // ── Migration one-time : recalcul PR après correctif "première série ≠ PR" ──
+  // POST /api/admin/fix-first-pr  — utilisateur authentifié requis.
+  // 1. Trouve la 1re série complète par (user_id, exercice).
+  // 2. isPersonalRecord → false sur ces séries.
+  // 3. Tombstone (deleted=true) les personalRecords liés → propagés au client via pull.
+  app.post('/api/admin/fix-first-pr', requireUser, async (req, res) => {
+    if (!pool) return res.status(503).json({ error: 'DB indisponible' })
+    const now = Date.now()
+    try {
+      // Trouver les premières séries par (user_id, exercice)
+      const { rows: firstSets } = await pool.query(`
+        WITH ses AS (
+          SELECT user_id, id AS se_id, data->>'exerciseId' AS exercise_id
+          FROM sync_records
+          WHERE store = 'session_exercises'
+            AND (data->>'deleted')::boolean IS NOT TRUE
+        ),
+        ordered AS (
+          SELECT
+            s.user_id,
+            s.id AS set_id,
+            ROW_NUMBER() OVER (
+              PARTITION BY s.user_id, ses.exercise_id
+              ORDER BY (s.data->>'completedAt')::bigint
+            ) AS rn
+          FROM sync_records s
+          JOIN ses ON ses.user_id = s.user_id
+                  AND ses.se_id  = s.data->>'sessionExerciseId'
+          WHERE s.store = 'sets'
+            AND (s.data->>'isWarmup')::boolean  IS NOT TRUE
+            AND (s.data->>'deleted')::boolean   IS NOT TRUE
+            AND s.data->>'completedAt'          IS NOT NULL
+        )
+        SELECT set_id FROM ordered WHERE rn = 1
+      `)
+
+      const setIds = firstSets.map(r => r.set_id)
+      if (setIds.length === 0) return res.json({ fixedSets: 0, fixedPRs: 0, firstSets: 0 })
+
+      // Corriger isPersonalRecord sur ces séries
+      const { rowCount: fixedSets } = await pool.query(
+        `UPDATE sync_records
+         SET data      = jsonb_set(data, '{isPersonalRecord}', 'false'),
+             updated_at = $1
+         WHERE store = 'sets'
+           AND id = ANY($2)
+           AND (data->>'isPersonalRecord')::boolean = true`,
+        [now, setIds],
+      )
+
+      // Tombstone les personalRecords liés (setId → propagé au client par pull)
+      const { rowCount: fixedPRs } = await pool.query(
+        `UPDATE sync_records
+         SET data      = data || '{"deleted":true}'::jsonb,
+             updated_at = $1
+         WHERE store = 'personalRecords'
+           AND data->>'setId' = ANY($2)
+           AND (data->>'deleted')::boolean IS NOT TRUE`,
+        [now, setIds],
+      )
+
+      console.log(`[fix-first-pr] firstSets=${setIds.length} fixedSets=${fixedSets} fixedPRs=${fixedPRs}`)
+      res.json({ firstSets: setIds.length, fixedSets, fixedPRs })
+    } catch (err) {
+      console.error('fix-first-pr:', err.message)
+      res.status(500).json({ error: err.message })
+    }
+  })
 }
