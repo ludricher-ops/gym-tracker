@@ -14,7 +14,7 @@ import { ExercisePicker } from './ExercisePicker'
 import { ExerciseConfigSheet } from './ExerciseConfigSheet'
 import {
   WEEKDAYS, WEEKDAY_LABEL, PROGRAM_COLORS, defaultWE, draftStats,
-  type DraftProgram, type DraftWorkout, type DraftWE,
+  type DraftPhase, type DraftProgram, type DraftWorkout, type DraftWE,
 } from './programDraft'
 
 const WORKOUT_TYPES: WorkoutType[] = [
@@ -555,6 +555,52 @@ export function StepReview({
             <ReviewMetric value={stats.totalExercises} label="exercices" />
           </div>
         </Card>
+
+        {/* Périodisation — affiché uniquement si phases calculées */}
+        {draft.phases && draft.phases.length > 0 && (
+          <div>
+            <p className="t-eyebrow" style={{ marginBottom: 8 }}>Périodisation</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {draft.phases.map((phase: DraftPhase) => {
+                const focusColors: Record<DraftPhase['focus'], string> = {
+                  adaptation:     'var(--accent)',
+                  progression:    '#5b9dff',
+                  intensification: '#ff8a3d',
+                  deload:         'var(--fg-muted)',
+                }
+                const col = focusColors[phase.focus]
+                const pct = Math.round(((phase.weekEnd - phase.weekStart + 1) / draft.durationWeeks) * 100)
+                return (
+                  <div key={phase.focus} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                      background: col,
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--fs-caption)', color: col }}>
+                          {phase.name}
+                        </span>
+                        <span className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+                          S.{phase.weekStart}–{phase.weekEnd}
+                        </span>
+                      </div>
+                      <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 1 }}>
+                        {phase.description}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0, width: 36, height: 4, borderRadius: 2,
+                      background: 'var(--surface2)', overflow: 'hidden',
+                    }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: col, borderRadius: 2 }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Rythme hebdomadaire avec type de séance */}
         <div>
