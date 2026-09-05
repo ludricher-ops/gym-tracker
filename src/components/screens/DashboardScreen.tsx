@@ -10,7 +10,23 @@ import { localDayKey, startOfLocalDay } from '../../utils/dates'
 import { formatDuration } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
+import { buildPhases } from '../../utils/programGenerator'
+import type { DraftPhase } from '../programBuilder/programDraft'
 import { Button, Card, Icon, Row, SectionHeader, StatTile } from '../ui'
+
+// Couleurs et labels des phases de périodisation
+const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
+  adaptation:      'var(--accent)',
+  progression:     '#5b9dff',
+  intensification: '#ff8a3d',
+  deload:          'var(--fg-muted)',
+}
+const PHASE_EMOJI: Record<DraftPhase['focus'], string> = {
+  adaptation:      '🌱',
+  progression:     '📈',
+  intensification: '🔥',
+  deload:          '🔄',
+}
 
 const WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
@@ -71,6 +87,25 @@ export function DashboardScreen() {
     () => computeStreak(endedSessions.map((s) => localDayKey(s.startedAt))),
     [endedSessions],
   )
+
+  // ── Phase de périodisation courante ─────────────────────────────────
+  const programPhases = useMemo(
+    () => (activeProgram ? buildPhases(activeProgram.durationWeeks) : undefined),
+    [activeProgram],
+  )
+
+  /** Numéro de semaine actuel dans le programme (1-based). null si pas de startedAt. */
+  const currentWeekNumber = useMemo(() => {
+    if (!activeProgram?.startedAt) return null
+    return Math.max(1, Math.ceil((Date.now() - activeProgram.startedAt) / (7 * 24 * 60 * 60 * 1000)))
+  }, [activeProgram?.startedAt])
+
+  const currentPhase = useMemo((): DraftPhase | null => {
+    if (!currentWeekNumber || !programPhases) return null
+    return programPhases.find(
+      (p) => p.weekStart <= currentWeekNumber && currentWeekNumber <= p.weekEnd,
+    ) ?? null
+  }, [currentWeekNumber, programPhases])
 
   // ── Progression du programme ─────────────────────────────────────────
   const ignoredBefore = activeProgram?.catchupIgnoredBefore ?? 0
@@ -228,8 +263,18 @@ export function DashboardScreen() {
         {/* ── Séance du jour planifiée ────────────────────────────────── */}
         {!resumable && activeProgram && card.type === 'scheduled' && card.todaySession && (
           <Card variant="accent">
-            <p className="t-eyebrow" style={{ opacity: 0.8 }}>
-              {card.todaySession.label} · {activeProgram.name}
+            <p className="t-eyebrow" style={{ opacity: 0.8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span>{card.todaySession.label} · {activeProgram.name}</span>
+              {currentPhase && (
+                <span style={{
+                  background: 'color-mix(in oklch, var(--accent-ink) 15%, transparent)',
+                  color: 'var(--accent-ink)',
+                  borderRadius: 4, padding: '1px 6px',
+                  fontWeight: 700, fontSize: 10, letterSpacing: '0.04em',
+                }}>
+                  {PHASE_EMOJI[currentPhase.focus]} {currentPhase.name.toUpperCase()}
+                </span>
+              )}
             </p>
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
               {card.todaySession.workoutName}
@@ -493,18 +538,40 @@ export function DashboardScreen() {
         {/* ── Avancement du programme — groupé par semaine ─────────────── */}
         {activeProgram && schedule.length > 0 && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <SectionHeader label="Avancement" />
-              <span className="t-num" style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)' }}>
-                {progressDoneCount} / {schedule.length}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {currentPhase && (
+                  <span style={{
+                    fontSize: 'var(--fs-caption)', fontWeight: 700,
+                    color: PHASE_COLORS[currentPhase.focus],
+                  }}>
+                    {PHASE_EMOJI[currentPhase.focus]} {currentPhase.name}
+                  </span>
+                )}
+                <span className="t-num" style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)' }}>
+                  {progressDoneCount} / {schedule.length}
+                </span>
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {progressByWeek.map(([weekKey, cells]) => (
+              {progressByWeek.map(([weekKey, cells]) => {
+                const weekNum = parseInt(weekKey.replace('S', ''), 10)
+                const weekPhase = programPhases?.find(
+                  (p) => p.weekStart <= weekNum && weekNum <= p.weekEnd,
+                )
+                const isCurrentWeek = weekNum === currentWeekNumber
+                const weekColor = weekPhase ? PHASE_COLORS[weekPhase.focus] : 'var(--fg-muted)'
+                return (
                 <div key={weekKey} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span
                     className="t-eyebrow"
-                    style={{ color: 'var(--muted)', fontWeight: 700, minWidth: 24, flexShrink: 0 }}
+                    style={{
+                      color: isCurrentWeek ? weekColor : 'var(--fg-muted)',
+                      fontWeight: isCurrentWeek ? 800 : 700,
+                      minWidth: 24, flexShrink: 0,
+                      opacity: isCurrentWeek ? 1 : 0.6,
+                    }}
                   >
                     {weekKey}
                   </span>
@@ -549,7 +616,7 @@ export function DashboardScreen() {
                     })}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
             {selectedCell && (() => {
               const completedSession = selectedCell.done

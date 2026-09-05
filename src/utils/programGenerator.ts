@@ -368,7 +368,7 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
 // 10-11 sem    : Adaptation 3 + Progression 4 + Intensification 2 + Décharge 1-2
 // 12+ sem      : Adaptation 4 + Progression (reste) + Intensification 3 + Décharge 1
 
-function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
+export function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
   if (totalWeeks < 8) return undefined
 
   const deload = 1
