@@ -328,17 +328,49 @@ export function GroupScreen() {
     }
   }
 
-  const topBar = (
+  // Bandeau simple (loading + noGroup)
+  const topBarSimple = (
     <div className="gt-topbar">
       <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
         <Icon name="arrow" size={22} strokeWidth={1.8} />
       </button>
-      <h1 className="gt-topbar__title">{group?.name ?? 'Rivals'}</h1>
-      {view === 'leaderboard' && (
-        <button className="gt-iconbtn" onClick={handleLeave} aria-label="Quitter">
-          <Icon name="logout" size={20} strokeWidth={1.8} />
-        </button>
-      )}
+      <h1 className="gt-topbar__title">Rivals</h1>
+    </div>
+  )
+
+  // Bandeau style Dashboard (classement)
+  const topBarLeaderboard = (
+    <div className="gt-topbar">
+      <div style={{ flex: 1 }}>
+        <div className="t-eyebrow">RIVALS</div>
+        <h1 className="gt-topbar__title" style={{ fontSize: 'var(--fs-title)' }}>
+          {group?.name}
+        </h1>
+      </div>
+      {/* Chip code d'invitation — même style que le chip streak du Dashboard */}
+      <button
+        onClick={copyCode}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--gap-tile)',
+          background: 'var(--surface)', borderRadius: 'var(--radius-card)',
+          padding: 'var(--gap-tile)', border: 'none', cursor: 'pointer',
+          color: copied ? 'var(--accent)' : 'var(--fg)',
+        }}
+        title="Copier le code d'invitation"
+      >
+        <div style={{ color: 'var(--accent)', display: 'flex' }}>
+          <Icon name={copied ? 'check' : 'copy'} size={20} />
+        </div>
+        <div>
+          <div
+            className="t-num gt-stat__label"
+            style={{ lineHeight: 1, fontFamily: 'var(--font-mono)', letterSpacing: 2 }}
+          >
+            {group?.code}
+          </div>
+          <div className="gt-stat__label">{copied ? 'COPIÉ !' : 'INVITER'}</div>
+        </div>
+      </button>
     </div>
   )
 
@@ -346,7 +378,7 @@ export function GroupScreen() {
   if (view === 'loading') {
     return (
       <div className="gt-screen">
-        {topBar}
+        {topBarSimple}
         <div className="gt-screen__scroll" style={{ alignItems: 'center', paddingTop: 48 }}>
           <p className="t-caption">Chargement…</p>
         </div>
@@ -358,7 +390,7 @@ export function GroupScreen() {
   if (view === 'noGroup') {
     return (
       <div className="gt-screen">
-        {topBar}
+        {topBarSimple}
         <div className="gt-screen__scroll">
           {!mode && (
             <>
@@ -504,36 +536,11 @@ export function GroupScreen() {
 
   return (
     <div className="gt-screen">
-      {topBar}
+      {topBarLeaderboard}
       <div className="gt-screen__scroll">
         {error && (
           <p className="t-caption" style={{ color: 'var(--danger)', marginBottom: 8 }}>{error}</p>
         )}
-
-        {/* Code d'invitation */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-          <Card style={{ flex: 1, padding: '10px 14px' }}>
-            <div className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 2 }}>
-              Code d'invitation
-            </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, letterSpacing: 4 }}>
-              {group?.code}
-            </div>
-          </Card>
-          <button
-            onClick={copyCode}
-            style={{
-              padding: '0 16px', borderRadius: 'var(--radius-card)',
-              border: '1px solid var(--border)', background: 'var(--surface)',
-              color: copied ? 'var(--accent)' : 'var(--fg-muted)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-caption)',
-              fontWeight: 600, flexShrink: 0,
-            }}
-          >
-            <Icon name={copied ? 'check' : 'copy'} size={18} />
-            {copied ? 'Copié' : 'Copier'}
-          </button>
-        </div>
 
         {/* Mon niveau */}
         {myEntry && (
@@ -592,8 +599,8 @@ export function GroupScreen() {
           ))}
         </div>
 
-        {/* Rejoindre un autre groupe */}
-        <div style={{ marginTop: 8 }}>
+        {/* Actions secondaires */}
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             onClick={() => { setView('noGroup'); setMode('join'); setDisplayName('') }}
             style={{
@@ -606,6 +613,19 @@ export function GroupScreen() {
           >
             <Icon name="link" size={18} />
             Rejoindre un autre groupe
+          </button>
+          <button
+            onClick={handleLeave}
+            style={{
+              width: '100%', padding: '12px 14px',
+              borderRadius: 'var(--radius-card)', border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--danger)',
+              fontSize: 'var(--fs-body)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <Icon name="logout" size={18} />
+            Quitter le groupe
           </button>
         </div>
 
