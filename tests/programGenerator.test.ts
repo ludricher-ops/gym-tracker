@@ -6,7 +6,7 @@
  * sans mock de Math.random.
  */
 import { describe, it, expect } from 'vitest'
-import { generateProgramDraft } from '../src/utils/programGenerator'
+import { generateProgramDraft, adjustedSpec } from '../src/utils/programGenerator'
 import type { Exercise } from '../src/types'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -372,6 +372,56 @@ describe('adjustedSlotCount — durée de séance', () => {
     // SLOTS.fullbody a exactement 8 entrées → même résultat qu'à 60 min
     const ids = firstWorkoutIds({ ...base, sessionDuration: 90 })
     expect(ids).toHaveLength(10)
+  })
+})
+
+// ── Ajustement de séries selon la durée ──────────────────────────────────────
+
+describe('adjustedSpec — sets selon sessionDuration', () => {
+  const compound4 = { sets: 4, repsMin: 8, repsMax: 12, restSec: 90, range: true as const }
+  const compound5 = { sets: 5, repsMin: 3, repsMax: 5,  restSec: 180, range: true as const }
+  const compound3 = { sets: 3, repsMin: 15, repsMax: 20, restSec: 60, range: true as const }
+
+  it('60 min → inchangé', () => {
+    expect(adjustedSpec(compound4, 60).sets).toBe(4)
+    expect(adjustedSpec(compound5, 60).sets).toBe(5)
+  })
+
+  it('90 min → inchangé', () => {
+    expect(adjustedSpec(compound4, 90).sets).toBe(4)
+  })
+
+  it('45 min → floor(sets × 0.75), min 2', () => {
+    expect(adjustedSpec(compound4, 45).sets).toBe(3)  // floor(4×0.75)=3
+    expect(adjustedSpec(compound5, 45).sets).toBe(3)  // floor(5×0.75)=3
+    expect(adjustedSpec(compound3, 45).sets).toBe(2)  // floor(3×0.75)=2
+  })
+
+  it('20 min → floor(sets × 0.5), min 2', () => {
+    expect(adjustedSpec(compound4, 20).sets).toBe(2)  // floor(4×0.5)=2
+    expect(adjustedSpec(compound5, 20).sets).toBe(2)  // floor(5×0.5)=2
+    expect(adjustedSpec(compound3, 20).sets).toBe(2)  // floor(3×0.5)=1 → min 2
+  })
+
+  it('repsMin/repsMax/restSec inchangés', () => {
+    const s = adjustedSpec(compound4, 20)
+    expect(s.repsMin).toBe(compound4.repsMin)
+    expect(s.repsMax).toBe(compound4.repsMax)
+    expect(s.restSec).toBe(compound4.restSec)
+  })
+
+  it('20 min hypertrophy fullbody : targetSets = 2 pour tous les exercices principaux', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 20, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    const mainWEs = d.workouts[0]!.exercises.filter((we) => {
+      const ex = POOL.find((e) => e.id === we.exerciseId)
+      return ex && !ex.isWarmupExercise && ex.primaryMuscle !== 'core'
+    })
+    for (const we of mainWEs) {
+      expect(we.targetSets).toBe(2)
+    }
   })
 })
 

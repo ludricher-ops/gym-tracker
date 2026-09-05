@@ -231,6 +231,17 @@ function adjustedSlotCount(base: number, duration: 20 | 45 | 60 | 90): number {
   return base
 }
 
+// ── Ajustement du nombre de séries selon la durée ────────────────────────────
+// Pour les séances courtes, on réduit les séries proportionnellement pour que
+// la durée réelle (travail + repos) corresponde à la durée annoncée.
+// 20 min → ×0.5 (min 2)   45 min → ×0.75 (min 2)   60/90 min → inchangé
+
+export function adjustedSpec(spec: SetSpec, duration: 20 | 45 | 60 | 90): SetSpec {
+  if (duration === 60 || duration === 90) return spec
+  const factor = duration === 20 ? 0.5 : 0.75
+  return { ...spec, sets: Math.max(2, Math.floor(spec.sets * factor)) }
+}
+
 // ── Noms et couleurs de programme ─────────────────────────────────────────────
 
 const PROGRAM_NAMES: Record<ProgramGoal, string> = {
@@ -482,7 +493,8 @@ export function generateProgramDraft(
     const draftExercises: DraftWE[] = []
 
     for (const slot of slots) {
-      const spec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
+      const baseSpec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
+      const spec = adjustedSpec(baseSpec, sessionDuration)
       const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level, focusedMuscles, goal)
       if (!ex) continue
 
