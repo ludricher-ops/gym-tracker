@@ -7,7 +7,7 @@ import { useRestTimer } from '../../../hooks/useRestTimer'
 import { useActiveSession } from '../../../hooks/useActiveSession'
 import { isAnyPR } from '../../../utils/pr'
 import { isValidSet, repsLookSuspicious } from '../../../utils/setValidation'
-import { lastWorkingSet } from '../../../utils/sessionOps'
+import { lastWorkingSet, activePhase } from '../../../utils/sessionOps'
 import { formatClock, formatDuration } from '../../../utils/format'
 import { formatWeight } from '../../../utils/units'
 import { MUSCLE_LABEL } from '../../../utils/labels'
@@ -58,6 +58,19 @@ export function SessionModal({ sessionId }: SessionModalProps) {
 
   const { session, currentSE, currentExercise, currentSets, doneCount, totalCount } = act
   const elapsed = useSessionTimer(session?.startedAt ?? Date.now())
+
+  // Phase de périodisation en cours (null si pas de programme, < 8 sem, ou non démarré)
+  const sessionPhase = useMemo(() => activePhase(store), [store.programs]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const PHASE_COLORS = {
+    adaptation: 'var(--accent)',
+    progression: '#5b9dff',
+    intensification: '#ff8a3d',
+    deload: 'var(--fg-muted)',
+  } as const
+  const PHASE_EMOJI = {
+    adaptation: '🌱', progression: '📈', intensification: '🔥', deload: '🔄',
+  } as const
 
   const restTimer = useRestTimer(() => {
     if (prefs.restSoundEnabled) playBeep()
@@ -269,9 +282,18 @@ export function SessionModal({ sessionId }: SessionModalProps) {
           <Icon name="close" size={22} />
         </button>
 
-        {/* Zone 2 : label "En cours" + chrono */}
+        {/* Zone 2 : phase ou "En cours" + chrono */}
         <div style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
-          <div className="t-eyebrow">En cours</div>
+          {sessionPhase ? (
+            <div
+              className="t-eyebrow"
+              style={{ color: PHASE_COLORS[sessionPhase.focus] }}
+            >
+              {PHASE_EMOJI[sessionPhase.focus]} {sessionPhase.name}
+            </div>
+          ) : (
+            <div className="t-eyebrow">En cours</div>
+          )}
           <div
             className="t-num"
             style={{ fontSize: 'var(--fs-title)' }}

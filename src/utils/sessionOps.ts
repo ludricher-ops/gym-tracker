@@ -13,6 +13,8 @@ import { detectPRs, isAnyPR } from './pr'
 import type { PRResult } from './pr'
 import { daysBetween } from './dates'
 import { generateWarmup } from './warmup'
+import { buildPhases } from './programGenerator'
+import type { DraftPhase } from '../components/programBuilder/programDraft'
 
 const BARBELL_WEIGHT = 20
 /** Reprise proposée si la séance ouverte date de moins de 12 h (cahier 7). */
@@ -63,6 +65,20 @@ function currentProgramWeek(store: StoreApi): { programId?: string; week?: numbe
 }
 
 /**
+ * Phase de périodisation en cours pour le programme actif.
+ * Retourne undefined si pas de programme actif, pas encore démarré, ou < 8 semaines.
+ */
+export function activePhase(store: StoreApi): DraftPhase | undefined {
+  const program = store.programs.find((p) => p.isActive)
+  if (!program?.startedAt) return undefined
+  const phases = buildPhases(program.durationWeeks)
+  if (!phases) return undefined
+  const week = Math.floor(daysBetween(program.startedAt, Date.now()) / 7) + 1
+  const currentWeek = Math.min(Math.max(1, week), program.durationWeeks)
+  return phases.find((p) => currentWeek >= p.weekStart && currentWeek <= p.weekEnd)
+}
+
+/**
  * Démarre une séance depuis un template : crée la Session, les
  * SessionExercises et les séries planifiées (pré-remplies). Renvoie la session.
  */
@@ -81,6 +97,7 @@ export async function startSessionFromTemplate(
     })
 
   const { programId, week } = currentProgramWeek(store)
+  const phase = activePhase(store)
   const sessionId = uuid()
   let totalSets = 0
 
@@ -105,6 +122,16 @@ export async function startSessionFromTemplate(
         ? generateWarmup(target.weightKg)
         : []
 
+    // Modificateurs de phase : appliqués sur les séries de travail uniquement
+    // (pas sur l'échauffement auto, mais bien sur les isAb).
+    const applyPhase = phase && !wet.isWarmup
+    const effectiveSets = applyPhase
+      ? Math.max(1, wet.targetSets + (phase.setsModifier ?? 0))
+      : wet.targetSets
+    const effectiveReps = applyPhase
+      ? Math.max(1, target.reps + (phase.repsOffset ?? 0))
+      : target.reps
+
     let idx = 0
     for (const ws of warmupSets) {
       await store.set.save({
@@ -119,13 +146,13 @@ export async function startSessionFromTemplate(
       })
       totalSets++
     }
-    for (let i = 0; i < wet.targetSets; i++) {
+    for (let i = 0; i < effectiveSets; i++) {
       await store.set.save({
         id: uuid(),
         sessionExerciseId: seId,
         index: idx++,
         weightKg: target.weightKg,
-        reps: target.reps,
+        reps: effectiveReps,
         isWarmup: false,
         isFailure: false,
         isPersonalRecord: false,
