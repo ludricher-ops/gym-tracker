@@ -162,10 +162,10 @@ export function ExerciseConfigSheet({
                     <Stepper
                       value={d.progressStepKg}
                       onChange={(v) => patch({ progressStepKg: v })}
-                      step={1.25}
-                      min={1.25}
+                      step={1}
+                      min={1}
                       max={10}
-                      decimals={2}
+                      decimals={0}
                       unit="kg"
                       ariaLabel="Pas de progression"
                     />
