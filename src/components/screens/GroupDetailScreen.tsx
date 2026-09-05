@@ -302,19 +302,17 @@ export function GroupDetailScreen({ params }: ScreenProps) {
         )}
 
         {/* Sélecteur de période */}
-        <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
-          <div className="gt-chips" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
-            {periodOptions.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
-                onClick={() => handlePeriodChange(p)}
-              >
-                {p === 'week' ? 'Semaine' : formatPeriod(p)}
-              </button>
-            ))}
-          </div>
+        <div className="gt-chips gt-chips--scroll">
+          {periodOptions.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
+              onClick={() => handlePeriodChange(p)}
+            >
+              {p === 'week' ? 'Semaine' : formatPeriod(p)}
+            </button>
+          ))}
         </div>
 
         <p className="t-eyebrow" style={{ marginTop: 0 }}>
