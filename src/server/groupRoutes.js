@@ -252,6 +252,62 @@ export function registerGroupRoutes(app, pool, requireUser) {
     }
   })
 
+  // ── Fil d'activité ────────────────────────────────────────────────────────
+  // GET /api/groups/:code/feed?limit=20
+  // Dernières séances terminées de tous les membres du groupe.
+  app.get('/api/groups/:code/feed', requireUser, async (req, res) => {
+    const code = req.params.code.toUpperCase()
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit ?? '20', 10) || 20))
+    try {
+      // Vérifier que le demandeur est membre
+      const { rows: [group] } = await pool.query(
+        `SELECT g.id FROM groups g
+         JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
+         WHERE g.code = $2`, [req.userId, code],
+      )
+      if (!group) return res.status(403).json({ error: 'Non membre' })
+
+      // Dernières séances terminées de tous les membres, triées par date desc
+      const { rows } = await pool.query(
+        `SELECT
+           gm.display_name,
+           s.user_id,
+           s.data->>'name'         AS name,
+           (s.data->>'startedAt')::bigint AS started_at,
+           (s.data->>'endedAt')::bigint   AS ended_at,
+           (s.data->>'totalVolumeKg')::float AS volume_kg,
+           -- Nombre de séries de travail dans cette séance
+           COALESCE((
+             SELECT COUNT(*)::int FROM sync_records se
+             JOIN sync_records sst
+               ON sst.user_id = s.user_id
+               AND sst.store = 'sets'
+               AND sst.data->>'sessionExerciseId' = se.id
+               AND (sst.data->>'deleted')::boolean IS NOT TRUE
+               AND (sst.data->>'isWarmup')::boolean IS NOT TRUE
+               AND sst.data->>'completedAt' IS NOT NULL
+             WHERE se.user_id = s.user_id
+               AND se.store = 'sessionExercises'
+               AND se.data->>'sessionId' = s.id
+               AND (se.data->>'deleted')::boolean IS NOT TRUE
+           ), 0) AS set_count
+         FROM sync_records s
+         JOIN group_members gm ON gm.user_id = s.user_id AND gm.group_id = $1
+         WHERE s.store = 'sessions'
+           AND s.data->>'endedAt' IS NOT NULL
+           AND (s.data->>'deleted')::boolean IS NOT TRUE
+         ORDER BY (s.data->>'endedAt')::bigint DESC
+         LIMIT $2`,
+        [group.id, limit],
+      )
+
+      res.json({ feed: rows })
+    } catch (err) {
+      console.error('groups/feed:', err.message)
+      res.status(500).json({ error: 'Erreur serveur' })
+    }
+  })
+
   // ── Classement ────────────────────────────────────────────────────────────
   // GET /api/groups/:code/leaderboard?period=YYYY-MM (optionnel, défaut = mois courant)
   // GET /api/groups/:code/leaderboard?period=week (semaine glissante)
