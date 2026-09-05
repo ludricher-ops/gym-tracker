@@ -27,6 +27,7 @@ export type ScreenName =
   | 'group'
   | 'groupDetail'
   | 'rivalsStats'
+  | 'admin'
 
 export interface ScreenEntry {
   name: ScreenName

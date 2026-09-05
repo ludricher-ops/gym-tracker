@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { registerSyncRoutes } from './src/server/syncRoutes.js'
 import { registerGroupRoutes } from './src/server/groupRoutes.js'
+import { registerAdminRoutes } from './src/server/adminRoutes.js'
 
 const { Pool } = pg
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -260,6 +261,7 @@ app.post('/auth/logout', (_req, res) => {
 
 registerSyncRoutes(app, pool, extractUser, requireUser)
 registerGroupRoutes(app, pool, requireUser)
+registerAdminRoutes(app, pool, requireUser)
 
 // ── Bundle React + SPA ────────────────────────────────────────────────────────
 

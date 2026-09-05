@@ -6,11 +6,14 @@ import { localDayKey } from '../../utils/dates'
 import { formatVolume } from '../../utils/format'
 import { Card, Row, StatTile } from '../ui'
 import { isCompetitionEnabled, setCompetitionEnabled } from '../../nav/navigation'
+import { useAuth } from '../../auth/AuthContext'
 
 export function ProfileScreen() {
   const store = useStore()
   const nav = useNavigation()
+  const { user } = useAuth()
   const { settings } = store
+  const isAdmin = user?.id === 1
 
   const ended = useMemo(
     () => store.sessions.filter((s) => s.endedAt != null),
@@ -143,6 +146,20 @@ export function ProfileScreen() {
             </label>
           }
         />
+        {/* ── Admin ────────────────────────────────────────────────────── */}
+        {isAdmin && (
+          <>
+            <p className="t-eyebrow">Administration</p>
+            <Row
+              icon="cog"
+              label="Panneau admin"
+              sub="Utilisateurs, stats globales, migrations"
+              chevron
+              onClick={() => nav.navigate('admin')}
+            />
+          </>
+        )}
+
         {/* ── Réglages ─────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Réglages</p>
         <Row

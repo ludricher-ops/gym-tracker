@@ -2,14 +2,18 @@
 
 // ── Niveaux ──────────────────────────────────────────────────────────────────
 
-/** XP total requis pour atteindre le niveau n. */
+/**
+ * XP total requis pour atteindre le niveau n.
+ * Coefficient 1000 (au lieu de 100) : une séance typique ≈ 1 500-2 000 XP,
+ * niveau 6 = 15 000 XP ≈ 8-10 séances, niveau 26 (Élite) ≈ 190 séances.
+ */
 export function xpForLevel(n: number): number {
-  return Math.round(100 * n * (n - 1) / 2)
+  return Math.round(1000 * n * (n - 1) / 2)
 }
 
 /** Niveau correspondant à un total d'XP. */
 export function levelFromXp(totalXp: number): number {
-  return Math.max(1, Math.floor((1 + Math.sqrt(1 + 8 * totalXp / 100)) / 2))
+  return Math.max(1, Math.floor((1 + Math.sqrt(1 + 8 * totalXp / 1000)) / 2))
 }
 
 /** Progression vers le niveau suivant. */
