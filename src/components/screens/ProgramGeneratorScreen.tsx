@@ -153,10 +153,29 @@ const FOCUS_OPTIONS: FocusOption[] = [
   { value: 'core',      emoji: '⭕',  label: 'Core',         sub: 'Abdominaux, gainage'               },
 ]
 
+// ── Durée du programme (périodisation) ────────────────────────────────────────
+
+interface ProgramWeeksOption {
+  value: number | null
+  label: string
+  sub: string
+}
+
+function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
+  const defaultWeeks = level === 'beginner' ? 8 : level === 'intermediate' ? 12 : 16
+  return [
+    { value: null,  label: '📅 Standard',    sub: `${defaultWeeks} sem. selon ton niveau` },
+    { value: 8,     label: '8 semaines',      sub: 'Bloc court — idéal pour tester' },
+    { value: 10,    label: '10 semaines',     sub: 'Adaptation + Progression + Intensification' },
+    { value: 12,    label: '12 semaines',     sub: 'Le classique 3 mois — équilibré' },
+    { value: 16,    label: '16 semaines',     sub: 'Programme long — gains durables' },
+  ]
+}
+
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Lieu  5: Équipement  6: Niveau  7: Muscles
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Muscles']
-const TOTAL = 8
+// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Lieu  5: Équipement  6: Niveau  7: Programme  8: Muscles
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme', 'Muscles']
+const TOTAL = 9
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -173,6 +192,7 @@ export function ProgramGeneratorScreen() {
   const [equipment, setEquipment]               = useState<Equipment[]>([])
   const [level, setLevel]                       = useState<ProgramLevel | null>(null)
   const [focusMuscles, setFocusMuscles]         = useState<FocusMuscle[]>([])
+  const [programWeeks, setProgramWeeks]         = useState<number | null>(null)
   const [advancing, setAdvancing]               = useState(false)
 
   function advance() {
@@ -201,6 +221,7 @@ export function ProgramGeneratorScreen() {
       goal, daysPerWeek: days, sessionDuration: duration,
       equipment, level, selectedDays: orderedDays,
       focusMuscles: focusMuscles.length > 0 ? focusMuscles : undefined,
+      totalWeeks: programWeeks ?? undefined,
     }
     const draft = generateProgramDraft(params, store.exercises)
     setPendingDraft(draft)
@@ -257,6 +278,7 @@ export function ProgramGeneratorScreen() {
     if (stepIndex === 6) {
       return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
     }
+    if (stepIndex === 7) return renderProgramWeeksPicker()
     return renderMusclePicker()
   }
 
@@ -441,6 +463,80 @@ export function ProgramGeneratorScreen() {
             ? `Continuer avec ${equipment.length} équipement${equipment.length > 1 ? 's' : ''}`
             : 'Sélectionne au moins un équipement'}
         </button>
+      </div>
+    )
+  }
+
+  // ── Sélecteur de durée de programme ──────────────────────────────────────
+
+  function renderProgramWeeksPicker() {
+    const options = programWeeksOptions(level)
+
+    // Étiquette de la phase de périodisation pour informer l'utilisateur
+    function phaseLabel(weeks: number): string {
+      if (weeks < 8) return ''
+      const d = 1
+      const i = weeks <= 9 ? 2 : 3
+      const a = weeks <= 9 ? 3 : 4
+      const p = Math.max(1, weeks - d - i - a)
+      return `${a} sem. adaptation · ${p} sem. progression · ${i} sem. intensification · ${d} sem. décharge`
+    }
+
+    return (
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
+          Sur combien de semaines ?
+        </p>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 20 }}>
+          Un programme plus long permet une périodisation par blocs — chaque phase adapte le volume et l'intensité.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+          {options.map((opt) => {
+            const active = programWeeks === opt.value
+            const phaseInfo = opt.value !== null ? phaseLabel(opt.value) : null
+            return (
+              <button
+                key={String(opt.value)}
+                onClick={() => { setProgramWeeks(opt.value); advance() }}
+                disabled={advancing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 14,
+                  padding: '14px 16px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: 'var(--fg)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.12s, background 0.12s',
+                  width: '100%',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+                    {opt.sub}
+                  </div>
+                  {phaseInfo && (
+                    <div className="t-caption" style={{ color: 'var(--accent)', marginTop: 4, opacity: 0.85 }}>
+                      {phaseInfo}
+                    </div>
+                  )}
+                </div>
+                {active && (
+                  <div style={{ color: 'var(--accent)', flexShrink: 0, paddingTop: 2 }}>
+                    <Icon name="check" size={20} strokeWidth={2.5} />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
     )
   }

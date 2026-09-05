@@ -7,7 +7,7 @@ import type {
   Equipment, Exercise, MuscleGroup,
   ProgramGoal, ProgramLevel, Weekday, WorkoutType,
 } from '../types'
-import type { DraftProgram, DraftWE, DraftWorkout } from '../components/programBuilder/programDraft'
+import type { DraftPhase, DraftProgram, DraftWE, DraftWorkout } from '../components/programBuilder/programDraft'
 import { PROGRAM_COLORS } from '../components/programBuilder/programDraft'
 import { uuid } from './uuid'
 
@@ -37,6 +37,11 @@ export interface GeneratorParams {
   selectedDays?: Weekday[]
   /** Muscles prioritaires (optionnel — vide = pas de préférence). */
   focusMuscles?: FocusMuscle[]
+  /**
+   * Durée totale du programme en semaines — override de DURATION_WEEKS[level].
+   * Active la périodisation par blocs si ≥ 8 semaines.
+   */
+  totalWeeks?: number
 }
 
 // ── Paramètres de séries/répétitions par objectif ────────────────────────────
@@ -357,13 +362,75 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
   }
 }
 
+// ── Périodisation par blocs ───────────────────────────────────────────────────
+// Moins de 8 semaines → pas de périodisation (trop court pour 4 phases).
+// 8-9 semaines : Adaptation 3 + Progression 3 + Intensification 2 + Décharge 1
+// 10-11 sem    : Adaptation 3 + Progression 4 + Intensification 2 + Décharge 1-2
+// 12+ sem      : Adaptation 4 + Progression (reste) + Intensification 3 + Décharge 1
+
+function buildPhases(totalWeeks: number): DraftPhase[] | undefined {
+  if (totalWeeks < 8) return undefined
+
+  const deload = 1
+  const intensive = totalWeeks <= 9 ? 2 : 3
+  const adapt = totalWeeks <= 9 ? 3 : 4
+  const progress = Math.max(1, totalWeeks - deload - intensive - adapt)
+
+  let w = 1
+  const phases: DraftPhase[] = []
+
+  phases.push({
+    name: 'Adaptation',
+    focus: 'adaptation',
+    weekStart: w,
+    weekEnd: w + adapt - 1,
+    description: 'Maîtrise des mouvements, charges légères, volume modéré',
+    setsModifier: -1,
+    repsOffset: +3,
+  })
+  w += adapt
+
+  phases.push({
+    name: 'Progression',
+    focus: 'progression',
+    weekStart: w,
+    weekEnd: w + progress - 1,
+    description: 'Montée en charge régulière, volume standard',
+  })
+  w += progress
+
+  phases.push({
+    name: 'Intensification',
+    focus: 'intensification',
+    weekStart: w,
+    weekEnd: w + intensive - 1,
+    description: 'Charges maximales, volume réduit',
+    setsModifier: 0,
+    repsOffset: -3,
+  })
+  w += intensive
+
+  phases.push({
+    name: 'Décharge',
+    focus: 'deload',
+    weekStart: w,
+    weekEnd: totalWeeks,
+    description: 'Récupération active, 50 % du volume habituel',
+    setsModifier: -2,
+    repsOffset: +4,
+  })
+
+  return phases
+}
+
 // ── Fonction principale ───────────────────────────────────────────────────────
 
 export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks } = params
+  const durationWeeks = totalWeeks ?? DURATION_WEEKS[level]!
 
   // Construire le Set<MuscleGroup> des muscles ciblés une seule fois
   const focusedMuscles = new Set<MuscleGroup>(
@@ -468,10 +535,11 @@ export function generateProgramDraft(
     name: `${PROGRAM_NAMES[goal]!} · ${LEVEL_SUFFIX[level]}`,
     goal,
     level,
-    durationWeeks: DURATION_WEEKS[level]!,
+    durationWeeks,
     sessionsPerWeek: daysPerWeek,
     color: PROGRAM_COLORS[GOAL_COLOR_INDEX[goal]!] ?? PROGRAM_COLORS[0]!,
     workouts,
     week,
+    phases: buildPhases(durationWeeks),
   }
 }

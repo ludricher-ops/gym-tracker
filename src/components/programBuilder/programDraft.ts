@@ -34,6 +34,19 @@ export interface DraftWorkout {
   exercises: DraftWE[]
 }
 
+/** Phase de périodisation dans un DraftProgram (métadonnées, non persistées dans Program). */
+export interface DraftPhase {
+  name: string
+  focus: 'adaptation' | 'progression' | 'intensification' | 'deload'
+  weekStart: number
+  weekEnd: number
+  description: string
+  /** Modificateur relatif sur les séries (ex: -1 pour allégement) */
+  setsModifier?: number
+  /** Décalage sur les répétitions mini/maxi (ex: +3 pour adaptation → reps plus hautes) */
+  repsOffset?: number
+}
+
 export interface DraftProgram {
   name: string
   goal: ProgramGoal
@@ -44,6 +57,8 @@ export interface DraftProgram {
   workouts: DraftWorkout[]
   /** jour de semaine → localId de la séance assignée. */
   week: Partial<Record<Weekday, string>>
+  /** Phases de périodisation calculées (affichage uniquement, non persistées). */
+  phases?: DraftPhase[]
 }
 
 /** Palette de couleurs de programme (cahier 6.12, étape 1). */
