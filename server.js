@@ -17,7 +17,7 @@ const COOKIE_NAME = 'gt_session'
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: IS_PROD,
-  sameSite: 'strict',
+  sameSite: 'lax',
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 jours
   path: '/',
 }

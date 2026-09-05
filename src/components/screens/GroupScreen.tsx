@@ -22,9 +22,15 @@ interface GroupInfo {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function apiFetch(path: string, opts?: RequestInit) {
-  const res = await fetch(path, { credentials: 'include', ...opts })
+  let res: Response
+  try {
+    res = await fetch(path, { credentials: 'include', ...opts })
+  } catch (e) {
+    // fetch() lui-même a échoué (pas de réseau, SW, iOS "Load failed"…)
+    throw new Error(`Réseau inaccessible — réessaie dans quelques secondes.`)
+  }
   const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error((json as { error?: string }).error ?? 'Erreur réseau')
+  if (!res.ok) throw new Error((json as { error?: string }).error ?? `Erreur ${res.status}`)
   return json
 }
 
