@@ -129,6 +129,28 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     if (inserted > 0)
       console.log(`[startup] ${inserted} nouvel(aux) exercice(s) ajouté(s) au compte admin`)
 
+    // Patch popularités & données correctives (analyse coach oct. 2026).
+    // DO UPDATE ciblé uniquement si les données sont encore dans leur état d'origine.
+    const POPULARITY_PATCHES = [
+      { id: 'seed-bench-barbell',        data: { popularity: 8 } },
+      { id: 'seed-squat-barbell',        data: { popularity: 8 } },
+      { id: 'seed-row-barbell',          data: { popularity: 7 } },
+      { id: 'seed-hip-thrust',           data: { popularity: 4 } },
+      { id: 'seed-incline-bench-barbell',data: { popularity: 4 } },
+      { id: 'bw-wall-sit',               data: { popularity: 0 } },
+      { id: 'seed-elliptical',           data: { isWarmupExercise: false } },
+      { id: 'seed-bodyweight-squat',     data: { name: 'Squat mobilité' } },
+    ]
+    for (const p of POPULARITY_PATCHES) {
+      await pool.query(
+        `UPDATE sync_records
+            SET data = data || $1::jsonb,
+                updated_at = $2
+          WHERE user_id = $3 AND store = 'exercises' AND id = $4`,
+        [JSON.stringify(p.data), now, ADMIN_USER_ID, p.id],
+      )
+    }
+
     // Patch seed-hip-adduction-machine : primaryMuscle et category manquants dans le seed initial.
     // DO UPDATE ciblé → updated_at = now pour passer le LWW lors de la propagation.
     await pool.query(

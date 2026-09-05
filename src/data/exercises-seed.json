@@ -473,7 +473,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
+    "popularity": 8,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif",
       "mime": "image/gif",
@@ -580,7 +580,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
+    "popularity": 4,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Barbell-Bench-Press.gif",
       "mime": "image/gif",
@@ -801,7 +801,7 @@
     "equipment": "machine",
     "category": "compound",
     "trackingType": "time",
-    "isWarmupExercise": true,
+    "isWarmupExercise": false,
     "popularity": 2,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/10/Elliptical-Machine.gif",
@@ -1204,7 +1204,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
+    "popularity": 4,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif",
       "mime": "image/gif",
@@ -1760,7 +1760,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
+    "popularity": 7,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bent-Over-Row.gif",
       "mime": "image/gif",
@@ -1956,7 +1956,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
+    "popularity": 8,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
       "mime": "image/gif",
@@ -1989,7 +1989,7 @@
   },
   {
     "id": "seed-bodyweight-squat",
-    "name": "Squat poids du corps",
+    "name": "Squat mobilité",
     "primaryMuscle": "quads",
     "secondaryMuscles": [
       "glutes",
@@ -2167,7 +2167,7 @@
     "category": "isolation",
     "trackingType": "time",
     "isWarmupExercise": false,
-    "popularity": 1,
+    "popularity": 0,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png",
       "mime": "image/png",

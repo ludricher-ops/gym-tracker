@@ -255,9 +255,12 @@ function pickExercise(
   focused: Set<MuscleGroup>,
   goal: ProgramGoal,
 ): Exercise | null {
-  // Filtrer par muscle cible
+  // Filtrer par muscle cible (et exclure les exercices désactivés popularity=0)
   let candidates = available.filter(
-    (ex) => slot.muscles.includes(ex.primaryMuscle) && !usedInWorkout.has(ex.id),
+    (ex) =>
+      slot.muscles.includes(ex.primaryMuscle) &&
+      !usedInWorkout.has(ex.id) &&
+      (ex.popularity ?? 1) > 0,
   )
 
   if (slot.compound) {
