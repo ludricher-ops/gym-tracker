@@ -172,6 +172,8 @@ app.get('/auth/me', extractUser, (req, res) => {
   pool.query('SELECT id, email FROM users WHERE id = $1', [req.userId])
     .then(({ rows }) => {
       if (!rows[0]) return res.status(401).json({ error: 'Utilisateur introuvable' })
+      // Met à jour la date de dernière connexion à chaque ouverture de l'app (fire-and-forget)
+      pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [req.userId]).catch(() => {})
       res.json({ id: rows[0].id, email: rows[0].email })
     })
     .catch((err) => {
