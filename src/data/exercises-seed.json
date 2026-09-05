@@ -1080,7 +1080,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 2,
+    "popularity": 3,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2023/01/Dumbbell-Goblet-Squat.gif",
       "mime": "image/gif",
@@ -2351,7 +2351,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 1,
+    "popularity": 2,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Kettlebell-Chest-Press-on-the-Floor.gif",
       "mime": "image/gif",
@@ -2432,6 +2432,72 @@
     "popularity": 1,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Single-Leg-Calf-Raises.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-clean",
+    "name": "Kettlebell clean",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "back_thickness",
+      "shoulders"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Kettlebell-Clean.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-lunge",
+    "name": "Fentes kettlebell",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-Lunge.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788480000000,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "kb-turkish-getup",
+    "name": "Turkish get-up",
+    "primaryMuscle": "core",
+    "secondaryMuscles": [
+      "shoulders",
+      "back"
+    ],
+    "equipment": "kettlebell",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Turkish-Get-Up.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
