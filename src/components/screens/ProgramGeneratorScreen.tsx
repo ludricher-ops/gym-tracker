@@ -194,6 +194,7 @@ export function ProgramGeneratorScreen() {
   const [focusMuscles, setFocusMuscles]         = useState<FocusMuscle[]>([])
   const [programWeeks, setProgramWeeks]         = useState<number | null>(null)
   const [advancing, setAdvancing]               = useState(false)
+  const [showPeriodTable, setShowPeriodTable]   = useState(false)
 
   function advance() {
     if (stepIndex < TOTAL - 1) {
@@ -260,7 +261,7 @@ export function ProgramGeneratorScreen() {
 
   function renderStep() {
     if (stepIndex === 0) {
-      return renderChips(STEP_GOAL, goal, (v: ProgramGoal) => { setGoal(v); advance() })
+      return renderGoalPicker()
     }
     if (stepIndex === 1) {
       return renderChips(STEP_DAYS, days, (v: 2 | 3 | 4 | 5) => {
@@ -710,6 +711,210 @@ export function ProgramGeneratorScreen() {
                   {d.full}
                 </span>
               ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Sélecteur d'objectif avec accordéon périodisation ────────────────────
+
+  function renderGoalPicker() {
+    // Couleurs de phase (mêmes constantes que ProgramDetailScreen)
+    const PHASE_COLORS = {
+      adaptation:      'var(--accent)',
+      intensification: '#ff8a3d',
+      deload:          'var(--fg-muted)',
+    }
+
+    // Modificateurs par objectif (Progression = base, toujours ±0)
+    const GOAL_PHASES: Record<ProgramGoal, {
+      adaptation: string
+      intensification: string
+      intensLabel: string
+      deload: string
+    }> = {
+      strength:   { adaptation: '−1 série, +3 reps', intensification: '±0 série, −3 reps', intensLabel: 'Charge lourde, reps faibles', deload: '−2 séries, +4 reps' },
+      hypertrophy:{ adaptation: '−1 série, +2 reps', intensification: '+1 série, −2 reps',  intensLabel: 'Volume dense, un peu plus lourd', deload: '−2 séries' },
+      endurance:  { adaptation: '−1 série, −2 reps', intensification: '+1 série, +3 reps',  intensLabel: 'Plus de travail total',  deload: '−2 séries' },
+      fat_loss:   { adaptation: '−1 série',           intensification: '±0 série, +3 reps',  intensLabel: 'Densité max, cardio',     deload: '−1 série' },
+    }
+
+    const PHASE_ROWS: { key: keyof typeof PHASE_COLORS; emoji: string; name: string }[] = [
+      { key: 'adaptation',      emoji: '🌱', name: 'Adaptation' },
+      { key: 'intensification', emoji: '🔥', name: 'Intensification' },
+      { key: 'deload',          emoji: '🔄', name: 'Décharge' },
+    ]
+
+    return (
+      <div style={{ padding: '0 16px' }}>
+        <p className="t-title" style={{ fontWeight: 700, marginBottom: 20 }}>
+          Quel est ton objectif ?
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+          {STEP_GOAL.options.map((opt) => {
+            const active = goal === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { setGoal(opt.value); advance() }}
+                disabled={advancing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '14px 16px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active
+                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+                    : 'var(--surface)',
+                  color: 'var(--fg)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.12s, background 0.12s',
+                  width: '100%',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+                    {opt.sub}
+                  </div>
+                </div>
+                {active && (
+                  <div style={{ color: 'var(--accent)', display: 'flex', flexShrink: 0 }}>
+                    <Icon name="check" size={20} strokeWidth={2.5} />
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Accordéon périodisation */}
+        <button
+          onClick={() => setShowPeriodTable((s) => !s)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '8px 0',
+            background: 'none',
+            border: 'none',
+            color: 'var(--fg-muted)',
+            cursor: 'pointer',
+            fontSize: 'var(--fs-caption)',
+            fontWeight: 600,
+            letterSpacing: '0.01em',
+            width: '100%',
+          }}
+        >
+          <span>📊</span>
+          <span>Comment la périodisation s'adapte à l'objectif</span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.7 }}>
+            {showPeriodTable ? '▲' : '▼'}
+          </span>
+        </button>
+
+        {showPeriodTable && (
+          <div style={{
+            marginTop: 4,
+            borderRadius: 'var(--radius-card)',
+            border: '1.5px solid var(--border)',
+            overflow: 'hidden',
+          }}>
+            {/* En-tête */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '80px 1fr 1fr',
+              gap: 0,
+              background: 'var(--surface)',
+              borderBottom: '1.5px solid var(--border)',
+              padding: '6px 10px',
+            }}>
+              <span className="t-eyebrow" style={{ color: 'var(--fg-muted)' }}>Phase</span>
+              <span className="t-eyebrow" style={{ color: 'var(--fg-muted)' }}>Force / Masse</span>
+              <span className="t-eyebrow" style={{ color: 'var(--fg-muted)' }}>Forme / Bien-être</span>
+            </div>
+
+            {PHASE_ROWS.map((row, i) => (
+              <div
+                key={row.key}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '80px 1fr 1fr',
+                  gap: 0,
+                  padding: '8px 10px',
+                  background: i % 2 === 1
+                    ? 'color-mix(in oklch, var(--border) 30%, var(--surface))'
+                    : 'var(--surface)',
+                  borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+                  alignItems: 'start',
+                }}
+              >
+                {/* Nom phase */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: 12 }}>{row.emoji}</span>
+                  <span
+                    className="t-caption"
+                    style={{ fontWeight: 700, color: PHASE_COLORS[row.key] }}
+                  >
+                    {row.name}
+                  </span>
+                </div>
+
+                {/* Force | Hypertrophy */}
+                <div style={{ paddingRight: 8 }}>
+                  {(['strength', 'hypertrophy'] as const).map((g) => {
+                    const opt = STEP_GOAL.options.find((o) => o.value === g)!
+                    const val = GOAL_PHASES[g][row.key]
+                    return (
+                      <div key={g} style={{ marginBottom: 3 }}>
+                        <span
+                          className="t-eyebrow"
+                          style={{ color: 'var(--fg-muted)', display: 'block' }}
+                        >
+                          {opt.label}
+                        </span>
+                        <span className="t-caption" style={{ color: 'var(--fg)' }}>{val}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Fat loss | Endurance */}
+                <div>
+                  {(['fat_loss', 'endurance'] as const).map((g) => {
+                    const opt = STEP_GOAL.options.find((o) => o.value === g)!
+                    const val = GOAL_PHASES[g][row.key]
+                    return (
+                      <div key={g} style={{ marginBottom: 3 }}>
+                        <span
+                          className="t-eyebrow"
+                          style={{ color: 'var(--fg-muted)', display: 'block' }}
+                        >
+                          {opt.label}
+                        </span>
+                        <span className="t-caption" style={{ color: 'var(--fg)' }}>{val}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Progression = toujours base */}
+            <div style={{
+              padding: '6px 10px',
+              background: 'color-mix(in oklch, var(--accent) 6%, var(--surface))',
+              borderTop: '1px solid var(--border)',
+            }}>
+              <span className="t-caption" style={{ color: 'var(--fg-muted)' }}>
+                📈 <strong>Progression</strong> — specs du template telles quelles (base commune à tous les objectifs)
+              </span>
+            </div>
           </div>
         )}
       </div>
