@@ -266,27 +266,34 @@ describe('strengthEquipmentPrio', () => {
   })
 })
 
-// ── Slots fullbody (8 slots — biceps ET triceps indépendants) ─────────────────
-// SLOTS.fullbody : quads, chest, back, ham/glutes, sh_lat/rear, shoulders OHP, biceps, triceps
+// ── Slots fullbody-quad (9 slots — biceps, triceps, mollets séparés) ──────────
+// fullbody-quad : 4 composés (squat, bench, row, OHP) + 5 isolations (leg curl, face pull, biceps, triceps, calves)
+// fullbody-hip  : 4 composés (RDL, bench, pullup, OHP) + 5 isolations (leg ext, sh_lat/rear, biceps, triceps, calves)
 
-describe('fullbody — 8 slots (biceps et triceps séparés)', () => {
+describe('fullbody-quad — 9 slots (biceps, triceps, mollets séparés)', () => {
   const params = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, sessionDuration: 60 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
-  it('le workout fullbody contient un exercice biceps', () => {
+  it('le workout fullbody-quad contient un exercice biceps', () => {
     const ids = firstWorkoutIds(params)
     const bicepsExs = POOL.filter((e) => e.primaryMuscle === 'biceps').map((e) => e.id)
     expect(ids.some((id) => bicepsExs.includes(id))).toBe(true)
   })
 
-  it('le workout fullbody contient un exercice triceps', () => {
+  it('le workout fullbody-quad contient un exercice triceps', () => {
     const ids = firstWorkoutIds(params)
     const tricepsExs = POOL.filter((e) => e.primaryMuscle === 'triceps').map((e) => e.id)
     expect(ids.some((id) => tricepsExs.includes(id))).toBe(true)
   })
 
-  it('fullbody 60 min = 8 slots + 1 warmup + 1 core = 10 exercices', () => {
+  it('le workout fullbody-quad contient un exercice mollets', () => {
     const ids = firstWorkoutIds(params)
-    expect(ids).toHaveLength(10)
+    const calvesExs = POOL.filter((e) => e.primaryMuscle === 'calves').map((e) => e.id)
+    expect(ids.some((id) => calvesExs.includes(id))).toBe(true)
+  })
+
+  it('fullbody 60 min = 9 slots + 1 warmup + 1 core = 11 exercices', () => {
+    const ids = firstWorkoutIds(params)
+    expect(ids).toHaveLength(11)
   })
 })
 
@@ -349,27 +356,26 @@ describe('workout naming', () => {
 // ── Ajustement de durée ───────────────────────────────────────────────────────
 
 describe('adjustedSlotCount — durée de séance', () => {
-  // Fullbody base = 8 slots (après ajout slot back_thickness)
+  // fullbody-quad base = 9 slots (4 composés + 5 isolations)
   const base = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
-  it('20 min → max(2, floor(8×0.5)) = 4 slots + warmup + core = 6 exercices', () => {
+  it('20 min → max(2, floor(9×0.5)) = 4 slots + warmup + core = 6 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 20 })
     expect(ids).toHaveLength(6)
   })
 
-  it('45 min → max(3, floor(8×0.75)) = 6 slots + warmup + core = 8 exercices', () => {
+  it('45 min → max(3, floor(9×0.75)) = 6 slots + warmup + core = 8 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 45 })
     expect(ids).toHaveLength(8)
   })
 
-  it('60 min → 8 slots + warmup + core = 10 exercices', () => {
+  it('60 min → 9 slots + warmup + core = 11 exercices', () => {
     const ids = firstWorkoutIds({ ...base, sessionDuration: 60 })
-    expect(ids).toHaveLength(10)
+    expect(ids).toHaveLength(11)
   })
 
-  it('90 min → min(8+2,8)=8 → slice limité à 8 éléments → idem 60 min = 10 exercices', () => {
-    // adjustedSlotCount(8, 90) = min(10,8) = 8 (cap à 8)
-    // SLOTS.fullbody a exactement 8 entrées → même résultat qu'à 60 min
+  it('90 min → min(9+2,8)=8 → slice limité à 8 éléments → 8 + warmup + core = 10 exercices', () => {
+    // adjustedSlotCount(9, 90) = min(11,8) = 8 (cap à 8)
     const ids = firstWorkoutIds({ ...base, sessionDuration: 90 })
     expect(ids).toHaveLength(10)
   })
