@@ -113,7 +113,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['chest', 'chest_upper', 'chest_lower'], compound: false },
     { muscles: ['triceps'],                              compound: false },
     { muscles: ['shoulders_lateral', 'shoulders'],       compound: false },
-    { muscles: ['triceps'],                              compound: false },
+    { muscles: ['shoulders_rear'],                       compound: false }, // face pull / écarté penché — équilibre épaule
   ],
   pull: [
     { muscles: ['back_width', 'back'],                   compound: true  },
