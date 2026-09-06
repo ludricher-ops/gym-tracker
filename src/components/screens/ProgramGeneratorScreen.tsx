@@ -183,8 +183,8 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 }
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Structure  3: Jours  4: Durée  5: Lieu  6: Équipement  7: Niveau  8: Programme  9: Muscles
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Structure', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme', 'Muscles']
+// 0: Objectif  1: Fréquence  2: Muscles  3: Structure  4: Jours  5: Durée  6: Lieu  7: Équipement  8: Niveau  9: Programme
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Muscles', 'Structure', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme']
 const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -222,19 +222,23 @@ export function ProgramGeneratorScreen() {
     else setStepIndex((s) => s - 1)
   }
 
-  function handleGenerate() {
+  function handleGenerate(weeksOverride?: number | null) {
     if (!goal || !days || !duration || equipment.length === 0 || !level) return
 
     const orderedDays = WEEKDAY_OPTIONS
       .filter((d) => selectedDays.includes(d.value))
       .map((d) => d.value)
 
+    // weeksOverride permet d'utiliser la valeur juste sélectionnée avant que
+    // le state programWeeks ne soit mis à jour (closure sur l'ancienne valeur)
+    const totalWeeks = weeksOverride !== undefined ? weeksOverride ?? undefined : programWeeks ?? undefined
+
     const params: GeneratorParams = {
       goal, daysPerWeek: days, sessionDuration: duration,
       equipment, level, selectedDays: orderedDays,
       splitPreference: splitPreference !== 'auto' ? splitPreference : undefined,
       focusMuscles: focusMuscles.length > 0 ? focusMuscles : undefined,
-      totalWeeks: programWeeks ?? undefined,
+      totalWeeks,
     }
     const draft = generateProgramDraft(params, store.exercises)
     setPendingDraft(draft)
@@ -247,7 +251,30 @@ export function ProgramGeneratorScreen() {
     )
   }
 
-  // ── Sélection des jours (étape 2) ──────────────────────────────────────────
+  // ── Pré-sélection du split selon les muscles (étape 2 → étape 3) ─────────────
+  // Quand l'utilisateur passe à l'étape Structure, on suggère le preset le plus
+  // cohérent avec les muscles qu'il vient de choisir.
+
+  function suggestSplitFromFocus(muscles: FocusMuscle[]): SplitPreference {
+    if (muscles.length === 0) return 'auto'
+    const hasLegs  = muscles.includes('legs')
+    const hasBack  = muscles.includes('back')
+    const hasChest = muscles.includes('chest')
+    const hasShoulder = muscles.includes('shoulders')
+    const hasArms  = muscles.includes('arms')
+    const hasPush  = hasChest || hasShoulder
+    // Jambes + dos sans push → programme féminin fessiers
+    if (hasLegs && hasBack && !hasPush && !hasArms) return 'glutes-focus'
+    // Jambes seules (ou + core) → upper/lower est le plus logique
+    if (hasLegs && !hasBack && !hasPush && !hasArms) return 'upper-lower'
+    // Chest + back → Arnold (antagonistes dans la même séance)
+    if (hasChest && hasBack) return 'arnold'
+    // Push seul (chest / épaules) ou pull seul (back / arms) → PPL
+    if ((hasPush || hasBack || hasArms) && !hasLegs) return 'ppl'
+    return 'auto'
+  }
+
+  // ── Sélection des jours (étape 4 dans le nouvel ordre) ───────────────────────
 
   useEffect(() => {
     if (days !== null && selectedDays.length === days) {
@@ -282,9 +309,13 @@ export function ProgramGeneratorScreen() {
         advance()
       })
     }
-    if (stepIndex === 2) return renderSplitPicker()
-    if (stepIndex === 3) return renderDayPicker()
-    if (stepIndex === 4) {
+    // Étape 2 : Muscles — l'utilisateur indique ses muscles cibles
+    // La sélection est optionnelle (bouton Continuer toujours actif)
+    if (stepIndex === 2) return renderMusclePicker()
+    // Étape 3 : Structure — pré-sélectionnée selon les muscles choisis
+    if (stepIndex === 3) return renderSplitPicker()
+    if (stepIndex === 4) return renderDayPicker()
+    if (stepIndex === 5) {
       // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
       const durationNote = goal === 'strength' ? (
         <div style={{
@@ -311,13 +342,12 @@ export function ProgramGeneratorScreen() {
         </div>
       )
     }
-    if (stepIndex === 5) return renderLieuPicker()
-    if (stepIndex === 6) return renderEquipmentPicker()
-    if (stepIndex === 7) {
+    if (stepIndex === 6) return renderLieuPicker()
+    if (stepIndex === 7) return renderEquipmentPicker()
+    if (stepIndex === 8) {
       return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
     }
-    if (stepIndex === 8) return renderProgramWeeksPicker()
-    return renderMusclePicker()
+    return renderProgramWeeksPicker()
   }
 
   // ── Sélecteur de lieu ─────────────────────────────────────────────────────
@@ -692,7 +722,7 @@ export function ProgramGeneratorScreen() {
             return (
               <button
                 key={String(opt.value)}
-                onClick={() => { setProgramWeeks(opt.value); advance() }}
+                onClick={() => { setProgramWeeks(opt.value); handleGenerate(opt.value) }}
                 disabled={advancing}
                 style={{
                   display: 'flex',
@@ -842,7 +872,11 @@ export function ProgramGeneratorScreen() {
         )}
 
         <button
-          onClick={handleGenerate}
+          onClick={() => {
+            // Pré-sélectionner le split selon les muscles choisis, puis avancer
+            setSplitPreference(suggestSplitFromFocus(focusMuscles))
+            advance()
+          }}
           style={{
             width: '100%',
             padding: '16px',
@@ -857,8 +891,8 @@ export function ProgramGeneratorScreen() {
           }}
         >
           {focusMuscles.length > 0
-            ? `⚡ Générer avec focus ${focusMuscles.length > 1 ? `${focusMuscles.length} muscles` : FOCUS_OPTIONS.find(o => o.value === focusMuscles[0])?.label ?? ''}`
-            : '⚡ Générer mon programme'}
+            ? `Continuer avec focus ${focusMuscles.length > 1 ? `${focusMuscles.length} muscles` : FOCUS_OPTIONS.find(o => o.value === focusMuscles[0])?.label ?? ''}`
+            : 'Continuer →'}
         </button>
       </div>
     )
