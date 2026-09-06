@@ -3006,7 +3006,11 @@
     "id": "seed-chest-press-machine",
     "name": "Presse poitrine (machine)",
     "primaryMuscle": "chest",
-    "secondaryMuscles": ["chest_upper", "triceps", "shoulders_front"],
+    "secondaryMuscles": [
+      "chest_upper",
+      "triceps",
+      "shoulders_front"
+    ],
     "equipment": "machine",
     "category": "compound",
     "trackingType": "weight_reps",
@@ -3020,6 +3024,84 @@
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Machine-Chest-Press.gif",
       "mime": "image/gif",
       "aspectRatio": 1.0
+    }
+  },
+  {
+    "id": "seed-calf-raise-db",
+    "name": "Mollets haltère",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "dumbbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Dumbbell-Calf-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788679414727,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "seed-calf-raise-bb",
+    "name": "Mollets barre",
+    "primaryMuscle": "calves",
+    "secondaryMuscles": [],
+    "equipment": "barbell",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Barbell-Standing-Calf-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788679414727,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-prone-y-raise",
+    "name": "Élévations Y (allongé)",
+    "primaryMuscle": "shoulders_rear",
+    "secondaryMuscles": [],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/03/Prone-Y-Raise.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788679414727,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "band-face-pull",
+    "name": "Face pull élastique",
+    "primaryMuscle": "shoulders_rear",
+    "secondaryMuscles": [
+      "back_thickness"
+    ],
+    "equipment": "band",
+    "category": "isolation",
+    "trackingType": "reps_only",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Band-Face-Pull.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788679414727,
+      "aspectRatio": 1
     }
   }
 ]
