@@ -183,8 +183,8 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 }
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Lieu  5: Équipement  6: Niveau  7: Programme  8: Muscles
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Structure', 'Programme', 'Muscles']
+// 0: Objectif  1: Fréquence  2: Structure  3: Jours  4: Durée  5: Lieu  6: Équipement  7: Niveau  8: Programme  9: Muscles
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Structure', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme', 'Muscles']
 const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -282,8 +282,9 @@ export function ProgramGeneratorScreen() {
         advance()
       })
     }
-    if (stepIndex === 2) return renderDayPicker()
-    if (stepIndex === 3) {
+    if (stepIndex === 2) return renderSplitPicker()
+    if (stepIndex === 3) return renderDayPicker()
+    if (stepIndex === 4) {
       // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
       const durationNote = goal === 'strength' ? (
         <div style={{
@@ -310,12 +311,11 @@ export function ProgramGeneratorScreen() {
         </div>
       )
     }
-    if (stepIndex === 4) return renderLieuPicker()
-    if (stepIndex === 5) return renderEquipmentPicker()
-    if (stepIndex === 6) {
+    if (stepIndex === 5) return renderLieuPicker()
+    if (stepIndex === 6) return renderEquipmentPicker()
+    if (stepIndex === 7) {
       return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
     }
-    if (stepIndex === 7) return renderSplitPicker()
     if (stepIndex === 8) return renderProgramWeeksPicker()
     return renderMusclePicker()
   }
