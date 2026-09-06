@@ -1,4 +1,4 @@
-# Audit `generateProgramDraft` — 40 profils wizard (v3)
+# Audit `generateProgramDraft` — 68 profils wizard (v4)
 
 ## Rôle
 
@@ -99,6 +99,20 @@ Après la simulation, évalue en tant que coach :
 - `BAND+BW` = `['band','bodyweight']`
 - `FULL` = `['barbell','dumbbell','cable','machine','bodyweight']`
 
+**Nouveaux équipements ajoutés en commit `5941987` :**
+
+- `BW+BAR` = `['bodyweight','pullup_bar']` — preset "Extérieur / Calisthenics"
+- `HOME` = `['dumbbell','kettlebell','band','bodyweight']` — preset "Home gym"
+- `KB` = `['kettlebell']`
+- `BW+BAR+BAND` = `['bodyweight','pullup_bar','band']`
+- `CARDIO` = `['cardio_machine']`
+- `FULL+CARDIO` = `['barbell','dumbbell','cable','machine','bodyweight','pullup_bar','cardio_machine']` — preset "Salle" complet avec cardio
+
+**Exercices re-tagués en `pullup_bar` (étaient `bodyweight`) :**
+`seed-pullup` (back_width), `bw-chinup` (biceps), `seed-dips` (chest_lower), `seed-triceps-dips` (triceps), `bw-inverted-row` (back_thickness), `bw-nordic-curl` (hamstrings), `seed-hanging-leg-raise` (core).
+
+**Conséquence directe :** en `BW` pur (sans `pullup_bar`), les slots `back_width`, `back_thickness`, `biceps`, `chest_lower` (Dips), `triceps` (Dips triceps) et `hamstrings` (Nordic curl) sont **sans candidats composés**. Anticiper des slots vides et des warnings BUG-5.
+
 `level:'beginner'` sauf mention contraire → `pickExercise` retourne toujours `candidates[0]` (déterministe).
 
 ---
@@ -168,7 +182,11 @@ Après la simulation, évalue en tant que coach :
 - Noms : "Push — Poussée", "Pull — Tirage", "Full Body" (pas de suffixe A/B : une occurrence de chaque)
 - Pas de doublon intra-workout (chaque workout unique du split)
 
-**Coach :** reps en zone endurance (15+) ? Bodyweight only — quels exercices de jambes sont possibles ?
+> **⚠️ Post-commit `5941987`** : `seed-pullup` et `bw-inverted-row` sont maintenant `pullup_bar`, pas `bodyweight`.
+> En `BW` pur, le jour **Pull** n'a plus aucun exercice `back_width` compound ni `back_thickness` compound.
+> Ces slots seront vides → vérifier le fallback et l'émission du warning BUG-5.
+
+**Coach :** reps en zone endurance (15+) ? BW-only pur : les slots dos sont maintenant vides (post-fix EQUIP-1/2) — le programme pull est-il encore viable ?
 
 ---
 
@@ -181,7 +199,9 @@ Après la simulation, évalue en tant que coach :
 - Même règle que P05 : fat_loss (isMass=false) + intermediate → PPF
 - Noms : "Push — Poussée", "Pull — Tirage", "Full Body"
 
-**Coach :** rapport cardio/force adapté à fat_loss ? Volume hebdomadaire raisonnable ?
+> **⚠️ Post-commit `5941987`** : même impact que P05 — Pull day sans dos compound en BW pur.
+
+**Coach :** rapport cardio/force adapté à fat_loss ? Slots dos vides en BW-only (pullup_bar séparé) — impact sur la qualité du programme ?
 
 ---
 
@@ -382,7 +402,13 @@ Après la simulation, évalue en tant que coach :
 - Aucun exercice avec `equipment` ≠ `'bodyweight'` dans la sortie
 - `autoProgress: false`, `progressStepKg: 0`
 
-**Coach :** quels exercices de jambes sont possibles en BW only ? Le dos est-il couvert (pullup disponible) ?
+> **⚠️ Post-commit `5941987`** : `seed-pullup`, `bw-chinup`, `seed-dips`, `seed-triceps-dips`,
+> `bw-inverted-row`, `bw-nordic-curl`, `seed-hanging-leg-raise` sont maintenant `pullup_bar`.
+> En BW pur, les slots `back_width`, `back_thickness`, `biceps`, `chest_lower` compound, `triceps` compound
+> et `hamstrings` compound (nordic curl) n'ont **aucun candidat**. Lister précisément quels slots sont vides
+> et quels exercices `bodyweight` restent pour remplir (fallback isolation si aucun compound).
+
+**Coach :** BW-only post-fix — le dos est-il toujours couvert ? (`seed-pullup` étant maintenant `pullup_bar`, la réponse est non.) Programme viable ou trop tronqué ?
 
 ---
 
@@ -429,7 +455,11 @@ Après la simulation, évalue en tant que coach :
 - Aucun exercice nécessitant haltère/barre/câble/machine
 - Identifier dans le seed quels exercices band sont disponibles par groupe musculaire
 
-**Coach :** fat_loss avec band+BW — le programme est-il suffisamment intensif pour atteindre l'objectif ?
+> **⚠️ Post-commit `5941987`** : `seed-pullup`, `bw-inverted-row` etc. sont maintenant `pullup_bar` → exclus de BAND+BW.
+> Même impact que P21 pour les slots dos. En revanche, `seed-band-pull-apart` (élastique) reste disponible
+> pour `shoulders_rear` mais est `isWarmupExercise:true` → exclu d'`available` (SEED-2 toujours ouvert).
+
+**Coach :** fat_loss avec Band+BW — slots dos vides (back_width, back_thickness) post-fix, le programme est-il encore équilibré ?
 
 ---
 
@@ -1129,3 +1159,248 @@ fmtMod(sets, reps):
 | PUSH_FULL | chest+shoulders → push (pas upper) | P45 |
 | PULL_FULL | back+arms → pull (pas upper) | P46 |
 | ARMS | arms seul → upper (rule 5 avant rule 3/4) | P53 |
+
+---
+
+## Groupe G — Nouveaux équipements & presets wizard (P58–P68)
+
+> **Contexte :** commit `5941987` a ajouté deux nouveaux types d'équipement :
+> - `pullup_bar` : barre de traction, barres parallèles, barre horizontale — 7 exercices re-tagués
+> - `cardio_machine` : tapis, vélo, rameur, elliptique — 4 exercices (primaryMuscle: 'cardio')
+>
+> Ces profils vérifient (1) que les exercices pullup_bar apparaissent uniquement quand `pullup_bar ∈ allowed`,
+> (2) que BW-only est bien plus restreint qu'avant, (3) le comportement de cardio_machine dans le générateur.
+>
+> **Rappel exercices pullup_bar :** `seed-pullup` (back_width, cmp), `bw-chinup` (biceps, cmp),
+> `seed-dips` (chest_lower, cmp), `seed-triceps-dips` (triceps, iso), `bw-inverted-row` (back_thickness, cmp),
+> `bw-nordic-curl` (hamstrings, cmp), `seed-hanging-leg-raise` (core).
+>
+> **Rappel exercices cardio_machine :** `seed-treadmill`, `seed-elliptical`, `seed-rowing-erg`, `seed-cycling`
+> (tous primaryMuscle:'cardio', category:'compound'). Il n'existe **aucun slot template** ciblant `'cardio'`
+> dans `programGenerator.ts` — ces exercices ne peuvent donc jamais être sélectionnés par `pickExercise`.
+
+---
+
+### P58 — **Outdoor preset (BW+BAR) 3j intermediate hypertrophy — vérification post-fix EQUIP-1/2**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:BW+BAR, level:'intermediate' }
+```
+**Assertions CRITIQUES :**
+- isMass (hypertrophy) + intermediate + 3j → Split = `['push','pull','legs']` (PPL)
+- `autoProgress: false`, `progressStepKg: 0` (pullup_bar + bodyweight : pas de poids externe)
+- Pull day slot `back_width` compound → `seed-pullup` (pullup_bar) ✓ (EQUIP-1 corrigé)
+- Pull day slot `back_thickness` compound → `bw-inverted-row` (pullup_bar) ✓ (EQUIP-2 corrigé)
+- Pull day slot `biceps` → `bw-chinup` (pullup_bar) ✓
+- Push day slot `chest_lower` compound → `seed-dips` (pullup_bar) ✓ (EQUIP-2 corrigé)
+- Push day slot `triceps` isolation → `seed-triceps-dips` (pullup_bar) ✓
+- Legs slot `hamstrings` compound → `bw-nordic-curl` (pullup_bar) ✓ (EQUIP-3 corrigé)
+- Aucun exercice `barbell`, `dumbbell`, `cable`, `machine`, `band`, `kettlebell` dans la sortie
+
+**Coach :** programme calisthenics outdoor complet — ratio push/pull équilibré ? Progressivité possible sans poids externe (autoProgress=false) ?
+
+---
+
+### P59 — **BW-only sans pullup_bar 3j intermediate — conséquence de la séparation EQUIP-1/2**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:BW, level:'intermediate' }
+```
+**Assertions CRITIQUES :**
+- Split = `['push','pull','legs']` (PPL, isMass + intermediate + 3j)
+- Pull day slot `back_width` compound → **aucun candidat** (seed-pullup est pullup_bar, exclu) → slot vide → null
+- Pull day slot `back_thickness` compound → **aucun candidat** (bw-inverted-row est pullup_bar) → null
+- Pull day slot `biceps` compound → **aucun candidat** (bw-chinup est pullup_bar) → null
+- Push day slot `chest_lower` → **aucun candidat** (seed-dips est pullup_bar) → null (fallback isolation ?)
+- Legs slot `hamstrings` compound → **aucun candidat** (bw-nordic-curl est pullup_bar) → null
+- Vérifier combien de slots sont null au total et si le générateur émet des warnings (BUG-5)
+- Nommer les exercices bodyweight restants pour chaque slot non-vide
+
+**⚠️ CRITIQUE** : comparer avec P21 (beginner, qui est fullbody — moins de slots back). Ici c'est PPL : le Pull day entier est structurellement vide de dos. Documenter cet état comme un problème UX majeur.
+
+**Coach :** BW pur sans pullup_bar — un pull day sans dos est-il acceptable ? Le générateur devrait-il avertir "impossible de générer un Pull day sans barre de traction" ?
+
+---
+
+### P60 — **Home gym (DB+KB+Band+BW) 3j intermediate hypertrophy**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:HOME, level:'intermediate' }
+```
+**Assertions techniques :**
+- `HOME` = `['dumbbell','kettlebell','band','bodyweight']`
+- Split = `['push','pull','legs']` (PPL, isMass + intermediate + 3j)
+- Aucun exercice pullup_bar (barre de traction non dans HOME)
+- Pull day `back_width` compound : pool candidats = exercices dumbbell/kettlebell pour `back_width` — identifier dans le seed (rowing DB / KB row)
+- Pull day `back_thickness` compound : `kb-row` (KB) ou row dumbbell ?
+- Trier les candidats par `strengthEquipmentPrio` : dumbbell(2) < kettlebell(2) < band(3) < bodyweight(4)
+  → dumbbell prioritaire sur kettlebell sur band sur bodyweight pour les composés en hypertrophy
+- Identifier pour chaque slot le top-3 candidats et l'exercice retenu (intermediate → random top-3)
+- `autoProgress: true`, `progressStepKg: 2.5` (dumbbell/kettlebell ont du poids externe)
+
+**Coach :** home gym cohérent — le KB swing est-il sélectionné pour un slot jambes/fessiers ? L'elliptique est absent (cardio_machine) — le programme couvre-t-il le fat_loss si l'objectif était fat_loss ?
+
+---
+
+### P61 — **Home gym 4j fat_loss intermediate**
+```
+{ goal:'fat_loss', daysPerWeek:4, sessionDuration:60, equipment:HOME, level:'intermediate' }
+```
+**Assertions CRITIQUES :**
+- isMass=false (fat_loss) + intermediate + 4j → identifier la branche exacte dans `selectSplit`
+  (comparer avec P49 FULL+fat_loss+4j+intermediate)
+- Afficher le split exact et les types internes
+- Vérifier que les slots dos sont remplis avec DB/KB (pas de pullup_bar dans HOME)
+- `progressStepKg: 2.5` (dumbbell/kettlebell disponibles)
+
+**Coach :** fat_loss home gym sans cardio_machine — le programme peut-il atteindre l'objectif fat_loss ? KB swing en circuit-style serait pertinent — est-il sélectionné ?
+
+---
+
+### P62 — **Kettlebell seul 3j beginner hypertrophy**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:KB, level:'beginner' }
+```
+**Assertions techniques :**
+- `KB` = `['kettlebell']`
+- beginner + isMass + 3j → Split = `['fullbody','fullbody','fullbody']` (fullbody×3)
+- Pool kettlebell disponible (14 exercices) — lister par groupe musculaire : chest, back, shoulders, legs, arms, core
+- Slots fullbody-quad : identifier candidats KB pour quads/glutes compound (kb-deadlift, kb-goblet-squat ?), back_width (kb-row), chest (kb-floor-press), etc.
+- Slots vides éventuels : pas d'exercice KB pour `back_width` compound ?
+  (vérifier si `kb-row` qualifie pour `back_width` ou seulement `back_thickness`)
+- `autoProgress: true`, `progressStepKg: 2.5`
+
+**Coach :** programme KB-only fullbody débutant — le goblet squat remplace-t-il bien le squat barre ? Le KB swing est-il sélectionné et dans quel slot ? La surcharge progressive est-elle réaliste avec une seule kettlebell ?
+
+---
+
+### P63 — **Outdoor lower_pull (BW+BAR + focus legs+back)**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:BW+BAR, level:'beginner',
+  focusMuscles:['legs','back'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPull=true (back), hasPush=false` → `'lower_pull'`
+- Split = `['lower','lower','lower']` (lower_pull × 3)
+- Noms : "Lower — Chaîne postérieure A/B/C"
+- Slot 1 (hamstrings/glutes compound) → `bw-nordic-curl` (pullup_bar) ✓ (EQUIP-3 corrigé)
+- Slot 2 (back_width compound) → `seed-pullup` (pullup_bar) ✓
+- Slot 3 (back_thickness compound) → `bw-inverted-row` (pullup_bar) ✓
+- Slot quads/glutes compound → `bw-squat` (bodyweight) ✓
+- `autoProgress: false`, `progressStepKg: 0`
+- Vérifier que 3 sessions lower_pull distincts sont générées avec variation d'exercices
+
+**Coach :** lower_pull outdoor (tractions + nordic curl + squat BW) — programme fonctionnel et réaliste ? Nordic curl en premier slot d'un débutant est-il approprié ?
+
+---
+
+### P64 — **BW+BAR+BAND 3j intermediate endurance (élastiques pour shoulders_rear)**
+```
+{ goal:'endurance', daysPerWeek:3, sessionDuration:60, equipment:BW+BAR+BAND, level:'intermediate' }
+```
+**Assertions techniques :**
+- `BW+BAR+BAND` = `['bodyweight','pullup_bar','band']`
+- isMass=false (endurance) + intermediate + 3j → Split PPF = `['push','pull','fullbody']`
+- Pull day slot `shoulders_rear` : `seed-band-pull-apart` est `band` + `isWarmupExercise:true` → exclu
+  → vérifier si un autre exercice `band` cible `shoulders_rear` dans le seed (SEED-2 toujours ouvert)
+- Push day + pull day : slots pullup_bar disponibles (tractions, dips, inverted row)
+- Reps endurance : 15+ sur tous les slots
+- `autoProgress: false`, `progressStepKg: 0` (band + bodyweight + pullup_bar, aucun poids externe)
+
+**Coach :** élastiques pour shoulders_rear — le slot est-il vide (SEED-2) ou rempli ? Endurance calisthenics 3j intermediate — volume hebdomadaire adapté ?
+
+---
+
+### P65 — **FULL+CARDIO fat_loss 3j — cardio_machine jamais sélectionné (EQUIP-5)**
+```
+{ goal:'fat_loss', daysPerWeek:3, sessionDuration:60, equipment:FULL+CARDIO, level:'intermediate' }
+```
+**Assertions CRITIQUES :**
+- `FULL+CARDIO` inclut `cardio_machine` dans les équipements autorisés
+- isMass=false (fat_loss) + intermediate + 3j → Split PPF = `['push','pull','fullbody']`
+- **Assertion principale (EQUIP-5)** : aucun exercice `equipment:'cardio_machine'` dans la sortie
+  (seed-treadmill, seed-elliptical, seed-rowing-erg, seed-cycling ont `primaryMuscle:'cardio'` —
+  il n'existe aucun slot template ciblant `'cardio'` dans `programGenerator.ts`)
+- Vérifier dans le code que `pickExercise` filtre sur `slot.muscles.includes(ex.primaryMuscle)` :
+  aucun slot ne liste `'cardio'` → les 4 exercices cardio_machine ne sont jamais candidats
+- Programme généré = identique à FULL 3j fat_loss intermediate (cardio_machine ignoré)
+- `strengthEquipmentPrio('cardio_machine')` = 5 → commentaire "jamais dans les slots de force" (ligne ~511)
+
+**⚠️ BUG EQUIP-5** : `cardio_machine` est dans l'interface `Equipment`, dans les préférences utilisateur,
+dans le wizard — mais le générateur ne l'utilise jamais. L'utilisateur qui coche "Cardio machine" n'en voit
+aucun effet dans le programme généré.
+
+**Correction recommandée :** soit ajouter un slot `cardio` en fin de séance (après core) pour les objectifs
+`fat_loss` et `endurance`, soit afficher un message "Les machines cardio ne sont pas intégrées au programme —
+les utiliser en échauffement ou en finisher."
+
+**Coach :** fat_loss sans cardio_machine dans le programme — le programme peut-il atteindre l'objectif ? L'absence d'exercice cardio explicite est-elle acceptable ?
+
+---
+
+### P66 — **cardio_machine seul → edge case dégradé**
+```
+{ goal:'endurance', daysPerWeek:3, sessionDuration:60, equipment:CARDIO, level:'beginner' }
+```
+**Assertions CRITIQUES :**
+- `CARDIO` = `['cardio_machine']` uniquement
+- Tous les exercices du seed qui sont `cardio_machine` ont `primaryMuscle:'cardio'`
+- Aucun slot template ne cible `'cardio'` → tous les slots sont vides → programme entièrement vide
+- Vérifier le comportement exact du générateur : crash ? programme avec 0 exercices ? warnings ?
+- L'unique contenu possible = warmup (`isWarmupExercise:true`) — vérifier si le warmup est cardio_machine
+  (seed-jumping-jacks est bodyweight, non cardio_machine — pool warmup = bodyweight uniquement)
+- Résultat attendu : DraftProgram avec 0 WorkoutExercise générés dans chaque session
+
+**⚠️ Edge case** : le wizard ne bloque pas cette sélection. Un utilisateur peut cocher uniquement "Cardio machine" et lancer le générateur. Le résultat est un programme vide.
+
+**Coach :** un programme vide est-il acceptable ? Comment le wizard devrait-il prévenir l'utilisateur ?
+
+---
+
+### P67 — **BW+BAR strength advanced 4j upper/lower — progressStepKg=0**
+```
+{ goal:'strength', daysPerWeek:4, sessionDuration:60, equipment:BW+BAR, level:'advanced' }
+```
+**Assertions CRITIQUES :**
+- isMass (strength considéré isMass ? — vérifier dans le code) + advanced + 4j → Split = upper/lower A/B
+- `progressStepKg: 0` pour tous les exercices (`pullup_bar` et `bodyweight` → `progressStepKg=0` dans `makeDraftWE`)
+- `autoProgress: false` (bodyweight+pullup_bar, pas de poids externe incrémentable)
+- Séries × reps strength advanced : vérifier que les specs force (5×3-5) sont générées malgré `autoProgress=false`
+- Upper A : chest compound → seed-pushup (bodyweight) ; chest_lower → seed-dips (pullup_bar) ✓
+- Upper B : back_width compound → seed-pullup (pullup_bar) ✓ ; biceps → bw-chinup (pullup_bar) ✓
+- Advanced : `pickExercise` utilise random top-3 → lister les 3 candidats pour le slot chest compound
+
+**Coach :** strength advanced calisthenics — sets×reps force (3-5 reps) sur des exercices bodyweight est-il réaliste ? La progression sans poids additionnel est-elle possible ? Recommandation : weighted calisthenics ou progression par variation d'exercice.
+
+---
+
+### P68 — **BW+BAR 2j beginner endurance selectedDays custom**
+```
+{ goal:'endurance', daysPerWeek:2, sessionDuration:45, equipment:BW+BAR, level:'beginner',
+  selectedDays:['tuesday','saturday'] }
+```
+**Assertions techniques :**
+- 2j = fullbody toujours → Split = `['fullbody','fullbody']`
+- `selectedDays:['tuesday','saturday']` → weekMap = { tuesday: templateA, saturday: templateB }
+  (lundi/mercredi par défaut remplacés)
+- 45min endurance → `adjustedSlotCount(9, 45)` = 6 slots
+- Total = 6 + warmup + core = 8 exercices par session
+- `autoProgress: false`, `progressStepKg: 0`
+- Reps endurance : 15+
+- Vérifier que seed-pullup (pullup_bar) apparaît dans le slot back_width ✓
+- Vérifier que seed-dips (pullup_bar) est disponible pour chest_lower ✓
+
+**Coach :** endurance calisthenics 2j 45min — contenu suffisant ? Mardi + samedi : 4 jours de repos entre les séances, récupération optimale. Programme cohérent pour un débutant fitness ?
+
+---
+
+## Récapitulatif assertions critiques Groupe G
+
+| Code | Assertion | Profils |
+|------|-----------|---------|
+| EQUIP-FIX1 | BW+BAR : seed-pullup (back_width) ∈ allowed ✓ | P58, P63, P67, P68 |
+| EQUIP-FIX2 | BW+BAR : seed-dips (chest_lower), bw-inverted-row (back_thickness) ∈ allowed ✓ | P58, P67 |
+| EQUIP-FIX3 | BW+BAR : bw-nordic-curl (hamstrings) ∈ allowed ✓ | P58, P63 |
+| BW-VIDE | BW pur : back_width, back_thickness, biceps compound → slots vides (pullup_bar séparé) | P59, P05, P06, P21, P25 |
+| HOME | HOME = DB+KB+Band+BW : dos couvert par KB/DB row (pullup_bar absent) | P60, P61 |
+| KB | KB-only : identifier les slots vides faute de candidats kettlebell | P62 |
+| EQUIP5 | cardio_machine jamais sélectionné par pickExercise (no 'cardio' slot in templates) | P65, P66 |
+| CARDIO-EDGE | cardio_machine seul → programme entièrement vide | P66 |
+| PROG0 | BW+BAR : progressStepKg=0, autoProgress=false | P58, P63, P67, P68 |

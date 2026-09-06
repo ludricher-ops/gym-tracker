@@ -571,24 +571,26 @@ export function ProgramGeneratorScreen() {
         )}
 
         <button
-          onClick={() => { if (equipment.length > 0) advance() }}
-          disabled={equipment.length === 0}
+          onClick={() => { if (equipment.length > 0 && availableCount > 0) advance() }}
+          disabled={equipment.length === 0 || availableCount === 0}
           style={{
             width: '100%',
             padding: '16px',
             borderRadius: 'var(--radius-card)',
             border: 'none',
-            background: equipment.length > 0 ? 'var(--accent)' : 'var(--border)',
-            color: equipment.length > 0 ? 'var(--accent-ink)' : 'var(--fg-muted)',
+            background: equipment.length > 0 && availableCount > 0 ? 'var(--accent)' : 'var(--border)',
+            color: equipment.length > 0 && availableCount > 0 ? 'var(--accent-ink)' : 'var(--fg-muted)',
             fontSize: 'var(--fs-body)',
             fontWeight: 700,
-            cursor: equipment.length > 0 ? 'pointer' : 'not-allowed',
+            cursor: equipment.length > 0 && availableCount > 0 ? 'pointer' : 'not-allowed',
             transition: 'background 0.15s, color 0.15s',
           }}
         >
-          {equipment.length > 0
-            ? `Continuer avec ${equipment.length} équipement${equipment.length > 1 ? 's' : ''}`
-            : 'Sélectionne au moins un équipement'}
+          {equipment.length === 0
+            ? 'Sélectionne au moins un équipement'
+            : availableCount === 0
+            ? 'Aucun exercice de musculation disponible'
+            : `Continuer avec ${equipment.length} équipement${equipment.length > 1 ? 's' : ''}`}
         </button>
       </div>
     )
