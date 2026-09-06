@@ -82,9 +82,24 @@ interface Slot {
   compound: boolean
 }
 
-// Types internes au générateur — fullbody-quad et fullbody-hip ne font pas
-// partie du WorkoutType public ; le DraftWorkout.type est toujours 'fullbody'.
-type InternalWorkoutType = Exclude<WorkoutType, 'custom'> | 'fullbody-quad' | 'fullbody-hip'
+// Types internes au générateur — les variantes A/B ne font pas partie du WorkoutType
+// public. Le DraftWorkout.type reçoit toujours le type public canonique :
+//   fullbody-quad / fullbody-hip → 'fullbody'
+//   upper-push / upper-pull      → 'upper'
+//   lower-quad / lower-hip       → 'lower'
+type InternalWorkoutType =
+  | Exclude<WorkoutType, 'custom'>
+  | 'fullbody-quad' | 'fullbody-hip'
+  | 'upper-push'    | 'upper-pull'
+  | 'lower-quad'    | 'lower-hip'
+
+/** Retourne le WorkoutType public correspondant à un type interne. */
+function toPublicType(t: InternalWorkoutType): Exclude<WorkoutType, 'custom'> {
+  if (t === 'fullbody-quad' || t === 'fullbody-hip') return 'fullbody'
+  if (t === 'upper-push'    || t === 'upper-pull')   return 'upper'
+  if (t === 'lower-quad'    || t === 'lower-hip')    return 'lower'
+  return t
+}
 
 // Slots pour une séance de 60 min (référence).
 // L'ajustement de durée réduit / augmente le nombre de slots pris.
@@ -141,6 +156,56 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['shoulders', 'shoulders_front'],                 compound: true  },
     { muscles: ['biceps'],                                       compound: false },
     { muscles: ['triceps'],                                      compound: false },
+  ],
+  // ── Patterns A/B upper ───────────────────────────────────────────────────────
+  // upper-push (A) : bench-first — développé + tirage + OHP, puis fly + tris + écarté + bis
+  // upper-pull (B) : traction-first — 2 composés dos + bench incliné, puis face pull + bis + isolation dos + tris
+  'upper-push': [
+    // Composés (bench-first)
+    { muscles: ['chest', 'chest_upper'],                          compound: true  }, // Développé couché
+    { muscles: ['back_width', 'back_thickness', 'back'],           compound: true  }, // Tirage / rowing
+    { muscles: ['shoulders', 'shoulders_front'],                  compound: true  }, // OHP
+    // Isolations
+    { muscles: ['chest', 'chest_lower', 'chest_upper'],           compound: false }, // Fly pectoraux
+    { muscles: ['triceps'],                                       compound: false },
+    { muscles: ['shoulders_lateral'],                             compound: false }, // Écarté latéral
+    { muscles: ['biceps'],                                        compound: false },
+    { muscles: ['back_thickness', 'back'],                        compound: false }, // Isolation dos
+  ],
+  'upper-pull': [
+    // Composés (traction-first — 2 composés dos)
+    { muscles: ['back_width', 'back'],                            compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_thickness', 'back'],                        compound: true  }, // Rowing
+    { muscles: ['chest', 'chest_upper'],                          compound: true  }, // Développé incliné
+    // Isolations
+    { muscles: ['shoulders_rear'],                                compound: false }, // Face pull (obligatoire)
+    { muscles: ['biceps'],                                        compound: false },
+    { muscles: ['back_thickness', 'back'],                        compound: false }, // Isolation dos
+    { muscles: ['triceps'],                                       compound: false },
+    { muscles: ['shoulders_lateral'],                             compound: false }, // Écarté latéral
+  ],
+  // ── Patterns A/B lower ───────────────────────────────────────────────────────
+  // lower-quad (A) : squat-dominant — charge quadriceps en priorité
+  // lower-hip  (B) : hip-dominant — fessiers et chaîne postérieure en priorité
+  'lower-quad': [
+    // Composés (squat-first)
+    { muscles: ['quads', 'glutes'],               compound: true  }, // Squat / leg press
+    { muscles: ['hamstrings', 'glutes'],           compound: true  }, // RDL
+    // Isolations
+    { muscles: ['quads'],                          compound: false }, // Leg extension
+    { muscles: ['hamstrings'],                     compound: false }, // Leg curl
+    { muscles: ['glutes'],                         compound: false }, // Hip abduction / donkey kick
+    { muscles: ['calves'],                         compound: false },
+  ],
+  'lower-hip': [
+    // Composés (hip thrust-first)
+    { muscles: ['glutes', 'hamstrings'],           compound: true  }, // Hip thrust / sumo DL
+    { muscles: ['quads', 'glutes'],                compound: true  }, // Fente bulgare / lunge / step-up
+    // Isolations
+    { muscles: ['glutes'],                         compound: false }, // Cable kickback / abducteur machine
+    { muscles: ['hamstrings'],                     compound: false }, // Leg curl
+    { muscles: ['quads'],                          compound: false }, // Leg extension
+    { muscles: ['calves'],                         compound: false },
   ],
   // ── Patterns A/B fullbody ─────────────────────────────────────────────────────
   // fullbody-quad (A) : dominance quadriceps — squat + développé + tirage + OHP
@@ -223,16 +288,33 @@ function selectSplit(params: GeneratorParams): Split {
 
   // Split par défaut basé sur l'objectif et la fréquence
   switch (daysPerWeek) {
-    case 2: return ['fullbody-quad', 'fullbody-hip']
+    case 2:
+      return ['fullbody-quad', 'fullbody-hip']
+
     case 3:
+      // Mass + intermédiaire/confirmé → PPL classique
       if (isMass && level !== 'beginner') return ['push', 'pull', 'legs']
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Full Body (haut 2×, bas 1× via fullbody)
+      if (!isMass && level !== 'beginner') return ['push', 'pull', 'fullbody-quad']
+      // Débutants → fullbody A/B/A
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad']
+
     case 4:
-      if (isMass) return ['upper', 'lower', 'upper', 'lower']
+      // Mass → upper-push/lower-quad/upper-pull/lower-hip (structure A/B pour upper ET lower)
+      if (isMass) return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip']
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower A/Full Body
+      if (level !== 'beginner') return ['push', 'pull', 'lower-quad', 'fullbody-quad']
+      // Débutants non-mass → fullbody A/B/A/B
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip']
+
     case 5:
+      // Mass + intermédiaire/confirmé → PPL + upper + lower (chaque type 1×, pas besoin d'A/B)
       if (isMass && level !== 'beginner') return ['push', 'pull', 'legs', 'upper', 'lower']
-      if (isMass) return ['upper', 'lower', 'upper', 'lower', 'fullbody-quad']
+      // Mass + débutant → upper-push/lower-quad/upper-pull/lower-hip/fullbody
+      if (isMass) return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip', 'fullbody-quad']
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower-A/Lower-B/Full Body
+      if (level !== 'beginner') return ['push', 'pull', 'lower-quad', 'lower-hip', 'fullbody-quad']
+      // Débutants non-mass → fullbody A/B/A/B/A
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip', 'fullbody-quad']
   }
 }
@@ -255,6 +337,10 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
   upper:    'Upper — Haut du corps',
   lower:    'Lower — Bas du corps',
   fullbody: 'Full Body',
+  'upper-push':    'Upper — Haut du corps',
+  'upper-pull':    'Upper — Haut du corps',
+  'lower-quad':    'Lower — Bas du corps',
+  'lower-hip':     'Lower — Bas du corps',
   'fullbody-quad': 'Full Body',
   'fullbody-hip':  'Full Body',
 }
@@ -567,8 +653,8 @@ export function generateProgramDraft(
   const workouts: DraftWorkout[] = []
 
   for (const workoutType of split) {
-    // Clé canonique : fullbody-quad et fullbody-hip comptent ensemble pour le suffixe A/B
-    const canon = (workoutType === 'fullbody-quad' || workoutType === 'fullbody-hip') ? 'fullbody' : workoutType
+    // Clé canonique : variantes A/B comptent ensemble pour le suffixe (upper-push + upper-pull = Upper A/B)
+    const canon = toPublicType(workoutType)
     const count = (typeCount.get(canon) ?? 0) + 1
     typeCount.set(canon, count)
 
@@ -611,16 +697,12 @@ export function generateProgramDraft(
     }
 
     // Nommage : suffixe A/B/C si le type canonique apparaît plusieurs fois dans la semaine
-    const totalOfType = split.filter((t) => {
-      const c = (t === 'fullbody-quad' || t === 'fullbody-hip') ? 'fullbody' : t
-      return c === canon
-    }).length
+    const totalOfType = split.filter((t) => toPublicType(t) === canon).length
     const suffix = totalOfType > 1 ? ` ${String.fromCharCode(64 + count)}` : ''
     const name = `${WORKOUT_NAMES[workoutType]}${suffix}`
 
-    // Type public du DraftWorkout : les variantes internes se projettent sur 'fullbody'
-    const publicType: Exclude<WorkoutType, 'custom'> =
-      workoutType === 'fullbody-quad' || workoutType === 'fullbody-hip' ? 'fullbody' : workoutType
+    // Type public du DraftWorkout : les variantes internes se projettent sur leur type public
+    const publicType = toPublicType(workoutType)
 
     workouts.push({
       localId: uuid(),

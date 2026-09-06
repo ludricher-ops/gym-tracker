@@ -132,19 +132,39 @@ describe('selectSplit', () => {
       .toEqual(['push', 'pull', 'legs'])
   })
 
+  it('3 j + fat_loss + intermédiaire → Push / Pull / Full Body', () => {
+    expect(splitTypes({ goal: 'fat_loss', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
+      .toEqual(['push', 'pull', 'fullbody'])
+  })
+
   it('3 j + force + débutant → fullbody × 3', () => {
     expect(splitTypes({ goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' }))
       .toEqual(['fullbody', 'fullbody', 'fullbody'])
   })
 
-  it('4 j + hypertrophie → upper/lower alternés', () => {
+  it('4 j + hypertrophie → upper/lower alternés (A/B)', () => {
     expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' }))
       .toEqual(['upper', 'lower', 'upper', 'lower'])
+  })
+
+  it('4 j + fat_loss + intermédiaire → Push / Pull / Lower / Full Body', () => {
+    expect(splitTypes({ goal: 'fat_loss', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
+      .toEqual(['push', 'pull', 'lower', 'fullbody'])
   })
 
   it('5 j + force + intermédiaire → PPL + upper + lower', () => {
     expect(splitTypes({ goal: 'strength', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
       .toEqual(['push', 'pull', 'legs', 'upper', 'lower'])
+  })
+
+  it('5 j + hypertrophie + débutant → upper/lower/upper/lower/fullbody', () => {
+    expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' }))
+      .toEqual(['upper', 'lower', 'upper', 'lower', 'fullbody'])
+  })
+
+  it('5 j + fat_loss + intermédiaire → Push / Pull / Lower / Lower / Full Body', () => {
+    expect(splitTypes({ goal: 'fat_loss', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
+      .toEqual(['push', 'pull', 'lower', 'lower', 'fullbody'])
   })
 })
 
@@ -297,6 +317,27 @@ describe('fullbody-quad — 9 slots (biceps, triceps, mollets séparés)', () =>
   })
 })
 
+// ── Mollets dans lower-quad et lower-hip ─────────────────────────────────────
+
+describe('lower-quad / lower-hip — mollets systématiques', () => {
+  const calvesExs = POOL.filter((e) => e.primaryMuscle === 'calves').map((e) => e.id)
+
+  it('lower-quad (4j hypertrophie) contient un exercice mollets', () => {
+    // 4j isMass → upper-push/lower-quad/upper-pull/lower-hip
+    const d = generateProgramDraft({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' }, POOL)
+    const lowerA = d.workouts.find((w) => w.name.includes('Lower') && w.name.includes('A'))!
+    const ids = lowerA.exercises.map((e) => e.exerciseId)
+    expect(ids.some((id) => calvesExs.includes(id))).toBe(true)
+  })
+
+  it('lower-hip (4j hypertrophie) contient un exercice mollets', () => {
+    const d = generateProgramDraft({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' }, POOL)
+    const lowerB = d.workouts.find((w) => w.name.includes('Lower') && w.name.includes('B'))!
+    const ids = lowerB.exercises.map((e) => e.exerciseId)
+    expect(ids.some((id) => calvesExs.includes(id))).toBe(true)
+  })
+})
+
 // ── Slot forearms standalone (non couplé aux biceps) ─────────────────────────
 
 describe('pull — slot forearms indépendant', () => {
@@ -348,6 +389,24 @@ describe('workout naming', () => {
     const names = d.workouts.map((w) => w.name)
     expect(names).toContain('Upper — Haut du corps A')
     expect(names).toContain('Upper — Haut du corps B')
+    expect(names).toContain('Lower — Bas du corps A')
+    expect(names).toContain('Lower — Bas du corps B')
+  })
+
+  it('push/pull/fullbody (3j fat_loss intermédiaire) → pas de suffixe lettre', () => {
+    const d = generateProgramDraft({ goal: 'fat_loss', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
+    const names = d.workouts.map((w) => w.name)
+    expect(names).toContain('Push — Poussée')
+    expect(names).toContain('Pull — Tirage')
+    expect(names).toContain('Full Body')
+    // Chaque type n'apparaît qu'une fois → pas de suffixe A/B
+    expect(names).not.toContain('Full Body A')
+    expect(names).not.toContain('Push — Poussée A')
+  })
+
+  it('push/pull/lower/lower/fullbody (5j fat_loss intermédiaire) → Lower A et Lower B', () => {
+    const d = generateProgramDraft({ goal: 'fat_loss', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
+    const names = d.workouts.map((w) => w.name)
     expect(names).toContain('Lower — Bas du corps A')
     expect(names).toContain('Lower — Bas du corps B')
   })
