@@ -31,12 +31,13 @@ export const FOCUS_TO_MUSCLES: Record<FocusMuscle, MuscleGroup[]> = {
  * 'auto' (défaut) = le générateur choisit selon objectif + niveau + focus.
  */
 export type SplitPreference =
-  | 'auto'        // Sélection automatique (recommandé)
-  | 'ppl'         // Push / Pull / Legs — le classique
-  | 'upper-lower' // Haut du corps / Bas du corps alternés
-  | 'arnold'      // Chest+Back / Shoulders+Arms / Legs — antagonistes
-  | 'brosplit'    // Un groupe musculaire par séance — volume maximal
-  | 'fullbody'    // Tout le corps à chaque séance
+  | 'auto'          // Sélection automatique (recommandé)
+  | 'ppl'           // Push / Pull / Legs — le classique
+  | 'upper-lower'   // Haut du corps / Bas du corps alternés
+  | 'arnold'        // Chest+Back / Shoulders+Arms / Legs — antagonistes
+  | 'brosplit'      // Un groupe musculaire par séance — volume maximal
+  | 'fullbody'      // Tout le corps à chaque séance
+  | 'glutes-focus'  // Fessiers & dos — programme féminin sans push
 
 export interface GeneratorParams {
   goal: ProgramGoal
@@ -480,6 +481,17 @@ function selectSplit(params: GeneratorParams): Split {
       case 3: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad']
       case 4: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip']
       case 5: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip', 'fullbody-quad']
+    }
+  }
+
+  if (pref === 'glutes-focus') {
+    // Programme féminin : fessiers & dos, sans poussée (pecs/épaules/triceps absents).
+    // Alterner glutes-hip (hip-thrust-first) et quad-glutes (squat-first + row).
+    switch (daysPerWeek) {
+      case 2: return ['glutes-hip', 'quad-glutes']
+      case 3: return ['glutes-hip', 'quad-glutes', 'glutes-hip']
+      case 4: return ['glutes-hip', 'quad-glutes', 'glutes-hip', 'quad-glutes']
+      case 5: return ['glutes-hip', 'quad-glutes', 'glutes-hip', 'quad-glutes', 'glutes-hip']
     }
   }
 

@@ -609,7 +609,8 @@ export function ProgramGeneratorScreen() {
       { value: 'upper-lower', icon: '↕️', label: 'Upper / Lower', sub: 'Haut et bas du corps en alternance'               },
       { value: 'arnold',      icon: '🏆', label: 'Arnold Split',  sub: 'Pecs+Dos / Épaules+Bras / Jambes'                },
       { value: 'brosplit',    icon: '💪', label: 'Bro Split',     sub: 'Un groupe musculaire par séance, volume max'      },
-      { value: 'fullbody',    icon: '🌐', label: 'Full Body',     sub: 'Corps entier à chaque séance'                     },
+      { value: 'fullbody',       icon: '🌐', label: 'Full Body',      sub: 'Corps entier à chaque séance'                            },
+      { value: 'glutes-focus',   icon: '🍑', label: 'Glutes Focus',   sub: 'Fessiers & dos — programme féminin sans push'            },
     ]
     return (
       <div style={{ padding: '0 16px 16px' }}>
