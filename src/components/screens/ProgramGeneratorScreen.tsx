@@ -260,17 +260,14 @@ export function ProgramGeneratorScreen() {
     const hasLegs  = muscles.includes('legs')
     const hasBack  = muscles.includes('back')
     const hasChest = muscles.includes('chest')
-    const hasShoulder = muscles.includes('shoulders')
-    const hasArms  = muscles.includes('arms')
-    const hasPush  = hasChest || hasShoulder
-    // Jambes + dos sans push → programme féminin fessiers
-    if (hasLegs && hasBack && !hasPush && !hasArms) return 'glutes-focus'
-    // Jambes seules (ou + core) → upper/lower est le plus logique
-    if (hasLegs && !hasBack && !hasPush && !hasArms) return 'upper-lower'
-    // Chest + back → Arnold (antagonistes dans la même séance)
-    if (hasChest && hasBack) return 'arnold'
-    // Push seul (chest / épaules) ou pull seul (back / arms) → PPL
-    if ((hasPush || hasBack || hasArms) && !hasLegs) return 'ppl'
+    // Seul cas vraiment évident : pecs + dos = antagonistes → Arnold
+    // (les deux groupes principaux en antagonisme, c'est la définition du split)
+    if (hasChest && hasBack && !hasLegs) return 'arnold'
+    // Haut du corps seul (sans jambes, sans combo chest+back) → PPL classique
+    const hasUpperOnly = !hasLegs && muscles.some((m) => ['chest', 'back', 'shoulders', 'arms'].includes(m))
+    if (hasUpperOnly) return 'ppl'
+    // Tout le reste (jambes seules, jambes+dos, mixte, etc.) → Auto
+    // Le générateur intègre déjà les muscles ciblés dans sa logique interne.
     return 'auto'
   }
 
