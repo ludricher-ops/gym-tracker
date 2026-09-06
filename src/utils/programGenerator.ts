@@ -281,12 +281,18 @@ function selectSplit(params: GeneratorParams): Split {
 
   // Si les muscles ciblés désignent clairement un type de séance, l'utiliser
   // pour toutes les séances. Pour le bas du corps, alterner lower-quad / lower-hip
-  // afin de varier la structure (squat-dominant vs hip-dominant) plutôt que N séances identiques.
+  // (squat-dominant vs hip-dominant). Pour le haut du corps, alterner upper-push /
+  // upper-pull (poussée-dominant vs tirage-dominant) — variété structurelle A/B.
   const focusType = workoutTypeFromFocus(focusMuscles)
   if (focusType) {
     if (focusType === 'lower') {
       return Array.from({ length: daysPerWeek }, (_, i) =>
         i % 2 === 0 ? 'lower-quad' : 'lower-hip',
+      ) as Split
+    }
+    if (focusType === 'upper') {
+      return Array.from({ length: daysPerWeek }, (_, i) =>
+        i % 2 === 0 ? 'upper-push' : 'upper-pull',
       ) as Split
     }
     return Array.from({ length: daysPerWeek }, () => focusType) as Split

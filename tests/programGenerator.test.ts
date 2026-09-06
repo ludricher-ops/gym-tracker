@@ -588,6 +588,29 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
     expect(names).toContain('Lower — Bas du corps B')
   })
 
+  it('focus upper 3j → "Upper A/B/C" alternant push-first / pull-first', () => {
+    // chest+back → focusType=upper → upper-push / upper-pull / upper-push
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['chest', 'back'] },
+      POOL,
+    )
+    const names = d.workouts.map((w) => w.name)
+    // Type public toujours 'upper' → noms identiques avec suffixe A/B/C
+    expect(names).toEqual(['Upper — Haut du corps A', 'Upper — Haut du corps B', 'Upper — Haut du corps C'])
+
+    // Session A (upper-push) : 1er exercice de travail = poitrine
+    // Session B (upper-pull) : 1er exercice de travail = dos
+    // NB : exercises[0] est le warmup (unshift), exercises[1] est le 1er slot de travail
+    const CHEST_MUSCLES = ['chest', 'chest_upper', 'chest_lower']
+    const BACK_MUSCLES  = ['back', 'back_width', 'back_thickness']
+    const firstWorkExId = (w: typeof d.workouts[0]) => w.exercises[1]?.exerciseId ?? ''
+    const primaryOf = (id: string) => POOL.find((e) => e.id === id)?.primaryMuscle ?? ''
+
+    const [wA, wB] = d.workouts
+    expect(CHEST_MUSCLES).toContain(primaryOf(firstWorkExId(wA!)))  // upper-push = bench-first
+    expect(BACK_MUSCLES).toContain(primaryOf(firstWorkExId(wB!)))   // upper-pull = traction-first
+  })
+
   it('chest seul → push × 2', () => {
     expect(splitTypes({ ...base, focusMuscles: ['chest'] }))
       .toEqual(['push', 'push'])
