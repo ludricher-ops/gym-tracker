@@ -9,7 +9,7 @@
 import rawExercises from '../data/exercises-seed.json'
 import type {
   Equipment, Exercise, ExerciseCategory, MuscleGroup, Settings,
-  TrackingType, UserPreferences,
+  TrackingType, UserPreferences, WorkoutExerciseTemplate,
 } from '../types'
 import { DEFAULT_ACCENT } from '../theme/accents'
 import { buildTemplateRecords } from '../data/program-templates'
@@ -145,12 +145,52 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
   })
 }
 
+/**
+ * Corrige les WorkoutExerciseTemplates dont targetSets est hors de la plage
+ * valide [1, 12]. Ces valeurs corrompues (ex : timestamp au lieu d'un entier,
+ * ou champ restSec copié par erreur) peuvent provenir d'une synchro serveur
+ * défectueuse. La correction pousse updatedAt=now afin que le serveur soit
+ * écrasé lors du prochain push (LWW). Idempotent — ne fait rien si tout est sain.
+ */
+async function fixCorruptedWets(now: number): Promise<void> {
+  const allWets = await idbGetAll<WorkoutExerciseTemplate>('workoutExerciseTemplates')
+  const corrupted = allWets.filter(
+    (w) => !w.deleted && (
+      typeof w.targetSets !== 'number' ||
+      !Number.isFinite(w.targetSets) ||
+      w.targetSets < 1 ||
+      w.targetSets > 12
+    ),
+  )
+  if (corrupted.length === 0) return
+
+  await idbTx(['workoutExerciseTemplates', OUTBOX_STORE], 'readwrite', (tx) => {
+    const s = tx.objectStore('workoutExerciseTemplates')
+    const outbox = tx.objectStore(OUTBOX_STORE)
+    for (const wet of corrupted) {
+      const raw = typeof wet.targetSets === 'number' && Number.isFinite(wet.targetSets)
+        ? wet.targetSets : 3
+      const fixed: WorkoutExerciseTemplate = {
+        ...wet,
+        targetSets: Math.min(Math.max(1, Math.round(raw)), 12),
+        updatedAt: now,
+        dirty: true,
+      }
+      s.put(fixed)
+      outbox.add({ store: 'workoutExerciseTemplates', id: fixed.id, updatedAt: now })
+    }
+  })
+}
+
 export async function ensureSeed(): Promise<void> {
   const now = Date.now()
 
   // Toujours vérifier les exercices manquants (nouveaux exercices ajoutés au seed
   // après l'installation initiale) — idempotent, ne touche pas aux données existantes.
   await ensureBuiltinExercises(now)
+
+  // Corrige les WETs avec targetSets invalide (corruption de synchro) — idempotent.
+  await fixCorruptedWets(now)
 
   // Le reste (settings, programmes) ne s'applique qu'au premier lancement.
   const existing = await idbGet<Settings>('settings', 'singleton')
