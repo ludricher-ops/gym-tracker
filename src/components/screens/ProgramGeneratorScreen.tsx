@@ -12,6 +12,7 @@ import {
   PHASE_CONFIG_BY_GOAL,
   type FocusMuscle,
   type GeneratorParams,
+  type SplitPreference,
 } from '../../utils/programGenerator'
 import { setPendingDraft } from '../../utils/generatorDraft'
 
@@ -183,8 +184,8 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
 // 0: Objectif  1: Fréquence  2: Jours  3: Durée  4: Lieu  5: Équipement  6: Niveau  7: Programme  8: Muscles
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme', 'Muscles']
-const TOTAL = 9
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Structure', 'Programme', 'Muscles']
+const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -200,6 +201,7 @@ export function ProgramGeneratorScreen() {
   const [lieu, setLieu]                         = useState<Lieu | null>(null)
   const [equipment, setEquipment]               = useState<Equipment[]>([])
   const [level, setLevel]                       = useState<ProgramLevel | null>(null)
+  const [splitPreference, setSplitPreference]   = useState<SplitPreference>('auto')
   const [focusMuscles, setFocusMuscles]         = useState<FocusMuscle[]>([])
   const [programWeeks, setProgramWeeks]         = useState<number | null>(null)
   const [advancing, setAdvancing]               = useState(false)
@@ -230,6 +232,7 @@ export function ProgramGeneratorScreen() {
     const params: GeneratorParams = {
       goal, daysPerWeek: days, sessionDuration: duration,
       equipment, level, selectedDays: orderedDays,
+      splitPreference: splitPreference !== 'auto' ? splitPreference : undefined,
       focusMuscles: focusMuscles.length > 0 ? focusMuscles : undefined,
       totalWeeks: programWeeks ?? undefined,
     }
@@ -312,7 +315,8 @@ export function ProgramGeneratorScreen() {
     if (stepIndex === 6) {
       return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
     }
-    if (stepIndex === 7) return renderProgramWeeksPicker()
+    if (stepIndex === 7) return renderSplitPicker()
+    if (stepIndex === 8) return renderProgramWeeksPicker()
     return renderMusclePicker()
   }
 
@@ -592,6 +596,62 @@ export function ProgramGeneratorScreen() {
             ? 'Aucun exercice de musculation disponible'
             : `Continuer avec ${equipment.length} équipement${equipment.length > 1 ? 's' : ''}`}
         </button>
+      </div>
+    )
+  }
+
+  // ── Sélecteur de structure (split) ───────────────────────────────────────
+
+  function renderSplitPicker() {
+    const OPTIONS: { value: SplitPreference; label: string; sub: string; icon: string }[] = [
+      { value: 'auto',        icon: '🤖', label: 'Auto',          sub: 'Le coach choisit selon tes critères'             },
+      { value: 'ppl',         icon: '🔄', label: 'PPL',           sub: 'Push · Pull · Legs — le classique'               },
+      { value: 'upper-lower', icon: '↕️', label: 'Upper / Lower', sub: 'Haut et bas du corps en alternance'               },
+      { value: 'arnold',      icon: '🏆', label: 'Arnold Split',  sub: 'Pecs+Dos / Épaules+Bras / Jambes'                },
+      { value: 'brosplit',    icon: '💪', label: 'Bro Split',     sub: 'Un groupe musculaire par séance, volume max'      },
+      { value: 'fullbody',    icon: '🌐', label: 'Full Body',     sub: 'Corps entier à chaque séance'                     },
+    ]
+    return (
+      <div style={{ padding: '0 16px 16px' }}>
+        <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 16 }}>
+          Choisis la structure de tes semaines. En mode Auto, le coach adapte selon ton objectif et ta fréquence.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {OPTIONS.map(({ value, icon, label, sub }) => {
+            const active = splitPreference === value
+            return (
+              <button
+                key={value}
+                onClick={() => { setSplitPreference(value); advance() }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '14px 16px',
+                  borderRadius: 'var(--radius-card)',
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  background: active ? 'color-mix(in oklch, var(--accent) 10%, var(--surface))' : 'var(--surface)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                <span style={{ fontSize: 24, flexShrink: 0 }}>{icon}</span>
+                <div>
+                  <div className="t-body" style={{ fontWeight: 600, color: active ? 'var(--accent)' : 'var(--fg)' }}>
+                    {label}
+                  </div>
+                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+                    {sub}
+                  </div>
+                </div>
+                {active && (
+                  <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontSize: 18 }}>✓</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
     )
   }

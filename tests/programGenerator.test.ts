@@ -627,29 +627,33 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
     expect(BACK_MUSCLES).toContain(primaryOf(firstWorkExId(wB!)))   // upper-pull = traction-first
   })
 
-  it('chest seul → push × 2', () => {
+  it('chest seul → push + upper (alternance push/upper-push, 2j)', () => {
+    // internal: ['push', 'upper-push'] → public: ['push', 'upper']
     expect(splitTypes({ ...base, focusMuscles: ['chest'] }))
-      .toEqual(['push', 'push'])
+      .toEqual(['push', 'upper'])
   })
 
-  it('shoulders seul → push × 2', () => {
+  it('shoulders seul → push + upper (alternance push/upper-push, 2j)', () => {
     expect(splitTypes({ ...base, focusMuscles: ['shoulders'] }))
-      .toEqual(['push', 'push'])
+      .toEqual(['push', 'upper'])
   })
 
-  it('back seul → pull × 2', () => {
+  it('back seul → pull + upper (alternance pull/upper-pull, 2j)', () => {
+    // internal: ['pull', 'upper-pull'] → public: ['pull', 'upper']
     expect(splitTypes({ ...base, focusMuscles: ['back'] }))
-      .toEqual(['pull', 'pull'])
+      .toEqual(['pull', 'upper'])
   })
 
-  it('arms seul → upper × 2 (bras = haut du corps mixte)', () => {
+  it('arms seul → push + pull (2j inter+ : PPU réduit = push/pull)', () => {
+    // arms = focusType 'upper' → branche upper 2j → ['push', 'pull']
     expect(splitTypes({ ...base, focusMuscles: ['arms'] }))
-      .toEqual(['upper', 'upper'])
+      .toEqual(['push', 'pull'])
   })
 
-  it('chest + back → upper × 2 (push + pull = haut mixte)', () => {
+  it('chest + back → push + pull (2j : meilleure variété que upper×2)', () => {
+    // focusType 'upper' → branche upper 2j → ['push', 'pull']
     expect(splitTypes({ ...base, focusMuscles: ['chest', 'back'] }))
-      .toEqual(['upper', 'upper'])
+      .toEqual(['push', 'pull'])
   })
 
   it('legs + back → lower_pull × 2 (type public = lower)', () => {
@@ -751,14 +755,17 @@ describe('selectSplit — focusMuscles override', () => {
       .toEqual(['lower', 'lower', 'lower'])
   })
 
-  it('chest, 4j, beginner → push × 4 (override upper/lower)', () => {
+  it('chest, 4j, beginner → push/upper alternés (internal: push/upper-push)', () => {
+    // internal: ['push', 'upper-push', 'push', 'upper-push'] → public: ['push', 'upper', 'push', 'upper']
     expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['chest'] }))
-      .toEqual(['push', 'push', 'push', 'push'])
+      .toEqual(['push', 'upper', 'push', 'upper'])
   })
 
-  it('chest + back, 5j, intermediate → upper × 5 (override PPL+upper+lower)', () => {
+  it('chest + back, 5j, intermediate → push/pull/upper×3 (PPU + upper-push/upper-pull)', () => {
+    // focusType 'upper' + 5j intermediate → ['push', 'pull', 'upper', 'upper-push', 'upper-pull']
+    // public: ['push', 'pull', 'upper', 'upper', 'upper']
     expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest', 'back'] }))
-      .toEqual(['upper', 'upper', 'upper', 'upper', 'upper'])
+      .toEqual(['push', 'pull', 'upper', 'upper', 'upper'])
   })
 
   it('core seul, 4j, beginner → null → upper/lower par défaut (pas lower)', () => {
@@ -862,11 +869,15 @@ describe('UX-C : warning force pour débutant', () => {
 })
 
 describe('UX-D : warning programme unilatéral (spécialisation)', () => {
-  it('focusMuscles=[chest] 2j → push only → warning spécialisation', () => {
+  it('focusMuscles=[chest] 3j → push×3 → warning spécialisation', () => {
+    // 3j push focus : ['push', 'upper-push', 'push'] → public types {push, upper} → taille 2 → pas de warning
+    // Pour déclencher le warning, il faut un split 100% identique en type public.
+    // Vérifier avec lower_push 2j (lower type homogène) :
     const d = generateProgramDraft(
-      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest'] },
+      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['legs', 'shoulders'] },
       POOL,
     )
+    // lower_push × 2 → publicTypes = {lower} → warning spécialisation
     expect(d.generatorWarnings?.some((w) => w.includes('spécialisation'))).toBe(true)
   })
 

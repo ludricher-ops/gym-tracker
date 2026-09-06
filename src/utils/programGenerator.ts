@@ -26,6 +26,18 @@ export const FOCUS_TO_MUSCLES: Record<FocusMuscle, MuscleGroup[]> = {
   core:      ['core'],
 }
 
+/**
+ * Structure de split choisie explicitement par l'utilisateur dans le wizard.
+ * 'auto' (défaut) = le générateur choisit selon objectif + niveau + focus.
+ */
+export type SplitPreference =
+  | 'auto'        // Sélection automatique (recommandé)
+  | 'ppl'         // Push / Pull / Legs — le classique
+  | 'upper-lower' // Haut du corps / Bas du corps alternés
+  | 'arnold'      // Chest+Back / Shoulders+Arms / Legs — antagonistes
+  | 'brosplit'    // Un groupe musculaire par séance — volume maximal
+  | 'fullbody'    // Tout le corps à chaque séance
+
 export interface GeneratorParams {
   goal: ProgramGoal
   daysPerWeek: 2 | 3 | 4 | 5
@@ -42,6 +54,8 @@ export interface GeneratorParams {
    * Active la périodisation par blocs si ≥ 8 semaines.
    */
   totalWeeks?: number
+  /** Structure de split choisie dans le wizard — undefined équivaut à 'auto'. */
+  splitPreference?: SplitPreference
 }
 
 // ── Paramètres de séries/répétitions par objectif ────────────────────────────
@@ -94,13 +108,20 @@ type InternalWorkoutType =
   | 'upper-push'    | 'upper-pull'
   | 'lower-quad'    | 'lower-hip'
   | 'lower_pull'    | 'lower_push'
+  | 'chest-back'    | 'shoulders-arms'  // Arnold Split
+  | 'chest-tri'     | 'back-bi'         // Bro Split
+  | 'glutes-hip'    | 'quad-glutes'     // Programme bas du corps / féminin
 
 /** Retourne le WorkoutType public correspondant à un type interne. */
 function toPublicType(t: InternalWorkoutType): Exclude<WorkoutType, 'custom'> {
   if (t === 'fullbody-quad' || t === 'fullbody-hip') return 'fullbody'
   if (t === 'upper-push'    || t === 'upper-pull')   return 'upper'
   if (t === 'lower-quad'    || t === 'lower-hip')    return 'lower'
-  if (t === 'lower_pull' || t === 'lower_push')      return 'lower'
+  if (t === 'lower_pull' || t === 'lower_push')         return 'lower'
+  if (t === 'chest-back' || t === 'shoulders-arms')    return 'upper'
+  if (t === 'chest-tri')                               return 'push'
+  if (t === 'back-bi')                                 return 'pull'
+  if (t === 'glutes-hip' || t === 'quad-glutes')       return 'lower'
   return t
 }
 
@@ -245,6 +266,93 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['glutes'],                                compound: false }, // Cable kickback / abducteur (pos 8)
     { muscles: ['triceps'],                               compound: false }, // Extension (accessoire press — pos 9, éjecté si cap=8)
   ],
+  // ── Arnold Split ──────────────────────────────────────────────────────────────
+  // chest-back (A) : pectoraux + dos — antagonistes dans la même séance.
+  // Principe : les muscles pousseurs et tireurs se récupèrent mutuellement.
+  // Ordre : composé push → composé pull → alternance, puis isolations.
+  'chest-back': [
+    // Composés (antagonistes en alternance)
+    { muscles: ['chest', 'chest_upper'],                         compound: true  }, // Développé couché
+    { muscles: ['back_width', 'back'],                           compound: true  }, // Traction / lat pulldown
+    { muscles: ['shoulders', 'shoulders_front'],                 compound: true  }, // OHP — clôt les composés
+    { muscles: ['back_thickness', 'back'],                       compound: true  }, // Rowing barre / DB
+    // Isolations
+    { muscles: ['chest', 'chest_lower', 'chest_upper'],          compound: false }, // Fly / pec deck
+    { muscles: ['back_thickness', 'back_width', 'back'],         compound: false }, // Isolation dos
+    { muscles: ['biceps'],                                       compound: false }, // Curl barre / EZ
+    { muscles: ['triceps'],                                      compound: false }, // Extension
+    { muscles: ['shoulders_rear'],                               compound: false }, // Face pull (pos 9 — éjecté si cap=8)
+  ],
+  // shoulders-arms (B) : épaules + bras — après la séance chest+back, les bras
+  // sont récupérés et peuvent être travaillés à plein volume.
+  'shoulders-arms': [
+    // Composé épaules
+    { muscles: ['shoulders', 'shoulders_front'],                 compound: true  }, // OHP
+    // Isolations épaules
+    { muscles: ['shoulders_lateral'],                            compound: false }, // Écarté latéral
+    { muscles: ['shoulders_rear'],                               compound: false }, // Face pull / écarté penché
+    // Bras — volume dédié
+    { muscles: ['biceps'],                                       compound: false }, // Curl barre EZ
+    { muscles: ['triceps'],                                      compound: false }, // Pushdown / dips
+    { muscles: ['biceps'],                                       compound: false }, // Curl marteau / concentré
+    { muscles: ['triceps'],                                      compound: false }, // Extension overhead
+    { muscles: ['forearms'],                                     compound: false }, // Curl poignets (pos 8)
+  ],
+
+  // ── Bro Split ─────────────────────────────────────────────────────────────────
+  // chest-tri : séance pectoraux + triceps (synergistes — les tris sont pré-fatigués
+  // par le bench). Volume pec maximal + finitions triceps.
+  'chest-tri': [
+    { muscles: ['chest', 'chest_upper'],                         compound: true  }, // Développé couché / incliné
+    { muscles: ['chest_upper', 'chest'],                         compound: true  }, // Développé incliné (chest_upper prioritaire)
+    { muscles: ['triceps'],                                      compound: false }, // Pushdown / dips
+    { muscles: ['chest', 'chest_lower', 'chest_upper'],          compound: false }, // Fly pec deck
+    { muscles: ['chest_lower'],                                  compound: false }, // Cable crossover bas
+    { muscles: ['triceps'],                                      compound: false }, // Extension overhead
+    { muscles: ['shoulders_rear'],                               compound: false }, // Face pull — équilibre (pos 7)
+  ],
+  // back-bi : séance dos + biceps (synergistes — les biceps sont pré-fatigués
+  // par le tirage). Volume dos maximal (largeur + épaisseur) + finitions biceps.
+  'back-bi': [
+    { muscles: ['back_width', 'back'],                           compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_thickness', 'back'],                       compound: true  }, // Rowing barre / DB
+    { muscles: ['biceps'],                                       compound: false }, // Curl barre EZ
+    { muscles: ['back_thickness', 'back_width', 'back'],         compound: false }, // Isolation dos (pull-over, cable)
+    { muscles: ['biceps'],                                       compound: false }, // Curl marteau / concentré
+    { muscles: ['back_width'],                                   compound: false }, // Straight arm pulldown
+    { muscles: ['shoulders_rear'],                               compound: false }, // Face pull
+    { muscles: ['forearms'],                                     compound: false }, // Curl poignets (pos 8)
+  ],
+
+  // ── Programme bas du corps / féminin ──────────────────────────────────────────
+  // glutes-hip (A) : hip thrust dominant — chaîne postérieure prioritaire.
+  // Dos en soutien posture (lat pulldown) mais zéro poussée épaules/pecs.
+  'glutes-hip': [
+    // Composés (hip thrust-first)
+    { muscles: ['glutes', 'hamstrings'],                         compound: true  }, // Hip thrust / Sumo DL
+    { muscles: ['hamstrings', 'glutes'],                         compound: true  }, // RDL
+    { muscles: ['quads', 'glutes'],                              compound: true  }, // Fente bulgare / split squat
+    { muscles: ['back_width', 'back'],                           compound: true  }, // Lat pulldown (posture)
+    // Isolations
+    { muscles: ['glutes'],                                       compound: false }, // Hip abduction
+    { muscles: ['hamstrings'],                                   compound: false }, // Leg curl
+    { muscles: ['glutes'],                                       compound: false }, // Cable kickback / donkey kick
+    { muscles: ['back_thickness', 'back'],                       compound: false }, // Isolation dos / face pull
+  ],
+  // quad-glutes (B) : squat dominant — quadriceps + fessiers, dos en soutien posture.
+  'quad-glutes': [
+    // Composés (squat-first)
+    { muscles: ['quads', 'glutes'],                              compound: true  }, // Squat / leg press
+    { muscles: ['glutes', 'hamstrings'],                         compound: true  }, // Hip thrust léger (glutes prioritaire)
+    { muscles: ['back_thickness', 'back'],                       compound: true  }, // DB row / seated row (posture)
+    // Isolations
+    { muscles: ['quads'],                                        compound: false }, // Leg extension
+    { muscles: ['glutes'],                                       compound: false }, // Hip abduction
+    { muscles: ['hamstrings'],                                   compound: false }, // Leg curl
+    { muscles: ['calves'],                                       compound: false },
+    { muscles: ['back_width', 'back'],                           compound: false }, // Pull-over / isolation dos
+  ],
+
   // ── Patterns A/B fullbody ─────────────────────────────────────────────────────
   // fullbody-quad (A) : dominance quadriceps — squat + développé + tirage + OHP
   // fullbody-hip  (B) : dominance postérieure — RDL + développé + traction + OHP
@@ -322,29 +430,108 @@ function workoutTypeFromFocus(
 }
 
 function selectSplit(params: GeneratorParams): Split {
-  const { goal, daysPerWeek, level, focusMuscles = [] } = params
+  const { goal, daysPerWeek, level, focusMuscles = [], splitPreference } = params
   const isMass = goal === 'strength' || goal === 'hypertrophy'
+  const pref = splitPreference ?? 'auto'
 
-  // Si les muscles ciblés désignent clairement un type de séance, l'utiliser
-  // pour toutes les séances. Pour le bas du corps, alterner lower-quad / lower-hip
-  // (squat-dominant vs hip-dominant). Pour le haut du corps, alterner upper-push /
-  // upper-pull (poussée-dominant vs tirage-dominant) — variété structurelle A/B.
+  // ── Splits explicites — choix utilisateur ────────────────────────────────────
+
+  if (pref === 'ppl') {
+    switch (daysPerWeek) {
+      case 2: return ['push', 'pull']
+      case 3: return ['push', 'pull', 'legs']
+      case 4: return ['push', 'pull', 'legs', 'upper']          // + upper polyvalent
+      case 5: return ['push', 'pull', 'legs', 'push', 'pull']   // PPL×2 (legs 1× seulement)
+    }
+  }
+
+  if (pref === 'upper-lower') {
+    switch (daysPerWeek) {
+      case 2: return ['upper-push', 'lower-quad']
+      case 3: return ['upper-push', 'lower-quad', 'upper-pull']
+      case 4: return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip']
+      case 5: return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip', 'upper']
+    }
+  }
+
+  if (pref === 'arnold') {
+    // Arnold classique : Chest+Back / Shoulders+Arms / Legs (3j de base)
+    switch (daysPerWeek) {
+      case 2: return ['chest-back', 'legs']
+      case 3: return ['chest-back', 'shoulders-arms', 'legs']            // Le classique
+      case 4: return ['chest-back', 'shoulders-arms', 'legs', 'upper']  // + upper polyvalent
+      case 5: return ['chest-back', 'shoulders-arms', 'legs', 'chest-back', 'shoulders-arms']
+    }
+  }
+
+  if (pref === 'brosplit') {
+    // Bro split : un groupe musculaire par séance, volume maximal
+    switch (daysPerWeek) {
+      case 2: return ['chest-tri', 'back-bi']
+      case 3: return ['chest-tri', 'back-bi', 'legs']
+      case 4: return ['chest-tri', 'back-bi', 'shoulders-arms', 'legs']
+      case 5: return ['chest-tri', 'back-bi', 'legs', 'shoulders-arms', 'upper']
+    }
+  }
+
+  if (pref === 'fullbody') {
+    switch (daysPerWeek) {
+      case 2: return ['fullbody-quad', 'fullbody-hip']
+      case 3: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad']
+      case 4: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip']
+      case 5: return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip', 'fullbody-quad']
+    }
+  }
+
+  // ── Auto — logique enrichie ──────────────────────────────────────────────────
+
   const focusType = workoutTypeFromFocus(focusMuscles)
   if (focusType) {
+    // ── Lower seul : alterner squat-dominant / hip-dominant ──────────────────
     if (focusType === 'lower') {
       return Array.from({ length: daysPerWeek }, (_, i) =>
         i % 2 === 0 ? 'lower-quad' : 'lower-hip',
       ) as Split
     }
+
+    // ── Upper mixte (chest+back, ou combo sans jambes) ───────────────────────
+    // Coach : push/pull/upper donne 3 séances vraiment différentes.
     if (focusType === 'upper') {
-      return Array.from({ length: daysPerWeek }, (_, i) =>
-        i % 2 === 0 ? 'upper-push' : 'upper-pull',
-      ) as Split
+      switch (daysPerWeek) {
+        case 2: return ['push', 'pull']
+        case 3: return level !== 'beginner'
+          ? ['push', 'pull', 'upper']           // PPU — 3 types distincts
+          : ['upper-push', 'upper-pull', 'upper-push']
+        case 4: return ['push', 'pull', 'upper-push', 'upper-pull']
+        case 5: return ['push', 'pull', 'upper', 'upper-push', 'upper-pull']
+      }
     }
+
+    // ── Push seul (chest, shoulders) : alterner push et upper-push ───────────
+    if (focusType === 'push') {
+      switch (daysPerWeek) {
+        case 2: return ['push', 'upper-push']
+        case 3: return ['push', 'upper-push', 'push']
+        case 4: return ['push', 'upper-push', 'push', 'upper-push']
+        case 5: return ['push', 'upper-push', 'push', 'upper-push', 'push']
+      }
+    }
+
+    // ── Pull seul (back, back+arms) : alterner pull et upper-pull ────────────
+    if (focusType === 'pull') {
+      switch (daysPerWeek) {
+        case 2: return ['pull', 'upper-pull']
+        case 3: return ['pull', 'upper-pull', 'pull']
+        case 4: return ['pull', 'upper-pull', 'pull', 'upper-pull']
+        case 5: return ['pull', 'upper-pull', 'pull', 'upper-pull', 'pull']
+      }
+    }
+
+    // ── lower_pull / lower_push / legs : type fixe par session ───────────────
     return Array.from({ length: daysPerWeek }, () => focusType) as Split
   }
 
-  // Split par défaut basé sur l'objectif et la fréquence
+  // ── Split par défaut (pas de focus muscles explicite) ────────────────────────
   switch (daysPerWeek) {
     case 2:
       return ['fullbody-quad', 'fullbody-hip']
@@ -352,27 +539,27 @@ function selectSplit(params: GeneratorParams): Split {
     case 3:
       // Mass + intermédiaire/confirmé → PPL classique
       if (isMass && level !== 'beginner') return ['push', 'pull', 'legs']
-      // Non-mass + intermédiaire/confirmé → Push/Pull/Full Body (haut 2×, bas 1× via fullbody)
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Full Body
       if (!isMass && level !== 'beginner') return ['push', 'pull', 'fullbody-quad']
       // Débutants → fullbody A/B/A
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad']
 
     case 4:
-      // Mass → upper-push/lower-quad/upper-pull/lower-hip (structure A/B pour upper ET lower)
+      // Mass → upper-push/lower-quad/upper-pull/lower-hip
       if (isMass) return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip']
-      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower A/Full Body
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower/Full Body
       if (level !== 'beginner') return ['push', 'pull', 'lower-quad', 'fullbody-quad']
-      // Débutants non-mass → fullbody A/B/A/B
+      // Débutants → fullbody A/B/A/B
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip']
 
     case 5:
-      // Mass + intermédiaire/confirmé → PPL + upper + lower (chaque type 1×, pas besoin d'A/B)
+      // Mass + intermédiaire/confirmé → PPL + upper + lower
       if (isMass && level !== 'beginner') return ['push', 'pull', 'legs', 'upper', 'lower']
       // Mass + débutant → upper-push/lower-quad/upper-pull/lower-hip/fullbody
       if (isMass) return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip', 'fullbody-quad']
-      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower-A/Lower-B/Full Body
+      // Non-mass + intermédiaire/confirmé → Push/Pull/Lower A/Lower B/Full Body
       if (level !== 'beginner') return ['push', 'pull', 'lower-quad', 'lower-hip', 'fullbody-quad']
-      // Débutants non-mass → fullbody A/B/A/B/A
+      // Débutants → fullbody A/B/A/B/A
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip', 'fullbody-quad']
   }
 }
@@ -395,14 +582,20 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
   upper:    'Upper — Haut du corps',
   lower:    'Lower — Bas du corps',
   fullbody: 'Full Body',
-  'upper-push':    'Upper — Haut du corps',
-  'upper-pull':    'Upper — Haut du corps',
-  'lower-quad':    'Lower — Bas du corps',
-  'lower-hip':     'Lower — Bas du corps',
-  'lower_pull':    'Lower — Chaîne postérieure',
-  'lower_push':    'Lower — Squat & Press',
-  'fullbody-quad': 'Full Body',
-  'fullbody-hip':  'Full Body',
+  'upper-push':      'Upper — Haut du corps',
+  'upper-pull':      'Upper — Haut du corps',
+  'lower-quad':      'Lower — Bas du corps',
+  'lower-hip':       'Lower — Bas du corps',
+  'lower_pull':      'Lower — Chaîne postérieure',
+  'lower_push':      'Lower — Squat & Press',
+  'chest-back':      'Chest & Back — Pectoraux & Dos',
+  'shoulders-arms':  'Shoulders & Arms — Épaules & Bras',
+  'chest-tri':       'Chest & Triceps — Pectoraux & Triceps',
+  'back-bi':         'Back & Biceps — Dos & Biceps',
+  'glutes-hip':      'Glutes & Hip — Fessiers & Ischio',
+  'quad-glutes':     'Quad & Glutes — Jambes & Fessiers',
+  'fullbody-quad':   'Full Body',
+  'fullbody-hip':    'Full Body',
 }
 
 // ── Ajustement du nombre de slots selon la durée et l'objectif ───────────────
@@ -724,7 +917,7 @@ export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks, splitPreference } = params
   const durationWeeks = totalWeeks ?? DURATION_WEEKS[level]!
 
   // Construire le Set<MuscleGroup> des muscles ciblés une seule fois
@@ -896,10 +1089,16 @@ export function generateProgramDraft(
   // UX-5 : Déséquilibre push/pull → risque posture et épaule
   // Détecte un split sans aucune séance de tirage (pull, upper-pull, lower_pull ou fullbody).
   const hasPullSession = split.some(
-    (t) => t === 'pull' || t === 'upper-pull' || t === 'lower_pull' || t === 'fullbody-quad' || t === 'fullbody-hip',
+    (t) =>
+      t === 'pull' || t === 'upper-pull' || t === 'lower_pull' ||
+      t === 'back-bi' || t === 'chest-back' ||                  // Arnold / Bro : dos inclus
+      t === 'glutes-hip' || t === 'quad-glutes' ||              // templates féminins : lat pull inclus
+      t === 'fullbody-quad' || t === 'fullbody-hip',
   )
   const hasPushSession = split.some(
-    (t) => t === 'push' || t === 'upper-push' || t === 'lower_push',
+    (t) =>
+      t === 'push' || t === 'upper-push' || t === 'lower_push' ||
+      t === 'chest-tri' || t === 'chest-back' || t === 'shoulders-arms', // Bro / Arnold : poussée incluse
   )
   if (hasPushSession && !hasPullSession) {
     generatorWarnings.push(
