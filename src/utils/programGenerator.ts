@@ -489,6 +489,8 @@ function pickExercise(
 // ── DraftWE depuis un exercice + spec ─────────────────────────────────────────
 
 function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
+  const progressStepKg =
+    exercise.equipment === 'bodyweight' || exercise.equipment === 'band' ? 0 : 2.5
   return {
     localId: uuid(),
     exerciseId: exercise.id,
@@ -497,8 +499,8 @@ function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
     targetRepsMin: spec.repsMin,
     targetRepsMax: spec.repsMax,
     restSec: spec.restSec,
-    autoProgress: true,
-    progressStepKg: (exercise.equipment === 'bodyweight' || exercise.equipment === 'band') ? 0 : 2.5,
+    autoProgress: progressStepKg > 0,
+    progressStepKg,
   }
 }
 
