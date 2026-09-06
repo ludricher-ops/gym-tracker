@@ -68,6 +68,8 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   bodyweight: 'Poids du corps',
   kettlebell: 'Kettlebell',
   band: 'Élastique',
+  pullup_bar: 'Barre de traction',
+  cardio_machine: 'Cardio machine',
 }
 
 export const CATEGORY_LABEL: Record<ExerciseCategory, string> = {

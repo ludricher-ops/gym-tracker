@@ -407,10 +407,31 @@ export function ProgramGeneratorScreen() {
       )
     }
 
+    // Fix EQUIP-5 : exclure les exercices cardio (primaryMuscle:'cardio') — aucun slot de force ne les cible
     const availableCount = equipment.length === 0 ? 0 :
       store.exercises.filter(
-        (ex) => !ex.deleted && !ex.isWarmupExercise && equipment.includes(ex.equipment),
+        (ex) => !ex.deleted && !ex.isWarmupExercise && equipment.includes(ex.equipment) &&
+        ex.primaryMuscle !== 'cardio',
       ).length
+
+    // ── Détection des configurations problématiques ─────────────────────────
+    const weightedEquip: Equipment[] = ['barbell', 'dumbbell', 'cable', 'machine', 'kettlebell']
+    const hasWeightedEquip = equipment.some(e => weightedEquip.includes(e))
+
+    // EQUIP-5 : cardio_machine sélectionné — n'apparaîtra pas dans le programme
+    const cardioPresent = equipment.includes('cardio_machine')
+
+    // P59 : bodyweight seul sans pullup_bar ni équipement lesté → dos vide
+    const bwAloneWithoutBar =
+      equipment.includes('bodyweight') &&
+      !equipment.includes('pullup_bar') &&
+      !hasWeightedEquip
+
+    // P67 : objectif Force sans équipement lesté → progression externe impossible
+    const strengthCalOnly =
+      goal === 'strength' &&
+      !hasWeightedEquip &&
+      equipment.some(e => e === 'bodyweight' || e === 'pullup_bar')
 
     // Label selon le lieu choisi
     const lieuLabel = lieu === 'gym' ? 'Salle de sport'
@@ -442,7 +463,7 @@ export function ProgramGeneratorScreen() {
           {CARDIO_OPTIONS.map((opt) => renderEquipmentButton(opt))}
         </div>
 
-        {/* Warning si peu d'exercices disponibles */}
+        {/* Warning si peu d'exercices disponibles (hors cardio) */}
         {equipment.length > 0 && availableCount < 12 && (
           <div style={{
             display: 'flex',
@@ -459,6 +480,68 @@ export function ProgramGeneratorScreen() {
               {availableCount === 0
                 ? 'Aucun exercice disponible — le programme sera vide.'
                 : `Seulement ${availableCount} exercice${availableCount > 1 ? 's' : ''} disponibles — certains slots seront vides.`}
+            </span>
+          </div>
+        )}
+
+        {/* EQUIP-5 : cardio machine → aucun effet sur le programme de force */}
+        {cardioPresent && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--accent) 8%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--accent) 30%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
+            <span className="t-caption" style={{ color: 'var(--fg)' }}>
+              Les machines cardio (vélo, tapis…) ne sont pas intégrées dans les séances de musculation générées.
+              Ajoute-les en complément de tes séances, selon ton objectif.
+            </span>
+          </div>
+        )}
+
+        {/* P59 : poids du corps seul sans barre → dos vide */}
+        {bwAloneWithoutBar && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--warn, #f59e0b) 12%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--warn, #f59e0b) 40%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <span className="t-caption" style={{ color: 'var(--fg)' }}>
+              Sans barre de traction, les exercices de dos (tractions, rowing inversé) ne seront pas disponibles.
+              Les séances de tirage seront partiellement vides.{' '}
+              <strong>Ajoute "Barre de traction / dips" si tu en as une.</strong>
+            </span>
+          </div>
+        )}
+
+        {/* P67 : Force + poids du corps uniquement → progression externe impossible */}
+        {strengthCalOnly && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--danger, #ef4444) 10%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--danger, #ef4444) 35%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🔴</span>
+            <span className="t-caption" style={{ color: 'var(--fg)' }}>
+              L'objectif <strong>Force</strong> est conçu pour progresser en charge externe (barres, haltères…).
+              Sans équipement lesté, la progression de force ne peut pas être mesurée.
+              Envisage l'objectif <strong>Masse</strong> ou <strong>Bien-être</strong> pour le calisthenics.
             </span>
           </div>
         )}

@@ -39,10 +39,6 @@ async function apiFetch(path: string, opts?: RequestInit) {
   return json
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
 function formatAgo(ms: number | null | undefined): string {
   if (!ms) return 'jamais'
   const diff = Date.now() - ms
@@ -178,7 +174,9 @@ export function AdminScreen() {
                         Connecté {formatLogin(u.last_login_at)} · sync {formatSync(u.last_sync_ms)}
                       </div>
                     </div>
-                    <Icon name="chevron-right" size={16} style={{ transform: expanded === u.id ? 'rotate(90deg)' : 'none', transition: 'transform .2s', flexShrink: 0 }} />
+                    <span style={{ transform: expanded === u.id ? 'rotate(90deg)' : 'none', transition: 'transform .2s', flexShrink: 0, display: 'inline-flex' }}>
+                      <Icon name="chevron-right" size={16} />
+                    </span>
                   </button>
 
                   {/* Détails dépliables */}
