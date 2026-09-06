@@ -1025,7 +1025,8 @@
       "sizeBytes": 0,
       "importedAt": 1788095000000,
       "aspectRatio": 1
-    }
+    },
+    "category": "compound"
   },
   {
     "id": "seed-side-plank",
@@ -2927,7 +2928,7 @@
   },
   {
     "id": "seed-pullover-dumbbell",
-    "name": "Pull-over haltère",
+    "name": "Pull-over haltère (bras fléchi)",
     "primaryMuscle": "back_thickness",
     "secondaryMuscles": [
       "chest",
