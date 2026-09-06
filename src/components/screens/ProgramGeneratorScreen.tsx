@@ -281,7 +281,31 @@ export function ProgramGeneratorScreen() {
     }
     if (stepIndex === 2) return renderDayPicker()
     if (stepIndex === 3) {
-      return renderChips(STEP_DURATION, duration, (v: 20 | 45 | 60 | 90) => { setDuration(v); advance() })
+      // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
+      const durationNote = goal === 'strength' ? (
+        <div style={{
+          margin: '0 16px 12px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 8,
+          padding: '10px 14px',
+          borderRadius: 'var(--radius-card)',
+          background: 'color-mix(in oklch, var(--accent) 8%, var(--surface))',
+          border: '1.5px solid color-mix(in oklch, var(--accent) 30%, transparent)',
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
+          <span className="t-caption" style={{ color: 'var(--fg)' }}>
+            Force : les repos de 3 min entre séries limitent le volume.
+            20 min = 2 exercices · 45 min = 3 exercices · 60 min = 4 exercices · 90 min = 6 exercices.
+          </span>
+        </div>
+      ) : null
+      return (
+        <div>
+          {durationNote}
+          {renderChips(STEP_DURATION, duration, (v: 20 | 45 | 60 | 90) => { setDuration(v); advance() })}
+        </div>
+      )
     }
     if (stepIndex === 4) return renderLieuPicker()
     if (stepIndex === 5) return renderEquipmentPicker()
