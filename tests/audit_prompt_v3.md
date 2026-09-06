@@ -854,3 +854,278 @@ fmtMod(sets, reps):
 | PHASE1 | phaseAtLeast compare les ordres 1-4 correctement | P38 |
 | WIZ1 | phaseLabel() appelle buildPhases() (pas de formule inline) | P39 |
 | WIZ2 | fmtMod génère les strings à partir des numériques PHASE_CONFIG_BY_GOAL | P40 |
+
+---
+
+## Groupe F — Nouveaux types lower_pull / lower_push + focusMuscles cross-body (P41–P57)
+
+> **Contexte :** deux nouveaux types internes ont été ajoutés depuis la v3 :
+> - `lower_pull` → `'lower'` public — "Chaîne postérieure" (deadlift-first + tirage)
+> - `lower_push` → `'lower'` public — "Squat & Press" (squat-first + bench/OHP)
+>
+> Leurs règles dans `workoutTypeFromFocus` :
+> - `hasLower && hasPush && !hasPull` → `lower_push`  (avant lower_pull)
+> - `hasLower && hasPull && !hasPush` → `lower_pull`
+>
+> **SLOTS de référence (base 60 min, 9 slots chacun) :**
+> - `lower_pull` : hamstrings/glutes cpd → back_width cpd → back_thickness cpd → quads/glutes cpd → glutes/hamstrings isol → back isol → hamstrings isol → biceps isol → calves isol
+> - `lower_push` : quads/glutes cpd → chest cpd → shoulders cpd → hamstrings/glutes cpd → quads isol → chest isol → triceps isol → glutes isol → calves isol
+
+---
+
+### P41 — **legs + back → lower_pull** (chaîne postérieure)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:BB+DB, level:'beginner',
+  focusMuscles:['legs','back'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPull=true, hasPush=false` → `'lower_pull'`
+- Split public = `['lower','lower']`
+- Noms : "Lower — Chaîne postérieure A", "Lower — Chaîne postérieure B"
+- Premier exercice de travail (index 1, après warmup) = composé hamstrings/glutes (deadlift ou RDL)
+- `autoProgress: true`, `progressStepKg: 2.5` (équipement barbell/dumbbell)
+
+**Coach :** le deadlift couvre-t-il bien jambes ET dos dans un seul mouvement ? Pool d'exercices suffisant pour 2 sessions distinctes ?
+
+---
+
+### P42 — **legs + back + core → lower_pull** (core ne change pas le type)
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:FULL, level:'beginner',
+  focusMuscles:['legs','back','core'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPull=true, hasPush=false, hasCore=true` → `'lower_pull'`
+- Split public = `['lower','lower','lower']` (lower_pull × 3)
+- Noms : "Lower — Chaîne postérieure A/B/C"
+- Core apparaît en queue via `corePool` (comportement normal)
+- Persona typique : femme focus fessiers + posture + gainage
+
+**Coach :** profil féminin (fessiers/dos/gainage) — le programme est-il adapté ? Hip thrust présent ?
+
+---
+
+### P43 — **legs + shoulders → lower_push** (squat+press, haltérophile)
+```
+{ goal:'strength', daysPerWeek:3, sessionDuration:60, equipment:BB+DB, level:'intermediate',
+  focusMuscles:['legs','shoulders'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPush=true (shoulders), hasPull=false` → `'lower_push'`
+- Split public = `['lower','lower','lower']`
+- Noms : "Lower — Squat & Press A/B/C"
+- Premier exercice de travail = composé quads/glutes (squat)
+- Deuxième composé = shoulders/front (OHP) présent dans les slots
+- `autoProgress: true` (barbell prioritaire en strength)
+
+**Coach :** pattern Wendler / haltérophile — le split est-il cohérent pour la force ? OHP et squat sont-ils bien les deux piliers ?
+
+---
+
+### P44 — **legs + chest + shoulders → lower_push** (push complet + jambes)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:FULL, level:'beginner',
+  focusMuscles:['legs','chest','shoulders'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPush=true (chest+shoulders), hasPull=false` → `'lower_push'`
+- Split public = `['lower','lower']`
+- Noms : "Lower — Squat & Press A", "Lower — Squat & Press B"
+
+**Coach :** surcharge musculaire — quads + pecs + épaules dans la même séance, est-ce trop pour un débutant ?
+
+---
+
+### P45 — **chest + shoulders → push** (push day complet)
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:DB, level:'beginner',
+  focusMuscles:['chest','shoulders'] }
+```
+**Assertions CRITIQUES :**
+- `hasPush=true (chest+shoulders), hasPull=false, hasLower=false` → `'push'`
+- Split = `['push','push','push']`
+- Slots chest ET shoulders bien couverts (pas seulement l'un des deux)
+
+**Coach :** push day DB-only — l'OHP est-il disponible ? Le chest est-il correctement travaillé sans barre ?
+
+---
+
+### P46 — **back + arms → pull** (pull day complet)
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:BB+DB+CABLE, level:'intermediate',
+  focusMuscles:['back','arms'] }
+```
+**Assertions CRITIQUES :**
+- `hasPull=true (back), hasArms=true → hasUpper=true, hasPush=false, hasLower=false` → `'pull'`
+- Split = `['pull','pull','pull']`
+- Slots biceps (arms) ET dos (back) tous deux couverts
+
+**Coach :** pull day "dos + bras" — les biceps bénéficient-ils d'un slot dédié en plus du tirage composé ?
+
+---
+
+### P47 — **chest + arms → push** (push day avec bras)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:DB, level:'beginner',
+  focusMuscles:['chest','arms'] }
+```
+**Assertions CRITIQUES :**
+- `hasPush=true (chest), hasArms=true → hasUpper=true, hasPull=false, hasLower=false`
+- Vérifier la priorité des règles : `hasPush && !hasPull && !hasLower` → `'push'` (rule 3 avant rule 5)
+- Split = `['push','push']`
+- Triceps (arms) ET chest couverts
+
+**Coach :** chest + triceps en push day — cohérence musculaire (synergistes) ?
+
+---
+
+### P48 — **shoulders + back → upper** (mixte haut du corps)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:FULL, level:'beginner',
+  focusMuscles:['shoulders','back'] }
+```
+**Assertions CRITIQUES :**
+- `hasPush=true (shoulders), hasPull=true (back)` → `hasUpper=true, hasLower=false` → `'upper'`
+- Split = `['upper','upper']` (upper-push / upper-pull en interne)
+- Noms : "Upper — Haut du corps A", "Upper — Haut du corps B"
+
+**Coach :** `shoulders + back` → upper A/B — les épaules sont-elles bien représentées dans upper-push ET upper-pull ? Est-ce le meilleur split pour cet objectif ?
+
+---
+
+### P49 — **fat_loss 4j intermediate** (gap auto-split)
+```
+{ goal:'fat_loss', daysPerWeek:4, sessionDuration:60, equipment:FULL, level:'intermediate' }
+```
+**Assertions CRITIQUES :**
+- `isMass = false` (fat_loss) + intermediate + 4j → identifier la branche exacte dans `selectSplit`
+- Vérifier : fat_loss 4j intermediate ne tombe pas dans upper/lower (qui est isMass+4j)
+- Afficher le split exact produit
+
+**Coach :** fat_loss 4j intermediate — intensité cardio vs force, structure adaptée ?
+
+---
+
+### P50 — **strength 2j advanced** (gap niveau advanced)
+```
+{ goal:'strength', daysPerWeek:2, sessionDuration:90, equipment:FULL, level:'advanced' }
+```
+**Assertions CRITIQUES :**
+- 2j = fullbody toujours (vérifier que le niveau advanced ne bifurque pas avant daysPerWeek)
+- Split = `['fullbody','fullbody']`
+- 90 min strength advanced → `adjustedSlotCount(9, 90, 'strength')` = base 9 (pas de bonus +2 en strength)
+- Total = 9 + warmup + core = 11 exercices
+
+**Coach :** advanced en strength sur seulement 2j — fullbody est-il adapté ? Quid des sets×reps ?
+
+---
+
+### P51 — **endurance 5j advanced** (gap niveau advanced + beaucoup de jours)
+```
+{ goal:'endurance', daysPerWeek:5, sessionDuration:60, equipment:FULL, level:'advanced' }
+```
+**Assertions CRITIQUES :**
+- `isMass=false` (endurance) + advanced + 5j → identifier la branche dans selectSplit
+- Afficher le split exact
+- Vérifier que le niveau `advanced` ne produit pas de crash ou de split inattendu
+
+**Coach :** endurance 5j advanced — volume hebdomadaire par groupe musculaire, récupération suffisante ?
+
+---
+
+### P52 — **legs + back + chest (ambiguïté totale) → fullbody**
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:FULL, level:'beginner',
+  focusMuscles:['legs','back','chest'] }
+```
+**Assertions CRITIQUES :**
+- `hasLower=true, hasPull=true, hasPush=true` → toutes les règles lower_push/lower_pull échouent → `null`
+- Split par défaut 3j beginner isMass = `['fullbody','fullbody','fullbody']`
+- **JAMAIS** `['lower_pull','lower_pull','lower_pull']` ou `['lower_push','lower_push','lower_push']`
+
+---
+
+### P53 — **arms seul → upper** (cas surprenant mais documenté)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:DB, level:'beginner',
+  focusMuscles:['arms'] }
+```
+**Assertions CRITIQUES :**
+- `hasArms=true → hasUpper=true, hasPush=false, hasPull=false, hasLower=false`
+- Vérifie que rule 5 (`hasUpper && !hasLower`) matche → `'upper'`
+- Split = `['upper','upper']` (upper-push / upper-pull en interne)
+- Vérifier que les slots upper contiennent bien des exercices biceps ET triceps
+
+**Coach :** "arms seul" en upper — est-ce que l'utilisateur va vraiment faire du bench press en cherchant des bras ?
+
+---
+
+### P54 — **chest + back + shoulders + arms → upper** (haut du corps complet sans jambes)
+```
+{ goal:'hypertrophy', daysPerWeek:4, sessionDuration:60, equipment:FULL, level:'intermediate',
+  focusMuscles:['chest','back','shoulders','arms'] }
+```
+**Assertions CRITIQUES :**
+- `hasUpper=true (tous), hasLower=false` → `'upper'`
+- Split 4j intermediate isMass → mais avec focusMuscles → override → upper × 4
+- Types internes : upper-push / upper-pull / upper-push / upper-pull
+- Noms : "Upper — Haut du corps A/B/C/D"
+
+**Coach :** programme "haut du corps only" 4j intermediate — récupération entre sessions upper ?
+
+---
+
+### P55 — **focusMuscles + selectedDays custom** (override jours + focus)
+```
+{ goal:'hypertrophy', daysPerWeek:3, sessionDuration:60, equipment:FULL, level:'beginner',
+  focusMuscles:['legs','back'], selectedDays:['tuesday','thursday','saturday'] }
+```
+**Assertions CRITIQUES :**
+- `selectedDays` remplace le mapping par défaut (lundi/mercredi/vendredi)
+- Split = lower_pull × 3, jours : mardi, jeudi, samedi
+- Vérifier que `selectedDays` est respecté dans le `weekMap` du DraftProgram
+
+---
+
+### P56 — **lower_push + BW only** (squat+press sans équipement)
+```
+{ goal:'endurance', daysPerWeek:2, sessionDuration:45, equipment:BW, level:'beginner',
+  focusMuscles:['legs','shoulders'] }
+```
+**Assertions CRITIQUES :**
+- → `'lower_push'`, Split = `['lower','lower']`
+- 45min endurance → `adjustedSlotCount(9, 45, 'endurance')` = max(3, floor(9×0.75)) = 6 slots
+- BW only : exercices shoulders disponibles ? (bw-pike-push-up ou similaire)
+- `autoProgress: false`, `progressStepKg: 0`
+
+**Coach :** squat+press en BW — push-ups et pike push-ups suffisent-ils pour les épaules ? Quads bien couverts en BW ?
+
+---
+
+### P57 — **lower_pull + machine+cable only** (chaîne postérieure sans barbell)
+```
+{ goal:'hypertrophy', daysPerWeek:2, sessionDuration:60, equipment:MACH+CABLE, level:'beginner',
+  focusMuscles:['legs','back'] }
+```
+**Assertions CRITIQUES :**
+- → `'lower_pull'`, Split = `['lower','lower']`
+- Slot 1 (hamstrings/glutes compound) : aucun barbell deadlift → machine leg curl ou leg press ?
+- Slot 2 (back_width compound) : lat pulldown machine ou cable row ?
+- Vérifier qu'aucun exercice barbell/dumbbell n'apparaît
+
+**Coach :** lower_pull sans barre — le slot deadlift est-il bien rempli ? Quelle machine simule le hip hinge ?
+
+---
+
+## Récapitulatif assertions critiques Groupe F
+
+| Code | Assertion | Profils |
+|------|-----------|---------|
+| LP1 | legs+back(!push) → lower_pull, jamais fullbody | P41, P42, P57 |
+| LP2 | legs+push(!pull) → lower_push, jamais fullbody | P43, P44, P56 |
+| LP3 | legs+push+pull → null → fullbody (ambiguïté) | P52 |
+| LP4 | lower_pull deadlift-first : slot 1 = hamstrings/glutes compound | P41, P42 |
+| LP5 | lower_push squat-first : slot 1 = quads/glutes compound | P43, P44 |
+| PUSH_FULL | chest+shoulders → push (pas upper) | P45 |
+| PULL_FULL | back+arms → pull (pas upper) | P46 |
+| ARMS | arms seul → upper (rule 5 avant rule 3/4) | P53 |
