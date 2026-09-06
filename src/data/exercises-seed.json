@@ -1125,7 +1125,15 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-hack-squat",
