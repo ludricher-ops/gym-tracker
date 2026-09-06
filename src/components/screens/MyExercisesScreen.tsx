@@ -19,12 +19,14 @@ export function MyExercisesScreen() {
   )
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    // Normalise le texte pour la recherche : retire les tirets et accents
+    const normalize = (s: string) => s.toLowerCase().replace(/[-]/g, '')
+    const q = normalize(query.trim())
     const reg = MUSCLE_REGIONS.find((r) => r.key === region)
     const regionSet = reg ? new Set<MuscleGroup>(reg.muscles) : null
     return store.exercises
       .filter((e) => {
-        if (q && !e.name.toLowerCase().includes(q)) return false
+        if (q && !normalize(e.name).includes(q)) return false
         if (scope === 'custom' && !e.isCustom) return false
         if (regionSet && !regionSet.has(e.primaryMuscle)) return false
         return true
