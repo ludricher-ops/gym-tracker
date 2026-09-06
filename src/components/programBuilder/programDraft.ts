@@ -59,6 +59,11 @@ export interface DraftProgram {
   week: Partial<Record<Weekday, string>>
   /** Phases de périodisation calculées (affichage uniquement, non persistées). */
   phases?: DraftPhase[]
+  /**
+   * Avertissements émis pendant la génération (slots composés sans exercice disponible
+   * avec l'équipement choisi). Affiché dans StepReview — non persisté.
+   */
+  generatorWarnings?: string[]
 }
 
 /** Palette de couleurs de programme (cahier 6.12, étape 1). */

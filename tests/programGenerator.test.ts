@@ -6,7 +6,7 @@
  * sans mock de Math.random.
  */
 import { describe, it, expect } from 'vitest'
-import { generateProgramDraft, adjustedSpec } from '../src/utils/programGenerator'
+import { generateProgramDraft, adjustedSpec, PHASE_CONFIG_BY_GOAL } from '../src/utils/programGenerator'
 import type { Exercise } from '../src/types'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -286,11 +286,13 @@ describe('strengthEquipmentPrio', () => {
   })
 })
 
-// ── Slots fullbody-quad (9 slots — biceps, triceps, mollets séparés) ──────────
-// fullbody-quad : 4 composés (squat, bench, row, OHP) + 5 isolations (leg curl, face pull, biceps, triceps, calves)
-// fullbody-hip  : 4 composés (RDL, bench, pullup, OHP) + 5 isolations (leg ext, sh_lat/rear, biceps, triceps, calves)
+// ── Slots fullbody-quad (9 slots — biceps, calves, triceps en fin) ───────────
+// Ordre des isolations (slots 5-9) : leg curl, face pull, biceps, calves, triceps
+// Logique : calves (jambes) prioritaire sur triceps (bras accessoire) → inclus si cap=8 (90 min)
+// fullbody-quad : 4 composés (squat, bench, row, OHP) + 5 isolations (leg curl, face pull, biceps, calves, triceps)
+// fullbody-hip  : 4 composés (RDL, bench, pullup, OHP) + 5 isolations (leg ext, sh_lat/rear, biceps, calves, triceps)
 
-describe('fullbody-quad — 9 slots (biceps, triceps, mollets séparés)', () => {
+describe('fullbody-quad — 9 slots (biceps, calves, triceps séparés)', () => {
   const params = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, sessionDuration: 60 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
   it('le workout fullbody-quad contient un exercice biceps', () => {
@@ -299,7 +301,9 @@ describe('fullbody-quad — 9 slots (biceps, triceps, mollets séparés)', () =>
     expect(ids.some((id) => bicepsExs.includes(id))).toBe(true)
   })
 
-  it('le workout fullbody-quad contient un exercice triceps', () => {
+  it('le workout fullbody-quad contient un exercice triceps (60 min — 9 slots complets)', () => {
+    // En 60 min hypertrophie, tous les 9 slots sont inclus (adjustedSlotCount = base = 9)
+    // En 90 min, triceps est éjecté (slot 9, cap=8) au profit des mollets (slot 8)
     const ids = firstWorkoutIds(params)
     const tricepsExs = POOL.filter((e) => e.primaryMuscle === 'triceps').map((e) => e.id)
     expect(ids.some((id) => tricepsExs.includes(id))).toBe(true)
@@ -314,6 +318,14 @@ describe('fullbody-quad — 9 slots (biceps, triceps, mollets séparés)', () =>
   it('fullbody 60 min = 9 slots + 1 warmup + 1 core = 11 exercices', () => {
     const ids = firstWorkoutIds(params)
     expect(ids).toHaveLength(11)
+  })
+
+  it('BUG-2 : fullbody 90 min contient des mollets malgré le cap à 8 slots', () => {
+    // adjustedSlotCount(9, 90, 'hypertrophy') = min(9+2, 8) = 8 → slot 9 (triceps) éjecté
+    // calves est en slot 8 → doit être inclus
+    const ids = firstWorkoutIds({ ...params, sessionDuration: 90 as const })
+    const calvesExs = POOL.filter((e) => e.primaryMuscle === 'calves').map((e) => e.id)
+    expect(ids.some((id) => calvesExs.includes(id))).toBe(true)
   })
 })
 
@@ -752,5 +764,50 @@ describe('selectSplit — focusMuscles override', () => {
     // pas lower × 4. Vérification que core seul ne force PAS lower.
     expect(splitTypes({ goal: 'hypertrophy', daysPerWeek: 4, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['core'] }))
       .toEqual(['upper', 'lower', 'upper', 'lower'])
+  })
+})
+
+// ── BUG-3 : repsOffset force intensification ne doit pas produire repsMin=0 ──
+
+describe('BUG-3 : repsOffset force intensification', () => {
+  it('strength.intensification.repsOffset = -2 (et non -3) → COMPOUND_SPEC.repsMin(3) + offset ≥ 1', () => {
+    // COMPOUND_SPEC.strength.repsMin = 3 ; avec offset=-3 on obtenait 0 reps (clampé en séance)
+    // Corrigé : offset=-2 → 3-2=1 rep minimum (1RM/3RM training), sémantiquement correct
+    expect(PHASE_CONFIG_BY_GOAL.strength.intensification.repsOffset).toBe(-2)
+  })
+
+  it('endurance.adaptation.repsOffset = -2 → COMPOUND_SPEC.repsMin(15) + offset = 13 ≥ 1', () => {
+    // Vérification de cohérence pour les autres objectifs
+    const { repsOffset } = PHASE_CONFIG_BY_GOAL.endurance.adaptation
+    expect(15 + repsOffset).toBeGreaterThanOrEqual(1)
+  })
+})
+
+// ── BUG-5 : warning si slot compound vide (équipement insuffisant) ────────────
+
+describe('BUG-5 : generatorWarnings — slot compound vide', () => {
+  it('bodyweight seul en pull 3j → warning pour back_thickness compound indisponible', () => {
+    // En bodyweight, pullup couvre back_width (compound) mais aucun exercice compound
+    // bodyweight pour back_thickness (row-bb et row-db exclus) → warning émis
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: BODYWEIGHT, level: 'intermediate' },
+      POOL,
+    )
+    // Au moins un workout pull dans un split 3j intermediate (PPL)
+    const pullWorkout = d.workouts.find((w) => w.type === 'pull')
+    expect(pullWorkout).toBeDefined()
+    // Le draft doit porter au moins un warning concernant un slot composé
+    expect(d.generatorWarnings).toBeDefined()
+    expect(d.generatorWarnings!.length).toBeGreaterThan(0)
+    // Le warning mentionne un muscle (texte en français)
+    expect(d.generatorWarnings!.some((w) => w.includes('composé'))).toBe(true)
+  })
+
+  it('full gym → aucun warning (tous les slots composés trouvent un exercice)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' },
+      POOL,
+    )
+    expect(d.generatorWarnings).toBeUndefined()
   })
 })

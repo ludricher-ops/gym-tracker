@@ -225,8 +225,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['glutes', 'hamstrings'],                  compound: false }, // Hip thrust / cable kickback
     { muscles: ['back_thickness', 'back_width', 'back'],  compound: false }, // Isolation dos
     { muscles: ['hamstrings'],                            compound: false }, // Leg curl
-    { muscles: ['biceps'],                                compound: false }, // Curl (accessoire pull)
-    { muscles: ['calves'],                                compound: false },
+    { muscles: ['calves'],                                compound: false }, // Mollets (pos 8 — inclus si cap=8)
+    { muscles: ['biceps'],                                compound: false }, // Curl (accessoire pull — pos 9, éjecté si cap=8)
   ],
   // ── Squat & Press (lower_push) ───────────────────────────────────────────────
   // Pour les utilisateurs qui ciblent jambes + push (± core, ± bras).
@@ -240,10 +240,10 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['hamstrings', 'glutes'],                  compound: true  }, // RDL / good morning (post. chain)
     // Isolations
     { muscles: ['quads'],                                 compound: false }, // Leg extension
+    { muscles: ['calves'],                                compound: false }, // Mollets (pos 6 — inclus si cap=8)
     { muscles: ['chest', 'chest_lower', 'chest_upper'],   compound: false }, // Fly pectoraux
-    { muscles: ['triceps'],                               compound: false }, // Extension (accessoire press)
-    { muscles: ['glutes'],                                compound: false }, // Cable kickback / abducteur
-    { muscles: ['calves'],                                compound: false },
+    { muscles: ['glutes'],                                compound: false }, // Cable kickback / abducteur (pos 8)
+    { muscles: ['triceps'],                               compound: false }, // Extension (accessoire press — pos 9, éjecté si cap=8)
   ],
   // ── Patterns A/B fullbody ─────────────────────────────────────────────────────
   // fullbody-quad (A) : dominance quadriceps — squat + développé + tirage + OHP
@@ -259,8 +259,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['hamstrings'],                          compound: false }, // Leg curl
     { muscles: ['shoulders_rear'],                      compound: false }, // Face pull (prioritaire)
     { muscles: ['biceps'],                              compound: false },
-    { muscles: ['triceps'],                             compound: false },
-    { muscles: ['calves'],                              compound: false },
+    { muscles: ['calves'],                              compound: false }, // Mollets (pos 8 — inclus si cap=8)
+    { muscles: ['triceps'],                             compound: false }, // Accessoire press (pos 9, éjecté si cap=8)
   ],
   'fullbody-hip': [
     // Composés (tous en premier)
@@ -272,8 +272,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['quads'],                               compound: false }, // Leg extension
     { muscles: ['shoulders_lateral', 'shoulders_rear'], compound: false }, // Écarté / face pull
     { muscles: ['biceps'],                              compound: false },
-    { muscles: ['triceps'],                             compound: false },
-    { muscles: ['calves'],                              compound: false },
+    { muscles: ['calves'],                              compound: false }, // Mollets (pos 8 — inclus si cap=8)
+    { muscles: ['triceps'],                             compound: false }, // Accessoire press (pos 9, éjecté si cap=8)
   ],
 }
 
@@ -531,8 +531,12 @@ function pickExercise(
   if (slot.compound) {
     // Compound strict : filtrer sur la catégorie
     const compoundOnly = candidates.filter((ex) => ex.category === 'compound')
-    if (compoundOnly.length > 0) candidates = compoundOnly
-    // Sinon on garde tous les candidats (fallback)
+    if (compoundOnly.length > 0) {
+      candidates = compoundOnly
+    } else {
+      // Aucun compound disponible → signal via valeur sentinelle pour déclencher un warning
+      return null
+    }
   } else {
     // Préférer isolation, mais ne pas bloquer si aucun
     const isolationFirst = candidates.filter((ex) => ex.category === 'isolation')
@@ -605,7 +609,8 @@ type GoalPhaseConfig = {
 export const PHASE_CONFIG_BY_GOAL: Record<ProgramGoal, GoalPhaseConfig> = {
   strength: {
     adaptation:      { setsModifier: -1, repsOffset: +3, description: 'Maîtrise des mouvements, charges légères, volume modéré' },
-    intensification: { setsModifier:  0, repsOffset: -3, description: 'Charges maximales, répétitions faibles' },
+    // repsOffset: -2 et non -3 pour garantir repsMin ≥ 1 (COMPOUND_SPEC.strength.repsMin = 3 → 3-2=1)
+    intensification: { setsModifier:  0, repsOffset: -2, description: 'Charges maximales, répétitions faibles (1–3 reps)' },
     deload:          { setsModifier: -2, repsOffset: +4, description: 'Récupération active, 50 % du volume habituel' },
   },
   hypertrophy: {
@@ -695,6 +700,16 @@ export function buildPhases(totalWeeks: number, goal: ProgramGoal = 'strength'):
 
 // ── Fonction principale ───────────────────────────────────────────────────────
 
+/** Labels français courts pour les muscles — utilisés dans les warnings. */
+const MUSCLE_LABEL: Partial<Record<MuscleGroup, string>> = {
+  chest: 'pectoraux', chest_upper: 'pec. supérieur', chest_lower: 'pec. inférieur',
+  back: 'dos', back_width: 'dos (largeur)', back_thickness: 'dos (épaisseur)',
+  shoulders: 'épaules', shoulders_front: 'épaules (avant)', shoulders_lateral: 'épaules (latéral)',
+  shoulders_rear: 'épaules (arrière)',
+  quads: 'quadriceps', hamstrings: 'ischio-jambiers', glutes: 'fessiers', calves: 'mollets',
+  biceps: 'biceps', triceps: 'triceps', forearms: 'avant-bras', core: 'abdominaux',
+}
+
 export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
@@ -737,6 +752,10 @@ export function generateProgramDraft(
   const typeCount = new Map<string, number>()
 
   const workouts: DraftWorkout[] = []
+  // Warnings collectés lors de la génération (slots composés sans exercice disponible).
+  // Dédupliqués par clé "{workoutType}:{muscle}" pour éviter les répétitions cross-séances.
+  const warnKeys = new Set<string>()
+  const generatorWarnings: string[] = []
 
   for (const workoutType of split) {
     // Clé canonique : variantes A/B comptent ensemble pour le suffixe (upper-push + upper-pull = Upper A/B)
@@ -757,7 +776,21 @@ export function generateProgramDraft(
       const baseSpec = slot.compound ? COMPOUND_SPEC[goal]! : ISOLATION_SPEC[goal]!
       const spec = adjustedSpec(baseSpec, sessionDuration)
       const ex = pickExercise(slot, available, usedInWorkout, usedGlobally, level, focusedMuscles, goal)
-      if (!ex) continue
+      if (!ex) {
+        // Slot composé vide → émettre un warning (dédupliqué par muscle principal)
+        if (slot.compound) {
+          const primaryMuscle = slot.muscles[0]
+          const warnKey = `${workoutType}:${primaryMuscle ?? ''}`
+          if (primaryMuscle && !warnKeys.has(warnKey)) {
+            warnKeys.add(warnKey)
+            const label = MUSCLE_LABEL[primaryMuscle] ?? primaryMuscle
+            generatorWarnings.push(
+              `Aucun exercice composé disponible pour "${label}" avec votre équipement.`,
+            )
+          }
+        }
+        continue
+      }
 
       usedInWorkout.add(ex.id)
       usedGlobally.add(ex.id)
@@ -817,5 +850,6 @@ export function generateProgramDraft(
     workouts,
     week,
     phases: buildPhases(durationWeeks, goal),
+    generatorWarnings: generatorWarnings.length > 0 ? generatorWarnings : undefined,
   }
 }

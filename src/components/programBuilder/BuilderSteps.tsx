@@ -541,6 +541,24 @@ export function StepReview({
   return (
     <>
       <div className="gt-screen__scroll">
+        {/* Avertissements générateur — slots composés vides (équipement insuffisant) */}
+        {draft.generatorWarnings && draft.generatorWarnings.length > 0 && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 6,
+            padding: '10px 12px',
+            background: 'color-mix(in srgb, var(--warning, #f59e0b) 12%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--warning, #f59e0b) 40%, transparent)',
+            borderRadius: 10,
+          }}>
+            <p className="t-caption" style={{ fontWeight: 600, color: 'var(--warning, #f59e0b)', marginBottom: 2 }}>
+              ⚠️ Équipement insuffisant pour certains slots
+            </p>
+            {draft.generatorWarnings.map((w, i) => (
+              <p key={i} className="t-caption" style={{ color: 'var(--fg-muted)' }}>{w}</p>
+            ))}
+          </div>
+        )}
+
         {/* En-tête programme */}
         <Card variant="accent">
           <p className="t-eyebrow" style={{ color: 'var(--accent-ink)', opacity: 0.7 }}>
