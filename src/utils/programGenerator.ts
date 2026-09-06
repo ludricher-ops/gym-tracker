@@ -280,9 +280,15 @@ function selectSplit(params: GeneratorParams): Split {
   const isMass = goal === 'strength' || goal === 'hypertrophy'
 
   // Si les muscles ciblés désignent clairement un type de séance, l'utiliser
-  // pour toutes les séances (ex. "legs + core" → lower × N jours).
+  // pour toutes les séances. Pour le bas du corps, alterner lower-quad / lower-hip
+  // afin de varier la structure (squat-dominant vs hip-dominant) plutôt que N séances identiques.
   const focusType = workoutTypeFromFocus(focusMuscles)
   if (focusType) {
+    if (focusType === 'lower') {
+      return Array.from({ length: daysPerWeek }, (_, i) =>
+        i % 2 === 0 ? 'lower-quad' : 'lower-hip',
+      ) as Split
+    }
     return Array.from({ length: daysPerWeek }, () => focusType) as Split
   }
 

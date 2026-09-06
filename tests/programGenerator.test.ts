@@ -556,7 +556,8 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
       .toEqual(['fullbody', 'fullbody'])
   })
 
-  it('legs seul → lower × 2', () => {
+  it('legs seul → lower × 2 (lower-quad + lower-hip, type public = lower)', () => {
+    // Alternance interne quad/hip — le type public DraftWorkout.type reste 'lower'
     expect(splitTypes({ ...base, focusMuscles: ['legs'] }))
       .toEqual(['lower', 'lower'])
   })
@@ -564,6 +565,13 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
   it('legs + core → lower × 2 (core ne neutralise pas legs)', () => {
     expect(splitTypes({ ...base, focusMuscles: ['legs', 'core'] }))
       .toEqual(['lower', 'lower'])
+  })
+
+  it('focus legs + 2j → "Lower A" et "Lower B" (lower-quad / lower-hip distincts)', () => {
+    const d = generateProgramDraft({ ...base, focusMuscles: ['legs'] }, POOL)
+    const names = d.workouts.map((w) => w.name)
+    expect(names).toContain('Lower — Bas du corps A')
+    expect(names).toContain('Lower — Bas du corps B')
   })
 
   it('chest seul → push × 2', () => {
