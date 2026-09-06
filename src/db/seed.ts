@@ -16,6 +16,15 @@ import { buildTemplateRecords } from '../data/program-templates'
 import { idbTx, idbGet, idbGetAll } from './idb'
 import { OUTBOX_STORE } from './schema'
 
+interface SeedExerciseMedia {
+  url?: string
+  mime: string
+  type: 'photo' | 'gif'
+  sizeBytes: number
+  importedAt: number
+  aspectRatio: number
+}
+
 interface SeedExercise {
   id: string
   name: string
@@ -26,6 +35,7 @@ interface SeedExercise {
   trackingType: TrackingType
   popularity: number
   isWarmupExercise?: boolean
+  media?: SeedExerciseMedia
 }
 
 const SEED_EXERCISES = rawExercises as SeedExercise[]
@@ -60,36 +70,57 @@ const SEED_UPDATED_AT = 1
  * Injecte les exercices built-in manquants dans l'IDB (idempotent).
  * S'exécute à chaque lancement pour que les nouveaux exercices ajoutés
  * dans exercises-seed.json soient disponibles pour les utilisateurs existants.
+ * Patche également le champ `media` des exercices existants qui n'ont pas d'image
+ * mais dont le seed en fournit une (ex : URL corrigée après un 403/404).
  */
 async function ensureBuiltinExercises(now: number): Promise<void> {
-  const allExercises = await idbGetAll<{ id: string }>('exercises')
-  const existingIds = new Set(allExercises.map((e) => e.id))
-  const missing = SEED_EXERCISES.filter((ex) => !existingIds.has(ex.id))
-  if (missing.length === 0) return
+  const allExercises = await idbGetAll<Exercise>('exercises')
+  const existingMap = new Map(allExercises.map((e) => [e.id, e]))
 
-  const newExercises: Exercise[] = missing.map((ex) => ({
-    id: ex.id,
-    name: ex.name,
-    primaryMuscle: ex.primaryMuscle,
-    secondaryMuscles: ex.secondaryMuscles,
-    equipment: ex.equipment,
-    category: ex.category,
-    trackingType: ex.trackingType,
-    instructions: undefined,
-    isCustom: false,
-    isWarmupExercise: ex.isWarmupExercise,
-    popularity: ex.popularity,
-    usageCount: 0,
-    createdAt: now,
-    updatedAt: SEED_UPDATED_AT,
-    deleted: false,
-    dirty: true,
-  }))
+  const toInsert: Exercise[] = []
+  const toUpdateMedia: Exercise[] = []
+
+  for (const ex of SEED_EXERCISES) {
+    const existing = existingMap.get(ex.id)
+    const seedMedia = ex.media?.url
+      ? { type: ex.media.type, url: ex.media.url, mime: ex.media.mime,
+          sizeBytes: ex.media.sizeBytes, importedAt: ex.media.importedAt,
+          aspectRatio: ex.media.aspectRatio }
+      : undefined
+
+    if (!existing) {
+      // Exercice absent → insertion complète
+      toInsert.push({
+        id: ex.id,
+        name: ex.name,
+        primaryMuscle: ex.primaryMuscle,
+        secondaryMuscles: ex.secondaryMuscles,
+        equipment: ex.equipment,
+        category: ex.category,
+        trackingType: ex.trackingType,
+        instructions: undefined,
+        isCustom: false,
+        isWarmupExercise: ex.isWarmupExercise,
+        popularity: ex.popularity,
+        usageCount: 0,
+        media: seedMedia,
+        createdAt: now,
+        updatedAt: SEED_UPDATED_AT,
+        deleted: false,
+        dirty: true,
+      })
+    } else if (!existing.media?.url && seedMedia) {
+      // Exercice présent mais sans image → patch media uniquement
+      toUpdateMedia.push({ ...existing, media: seedMedia, updatedAt: SEED_UPDATED_AT, dirty: true })
+    }
+  }
+
+  if (toInsert.length === 0 && toUpdateMedia.length === 0) return
 
   await idbTx(['exercises', OUTBOX_STORE], 'readwrite', (tx) => {
     const store = tx.objectStore('exercises')
     const outbox = tx.objectStore(OUTBOX_STORE)
-    for (const ex of newExercises) {
+    for (const ex of [...toInsert, ...toUpdateMedia]) {
       store.put(ex)
       outbox.add({ store: 'exercises', id: ex.id, updatedAt: SEED_UPDATED_AT })
     }
