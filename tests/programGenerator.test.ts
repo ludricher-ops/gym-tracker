@@ -652,8 +652,46 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
       .toEqual(['lower', 'lower'])
   })
 
-  it('legs + back + chest → null → fullbody (push présent = ambiguïté)', () => {
-    // hasPush=true → lower_pull ne matche pas → null → fullbody
+  it('legs + shoulders → lower_push × 2 (squat+press, type public = lower)', () => {
+    // Pattern haltérophile : squat + overhead press → lower_push
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'shoulders'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + chest → lower_push × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'chest'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + chest + shoulders → lower_push × 2', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'chest', 'shoulders'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + shoulders + core → lower_push × 2 (core ne change pas le type)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'shoulders', 'core'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('focus legs+shoulders 3j → "Lower — Squat & Press A/B/C" (squat-first)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['legs', 'shoulders'] },
+      POOL,
+    )
+    const names = d.workouts.map((w) => w.name)
+    expect(names).toEqual([
+      'Lower — Squat & Press A',
+      'Lower — Squat & Press B',
+      'Lower — Squat & Press C',
+    ])
+    // Premier exercice de travail (index 1 = après warmup) = composé quad (squat)
+    const QUAD_MUSCLES = ['quads', 'glutes']
+    const firstWorkEx = (w: typeof d.workouts[0]) => POOL.find((e) => e.id === w.exercises[1]?.exerciseId)
+    expect(QUAD_MUSCLES).toContain(firstWorkEx(d.workouts[0]!)?.primaryMuscle)
+  })
+
+  it('legs + back + chest → null → fullbody (push + pull + jambes = ambiguïté totale)', () => {
+    // hasPush=true ET hasPull=true ET hasLower=true → aucune règle → null → fullbody
     expect(splitTypes({ ...base, focusMuscles: ['legs', 'back', 'chest'] }))
       .toEqual(['fullbody', 'fullbody'])
   })

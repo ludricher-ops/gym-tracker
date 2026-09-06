@@ -93,14 +93,14 @@ type InternalWorkoutType =
   | 'fullbody-quad' | 'fullbody-hip'
   | 'upper-push'    | 'upper-pull'
   | 'lower-quad'    | 'lower-hip'
-  | 'lower_pull'
+  | 'lower_pull'    | 'lower_push'
 
 /** Retourne le WorkoutType public correspondant à un type interne. */
 function toPublicType(t: InternalWorkoutType): Exclude<WorkoutType, 'custom'> {
   if (t === 'fullbody-quad' || t === 'fullbody-hip') return 'fullbody'
   if (t === 'upper-push'    || t === 'upper-pull')   return 'upper'
   if (t === 'lower-quad'    || t === 'lower-hip')    return 'lower'
-  if (t === 'lower_pull')                            return 'lower'
+  if (t === 'lower_pull' || t === 'lower_push')      return 'lower'
   return t
 }
 
@@ -228,6 +228,23 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['biceps'],                                compound: false }, // Curl (accessoire pull)
     { muscles: ['calves'],                                compound: false },
   ],
+  // ── Squat & Press (lower_push) ───────────────────────────────────────────────
+  // Pour les utilisateurs qui ciblent jambes + push (± core, ± bras).
+  // Pattern haltérophile / Wendler : squat-first puis overhead press ou bench.
+  // Structure : composé quad → composé chest → composé OHP → composé postérieur → isolations.
+  'lower_push': [
+    // Composés (squat-first)
+    { muscles: ['quads', 'glutes'],                       compound: true  }, // Squat / leg press
+    { muscles: ['chest', 'chest_upper'],                  compound: true  }, // Développé couché / incliné
+    { muscles: ['shoulders', 'shoulders_front'],          compound: true  }, // Overhead press
+    { muscles: ['hamstrings', 'glutes'],                  compound: true  }, // RDL / good morning (post. chain)
+    // Isolations
+    { muscles: ['quads'],                                 compound: false }, // Leg extension
+    { muscles: ['chest', 'chest_lower', 'chest_upper'],   compound: false }, // Fly pectoraux
+    { muscles: ['triceps'],                               compound: false }, // Extension (accessoire press)
+    { muscles: ['glutes'],                                compound: false }, // Cable kickback / abducteur
+    { muscles: ['calves'],                                compound: false },
+  ],
   // ── Patterns A/B fullbody ─────────────────────────────────────────────────────
   // fullbody-quad (A) : dominance quadriceps — squat + développé + tirage + OHP
   // fullbody-hip  (B) : dominance postérieure — RDL + développé + traction + OHP
@@ -294,10 +311,13 @@ function workoutTypeFromFocus(
   if (hasPull && !hasPush && !hasLower) return 'pull'
   // Haut du corps mixte (sans jambes)
   if (hasUpper && !hasLower) return 'upper'
+  // Squat & Press : jambes + push (± core, ± bras, sans tirage)
+  // → squat-first puis bench/OHP : pattern haltérophile classique (Wendler, crossfit).
+  if (hasLower && hasPush && !hasPull) return 'lower_push'
   // Chaîne postérieure : jambes + dos (± core, ± bras, sans push)
   // → deadlift-first : le soulevé de terre travaille simultanément jambes et dos.
   if (hasLower && hasPull && !hasPush) return 'lower_pull'
-  // Ambiguïté totale (push + jambes, ou push + pull + jambes, etc.) → split par défaut
+  // Ambiguïté totale (push + pull + jambes, etc.) → split par défaut
   return null
 }
 
@@ -380,6 +400,7 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
   'lower-quad':    'Lower — Bas du corps',
   'lower-hip':     'Lower — Bas du corps',
   'lower_pull':    'Lower — Chaîne postérieure',
+  'lower_push':    'Lower — Squat & Press',
   'fullbody-quad': 'Full Body',
   'fullbody-hip':  'Full Body',
 }
