@@ -31,11 +31,11 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Skull-Crusher.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/triceps/barbell-lying-triceps-extension-skull-crusher.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788082176352,
+      "importedAt": 1788701016489,
       "aspectRatio": 1
     }
   },
@@ -428,11 +428,11 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Preacher-Curl.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/biceps/barbell-preacher-curl.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788080039623,
+      "importedAt": 1788701016489,
       "aspectRatio": 1
     }
   },
@@ -1082,11 +1082,11 @@
     "isWarmupExercise": false,
     "popularity": 3,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2023/01/Dumbbell-Goblet-Squat.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/kettlebell-goblet-squat.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788080039623,
+      "importedAt": 1788701016489,
       "aspectRatio": 1
     }
   },
@@ -1124,15 +1124,7 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1,
-    "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-hack-squat",
@@ -1168,11 +1160,11 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shrug.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/traps/dumbbell-shrug.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788080039623,
+      "importedAt": 1788701016489,
       "aspectRatio": 1
     }
   },
@@ -2011,11 +2003,11 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Bodyweight-Bulgarian-Split-Squat.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/quads/dumbbell-single-leg-split-squat.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788080039623,
+      "importedAt": 1788701016489,
       "aspectRatio": 1
     }
   },
@@ -2839,7 +2831,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Upright-Row.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2862,7 +2854,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Upright-Row.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2884,7 +2876,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2022/05/Standing-leg-curl.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2907,7 +2899,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge-.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2930,7 +2922,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Lever-Shoulder-Press.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2953,7 +2945,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Pullover.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2976,7 +2968,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/10/Cable-Seated-Pullover.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -2999,7 +2991,7 @@
       "type": "gif",
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cable-Straight-Arm-Pulldown.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -3023,7 +3015,7 @@
       "type": "gif",
       "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/pectorals/lever-chest-press.gif",
       "mime": "image/gif",
-      "aspectRatio": 1.0
+      "aspectRatio": 1
     }
   },
   {
@@ -3066,10 +3058,10 @@
   },
   {
     "id": "bw-prone-y-raise",
-    "name": "Élévations Y (allongé)",
+    "name": "Élévations Y (élastique)",
     "primaryMuscle": "shoulders_rear",
     "secondaryMuscles": [],
-    "equipment": "bodyweight",
+    "equipment": "band",
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,

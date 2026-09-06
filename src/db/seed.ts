@@ -78,7 +78,7 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
   const existingMap = new Map(allExercises.map((e) => [e.id, e]))
 
   const toInsert: Exercise[] = []
-  const toUpdateMedia: Exercise[] = []
+  const toUpdate: Exercise[] = []
 
   for (const ex of SEED_EXERCISES) {
     const existing = existingMap.get(ex.id)
@@ -109,16 +109,27 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
         deleted: false,
         dirty: true,
       })
-    } else if (!existing.media?.url && seedMedia) {
-      // Exercice présent mais sans image → patch media uniquement.
-      // On utilise `now` (et non SEED_UPDATED_AT) pour que le push écrase bien
-      // la version serveur qui n'a pas encore ce champ media, et que les pulls
-      // suivants ne réécrasent pas le patch (LWW : le plus grand timestamp gagne).
-      toUpdateMedia.push({ ...existing, media: seedMedia, updatedAt: now, dirty: true })
+    } else {
+      // Exercice présent : détecter les champs du seed qui ont changé par rapport à la DB.
+      // On utilise `now` pour que le push écrase la version serveur (LWW).
+      const mediaUrlChanged = (existing.media?.url ?? null) !== (seedMedia?.url ?? null)
+      const equipmentChanged = existing.equipment !== ex.equipment
+      const nameChanged = existing.name !== ex.name
+
+      if (mediaUrlChanged || equipmentChanged || nameChanged) {
+        toUpdate.push({
+          ...existing,
+          name: ex.name,
+          equipment: ex.equipment,
+          media: seedMedia,
+          updatedAt: now,
+          dirty: true,
+        })
+      }
     }
   }
 
-  if (toInsert.length === 0 && toUpdateMedia.length === 0) return
+  if (toInsert.length === 0 && toUpdate.length === 0) return
 
   await idbTx(['exercises', OUTBOX_STORE], 'readwrite', (tx) => {
     const store = tx.objectStore('exercises')
@@ -127,7 +138,7 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
       store.put(ex)
       outbox.add({ store: 'exercises', id: ex.id, updatedAt: SEED_UPDATED_AT })
     }
-    for (const ex of toUpdateMedia) {
+    for (const ex of toUpdate) {
       store.put(ex)
       outbox.add({ store: 'exercises', id: ex.id, updatedAt: ex.updatedAt })
     }
