@@ -414,8 +414,8 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
 //   45 min → ×0.5  min 2 slots   (créneau court)
 //   60 min → ×0.5  min 4 slots   → 4 slots ≈ 65-70 min effectifs
 //            (anciennement ×0.75, donnait 6 slots pour les templates 8-9 slots → ~80 min)
-//   90 min → min(base, 6)         → 6 slots ≈ 80 min effectifs
-//            (anciennement base, donnait 9 slots pour fullbody → ~115 min)
+//   90 min → min(base, 5)         → 5 slots ≈ 85-90 min effectifs
+//            (anciennement 6 slots → ~100 min, légèrement au-dessus)
 //
 // Les autres objectifs (hypertrophie, endurance, fat_loss) gardent le barème normal.
 
@@ -434,7 +434,7 @@ function adjustedSlotCount(
     : base
   // 90 min
   return isStrength
-    ? Math.min(base, 6)                      // cap à 6 — base=6 inchangé, base 8-9 → 6
+    ? Math.min(base, 5)                      // cap à 5 — 5 slots ≈ 85-90 min avec repos 3 min
     : Math.min(base + 2, 8)
 }
 

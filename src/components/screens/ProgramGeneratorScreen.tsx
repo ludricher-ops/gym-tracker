@@ -296,7 +296,7 @@ export function ProgramGeneratorScreen() {
           <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
           <span className="t-caption" style={{ color: 'var(--fg)' }}>
             Force : les repos de 3 min entre séries limitent le volume.
-            20 min = 2 exercices · 45 min = 3 exercices · 60 min = 4 exercices · 90 min = 6 exercices.
+            20 min = 2 exercices · 45 min = 3 exercices · 60 min = 4 exercices · 90 min = 5 exercices.
           </span>
         </div>
       ) : null

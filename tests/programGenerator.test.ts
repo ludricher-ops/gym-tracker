@@ -462,11 +462,11 @@ describe('adjustedSlotCount — durée de séance', () => {
     expect(ids).toHaveLength(6)
   })
 
-  it('force 90 min → min(9, 6)=6 slots + warmup + core = 8 exercices', () => {
-    // strength 90 min : cap à 6 slots ≈ 80 min réels
-    // (anciennement base=9 slots → ~115 min, bien au-delà de 90 min)
+  it('force 90 min → min(9, 5)=5 slots + warmup + core = 7 exercices', () => {
+    // strength 90 min : cap à 5 slots ≈ 85-90 min réels (5 slots × 3 min repos ≈ 90 min)
+    // (anciennement 6 slots → ~100 min, légèrement au-dessus de 90 min)
     const ids = firstWorkoutIds({ ...base, goal: 'strength', sessionDuration: 90 })
-    expect(ids).toHaveLength(8)
+    expect(ids).toHaveLength(7)
   })
 })
 
