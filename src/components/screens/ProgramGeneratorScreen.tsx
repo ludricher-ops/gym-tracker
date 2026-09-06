@@ -183,8 +183,9 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 }
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Muscles  3: Structure  4: Jours  5: Durée  6: Lieu  7: Équipement  8: Niveau  9: Programme
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Muscles', 'Structure', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme']
+// 0: Objectif  1: Fréquence  2: Structure  3: Muscles(si auto)  4: Jours  5: Durée  6: Lieu  7: Équipement  8: Niveau  9: Programme
+// Si splitPreference !== 'auto', l'étape 3 (Muscles) est sautée → 9 étapes effectives
+const STEP_TITLE = ['Objectif', 'Fréquence', 'Structure', 'Muscles', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme']
 const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -219,6 +220,8 @@ export function ProgramGeneratorScreen() {
 
   function handleBack() {
     if (stepIndex === 0) nav.back()
+    // Si on est à Jours (4) avec un split explicite, sauter Muscles (3) au retour
+    else if (stepIndex === 4 && splitPreference !== 'auto') setStepIndex(2)
     else setStepIndex((s) => s - 1)
   }
 
@@ -249,26 +252,6 @@ export function ProgramGeneratorScreen() {
     setFocusMuscles((prev) =>
       prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
     )
-  }
-
-  // ── Pré-sélection du split selon les muscles (étape 2 → étape 3) ─────────────
-  // Quand l'utilisateur passe à l'étape Structure, on suggère le preset le plus
-  // cohérent avec les muscles qu'il vient de choisir.
-
-  function suggestSplitFromFocus(muscles: FocusMuscle[]): SplitPreference {
-    if (muscles.length === 0) return 'auto'
-    const hasLegs  = muscles.includes('legs')
-    const hasBack  = muscles.includes('back')
-    const hasChest = muscles.includes('chest')
-    // Seul cas vraiment évident : pecs + dos = antagonistes → Arnold
-    // (les deux groupes principaux en antagonisme, c'est la définition du split)
-    if (hasChest && hasBack && !hasLegs) return 'arnold'
-    // Haut du corps seul (sans jambes, sans combo chest+back) → PPL classique
-    const hasUpperOnly = !hasLegs && muscles.some((m) => ['chest', 'back', 'shoulders', 'arms'].includes(m))
-    if (hasUpperOnly) return 'ppl'
-    // Tout le reste (jambes seules, jambes+dos, mixte, etc.) → Auto
-    // Le générateur intègre déjà les muscles ciblés dans sa logique interne.
-    return 'auto'
   }
 
   // ── Sélection des jours (étape 4 dans le nouvel ordre) ───────────────────────
@@ -306,11 +289,11 @@ export function ProgramGeneratorScreen() {
         advance()
       })
     }
-    // Étape 2 : Muscles — l'utilisateur indique ses muscles cibles
-    // La sélection est optionnelle (bouton Continuer toujours actif)
-    if (stepIndex === 2) return renderMusclePicker()
-    // Étape 3 : Structure — pré-sélectionnée selon les muscles choisis
-    if (stepIndex === 3) return renderSplitPicker()
+    // Étape 2 : Structure — si 'auto', on affiche ensuite les muscles (étape 3)
+    //           si preset explicite, on saute directement aux jours (étape 4)
+    if (stepIndex === 2) return renderSplitPicker()
+    // Étape 3 : Muscles — uniquement si 'auto' (sinon on ne passe jamais ici)
+    if (stepIndex === 3) return renderMusclePicker()
     if (stepIndex === 4) return renderDayPicker()
     if (stepIndex === 5) {
       // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
@@ -650,7 +633,16 @@ export function ProgramGeneratorScreen() {
             return (
               <button
                 key={value}
-                onClick={() => { setSplitPreference(value); advance() }}
+                onClick={() => {
+                  setSplitPreference(value)
+                  if (value === 'auto') {
+                    advance()                      // → étape 3 (Muscles)
+                  } else {
+                    // Sauter Muscles : inutile si la structure est explicite
+                    setStepIndex((s) => s + 2)    // → étape 4 (Jours)
+                    setFocusMuscles([])            // reset au cas où
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -869,11 +861,7 @@ export function ProgramGeneratorScreen() {
         )}
 
         <button
-          onClick={() => {
-            // Pré-sélectionner le split selon les muscles choisis, puis avancer
-            setSplitPreference(suggestSplitFromFocus(focusMuscles))
-            advance()
-          }}
+          onClick={() => { advance() }}
           style={{
             width: '100%',
             padding: '16px',
@@ -1243,24 +1231,31 @@ export function ProgramGeneratorScreen() {
         </button>
         <h1 className="gt-topbar__title">{STEP_TITLE[stepIndex]}</h1>
         <span className="t-caption" style={{ fontWeight: 700, opacity: 0.5 }}>
-          {stepIndex + 1}/{TOTAL}
+          {/* Si preset explicite (non-auto), l'étape 3 (muscles) est sautée :
+              step 0→1, 1→2, 2→3, 4→4, 5→5… (réajuste le numéro affiché) */}
+          {splitPreference !== 'auto' && stepIndex >= 4 ? stepIndex : stepIndex + 1}
+          /{splitPreference === 'auto' ? TOTAL : TOTAL - 1}
         </span>
       </div>
 
-      {/* Barre de progression */}
+      {/* Barre de progression — masque l'étape Muscles si preset non-auto */}
       <div style={{ display: 'flex', gap: 4, padding: '8px 16px 20px' }}>
-        {Array.from({ length: TOTAL }).map((_, i) => (
+        {Array.from({ length: splitPreference === 'auto' ? TOTAL : TOTAL - 1 }).map((_, i) => {
+          // Index réel dans le wizard (quand non-auto, i>=3 correspond à step i+1)
+          const realStep = splitPreference !== 'auto' && i >= 3 ? i + 1 : i
+          return (
           <div
             key={i}
             style={{
               flex: 1,
               height: 3,
               borderRadius: 2,
-              background: i <= stepIndex ? 'var(--accent)' : 'var(--border)',
+              background: realStep <= stepIndex ? 'var(--accent)' : 'var(--border)',
               transition: 'background 0.2s',
             }}
           />
-        ))}
+          )
+        })}
       </div>
 
       <div className="gt-screen__scroll" style={{ paddingTop: 0 }}>
