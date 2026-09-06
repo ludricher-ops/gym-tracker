@@ -406,11 +406,17 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
 }
 
 // ── Ajustement du nombre de slots selon la durée et l'objectif ───────────────
-// L'objectif force a des temps de repos longs (180 s vs 60–90 s) qui réduisent
-// le nombre d'exercices faisables dans le créneau déclaré. On décale d'un cran :
-//   force 60 min ≈ hypertrophie 45 min   → ×0.75
-//   force 90 min ≈ hypertrophie 60 min   → base (pas de bonus +2)
-//   force 45 min ≈ hypertrophie 20 min   → ×0.5  (créneau très court)
+// La force impose des repos de 180 s (vs 60–90 s en hypertrophie), ce qui réduit
+// sensiblement le nombre d'exercices réalisables dans le créneau déclaré.
+//
+// Barème force (timing réel estimé avec warmup + core) :
+//   20 min → ×0.5  min 2 slots   (créneau très court)
+//   45 min → ×0.5  min 2 slots   (créneau court)
+//   60 min → ×0.5  min 4 slots   → 4 slots ≈ 65-70 min effectifs
+//            (anciennement ×0.75, donnait 6 slots pour les templates 8-9 slots → ~80 min)
+//   90 min → min(base, 6)         → 6 slots ≈ 80 min effectifs
+//            (anciennement base, donnait 9 slots pour fullbody → ~115 min)
+//
 // Les autres objectifs (hypertrophie, endurance, fat_loss) gardent le barème normal.
 
 function adjustedSlotCount(
@@ -424,10 +430,12 @@ function adjustedSlotCount(
     ? Math.max(2, Math.floor(base * 0.5))
     : Math.max(3, Math.floor(base * 0.75))
   if (duration === 60) return isStrength
-    ? Math.max(3, Math.floor(base * 0.75))
+    ? Math.max(4, Math.floor(base * 0.5))   // 4 slots pour tous les templates
     : base
   // 90 min
-  return isStrength ? base : Math.min(base + 2, 8)
+  return isStrength
+    ? Math.min(base, 6)                      // cap à 6 — base=6 inchangé, base 8-9 → 6
+    : Math.min(base + 2, 8)
 }
 
 // ── Ajustement du nombre de séries selon la durée ────────────────────────────

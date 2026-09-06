@@ -441,16 +441,18 @@ describe('adjustedSlotCount — durée de séance', () => {
     expect(ids).toHaveLength(10)
   })
 
-  it('force 60 min → max(3, floor(9×0.75))=6 slots + warmup + core = 8 exercices', () => {
-    // strength 60 min décalé d'un cran : repos 180s → ×0.75 comme hypertrophie 45 min
+  it('force 60 min → max(4, floor(9×0.5))=4 slots + warmup + core = 6 exercices', () => {
+    // strength 60 min : repos 180s → cap effectif à 4 slots ≈ 65-70 min réels
+    // (anciennement ×0.75 = 6 slots → ~80 min, trop long)
     const ids = firstWorkoutIds({ ...base, goal: 'strength', sessionDuration: 60 })
-    expect(ids).toHaveLength(8)
+    expect(ids).toHaveLength(6)
   })
 
-  it('force 90 min → base=9 slots (pas de bonus +2) + warmup + core = 11 exercices', () => {
-    // strength 90 min = hypertrophie 60 min (repos longs absorbent le temps bonus)
+  it('force 90 min → min(9, 6)=6 slots + warmup + core = 8 exercices', () => {
+    // strength 90 min : cap à 6 slots ≈ 80 min réels
+    // (anciennement base=9 slots → ~115 min, bien au-delà de 90 min)
     const ids = firstWorkoutIds({ ...base, goal: 'strength', sessionDuration: 90 })
-    expect(ids).toHaveLength(11)
+    expect(ids).toHaveLength(8)
   })
 })
 
