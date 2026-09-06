@@ -636,6 +636,45 @@ describe('workoutTypeFromFocus — via splitTypes', () => {
       .toEqual(['upper', 'upper'])
   })
 
+  it('legs + back → lower_pull × 2 (type public = lower)', () => {
+    // Chaîne postérieure : deadlift-first — jambes + dos sans push → lower_pull
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'back'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + back + core → lower_pull × 2 (core ne change pas le type)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'back', 'core'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + back + arms → lower_pull × 2 (arms accessoire du pull)', () => {
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'back', 'arms'] }))
+      .toEqual(['lower', 'lower'])
+  })
+
+  it('legs + back + chest → null → fullbody (push présent = ambiguïté)', () => {
+    // hasPush=true → lower_pull ne matche pas → null → fullbody
+    expect(splitTypes({ ...base, focusMuscles: ['legs', 'back', 'chest'] }))
+      .toEqual(['fullbody', 'fullbody'])
+  })
+
+  it('focus legs+back 3j → "Lower — Chaîne postérieure A/B/C" (deadlift-first)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['legs', 'back'] },
+      POOL,
+    )
+    const names = d.workouts.map((w) => w.name)
+    expect(names).toEqual([
+      'Lower — Chaîne postérieure A',
+      'Lower — Chaîne postérieure B',
+      'Lower — Chaîne postérieure C',
+    ])
+    // Premier exercice de travail (index 1 = après warmup) = composé ischio/fessiers (deadlift)
+    const HINGE_MUSCLES = ['hamstrings', 'glutes']
+    const firstWorkEx = (w: typeof d.workouts[0]) => POOL.find((e) => e.id === w.exercises[1]?.exerciseId)
+    expect(HINGE_MUSCLES).toContain(firstWorkEx(d.workouts[0]!)?.primaryMuscle)
+  })
+
   it('chest + back + legs (tout le corps) → null → split par défaut fullbody', () => {
     // Ambiguïté totale → workoutTypeFromFocus retourne null → selectSplit par défaut
     expect(splitTypes({ ...base, focusMuscles: ['chest', 'back', 'legs'] }))

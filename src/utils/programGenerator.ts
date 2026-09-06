@@ -87,17 +87,20 @@ interface Slot {
 //   fullbody-quad / fullbody-hip → 'fullbody'
 //   upper-push / upper-pull      → 'upper'
 //   lower-quad / lower-hip       → 'lower'
+//   lower_pull                   → 'lower'  (chaîne postérieure : deadlift + tirage)
 type InternalWorkoutType =
   | Exclude<WorkoutType, 'custom'>
   | 'fullbody-quad' | 'fullbody-hip'
   | 'upper-push'    | 'upper-pull'
   | 'lower-quad'    | 'lower-hip'
+  | 'lower_pull'
 
 /** Retourne le WorkoutType public correspondant à un type interne. */
 function toPublicType(t: InternalWorkoutType): Exclude<WorkoutType, 'custom'> {
   if (t === 'fullbody-quad' || t === 'fullbody-hip') return 'fullbody'
   if (t === 'upper-push'    || t === 'upper-pull')   return 'upper'
   if (t === 'lower-quad'    || t === 'lower-hip')    return 'lower'
+  if (t === 'lower_pull')                            return 'lower'
   return t
 }
 
@@ -207,6 +210,24 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['quads'],                          compound: false }, // Leg extension
     { muscles: ['calves'],                         compound: false },
   ],
+  // ── Chaîne postérieure (lower_pull) ─────────────────────────────────────────
+  // Pour les utilisateurs qui ciblent jambes + dos (± core, ± bras).
+  // Deadlift-first : le soulevé de terre est le mouvement roi qui travaille
+  // simultanément ischio-jambiers, fessiers et érecteurs du rachis.
+  // Structure : 1 composé jambes-dos → 2 composés dos → 1 composé jambes → isolations.
+  'lower_pull': [
+    // Composés (deadlift-first)
+    { muscles: ['hamstrings', 'glutes'],                  compound: true  }, // Deadlift / RDL
+    { muscles: ['back_width', 'back'],                    compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_thickness', 'back'],                compound: true  }, // Rowing barre / DB
+    { muscles: ['quads', 'glutes'],                       compound: true  }, // Squat / leg press (couverture quads)
+    // Isolations
+    { muscles: ['glutes', 'hamstrings'],                  compound: false }, // Hip thrust / cable kickback
+    { muscles: ['back_thickness', 'back_width', 'back'],  compound: false }, // Isolation dos
+    { muscles: ['hamstrings'],                            compound: false }, // Leg curl
+    { muscles: ['biceps'],                                compound: false }, // Curl (accessoire pull)
+    { muscles: ['calves'],                                compound: false },
+  ],
   // ── Patterns A/B fullbody ─────────────────────────────────────────────────────
   // fullbody-quad (A) : dominance quadriceps — squat + développé + tirage + OHP
   // fullbody-hip  (B) : dominance postérieure — RDL + développé + traction + OHP
@@ -249,7 +270,9 @@ type Split = InternalWorkoutType[]
  * toutes les séances du programme seront de ce type.
  * Retourne null si les muscles couvrent trop de groupes (→ split par défaut).
  */
-function workoutTypeFromFocus(focusMuscles: FocusMuscle[]): Exclude<WorkoutType, 'custom' | 'fullbody'> | null {
+function workoutTypeFromFocus(
+  focusMuscles: FocusMuscle[],
+): Exclude<InternalWorkoutType, 'upper-push' | 'upper-pull' | 'lower-quad' | 'lower-hip' | 'fullbody-quad' | 'fullbody-hip'> | null {
   if (focusMuscles.length === 0) return null
 
   const hasLower = focusMuscles.includes('legs')
@@ -259,7 +282,7 @@ function workoutTypeFromFocus(focusMuscles: FocusMuscle[]): Exclude<WorkoutType,
   const hasCore  = focusMuscles.includes('core')
   const hasUpper = hasPush || hasPull || hasArms
 
-  // Jambes (± core) → séances bas du corps
+  // Jambes seules (± core) → séances bas du corps
   if (hasLower && !hasUpper) return 'lower'
   // Core seul → null : le générateur produit un fullbody équilibré avec un exercice
   // core ajouté en queue de chaque séance (corePool). Retourner 'lower' ici serait
@@ -271,7 +294,10 @@ function workoutTypeFromFocus(focusMuscles: FocusMuscle[]): Exclude<WorkoutType,
   if (hasPull && !hasPush && !hasLower) return 'pull'
   // Haut du corps mixte (sans jambes)
   if (hasUpper && !hasLower) return 'upper'
-  // Ambigü ou tout le corps → split par défaut
+  // Chaîne postérieure : jambes + dos (± core, ± bras, sans push)
+  // → deadlift-first : le soulevé de terre travaille simultanément jambes et dos.
+  if (hasLower && hasPull && !hasPush) return 'lower_pull'
+  // Ambiguïté totale (push + jambes, ou push + pull + jambes, etc.) → split par défaut
   return null
 }
 
@@ -353,6 +379,7 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
   'upper-pull':    'Upper — Haut du corps',
   'lower-quad':    'Lower — Bas du corps',
   'lower-hip':     'Lower — Bas du corps',
+  'lower_pull':    'Lower — Chaîne postérieure',
   'fullbody-quad': 'Full Body',
   'fullbody-hip':  'Full Body',
 }
