@@ -432,9 +432,11 @@ describe('adjustedSlotCount — durée de séance', () => {
   // fullbody-quad base = 9 slots (4 composés + 5 isolations)
   const base = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, equipment: FULL_GYM, level: 'beginner' as const }
 
-  it('20 min → max(2, floor(9×0.5)) = 4 slots + warmup + core = 6 exercices', () => {
+  it('20 min → max(2, floor(9×0.5)) = 4 slots + warmup (1 série) — core supprimé = 5 exercices', () => {
+    // UX-A : en 20 min, le core est supprimé (représentait ~5 min sur 20, soit ~25% du crédit)
+    // et le warmup est réduit à 1 série. Total : 4 slots + 1 warmup = 5 exercices.
     const ids = firstWorkoutIds({ ...base, sessionDuration: 20 })
-    expect(ids).toHaveLength(6)
+    expect(ids).toHaveLength(5)
   })
 
   it('45 min → max(3, floor(9×0.75)) = 6 slots + warmup + core = 8 exercices', () => {
@@ -809,5 +811,107 @@ describe('BUG-5 : generatorWarnings — slot compound vide', () => {
       POOL,
     )
     expect(d.generatorWarnings).toBeUndefined()
+  })
+})
+
+// ── UX-A : Warmup/core ajustés pour séances ≤ 20 min ─────────────────────────
+
+describe('UX-A : warmup réduit et core supprimé pour séances ≤ 20 min', () => {
+  const base = { goal: 'hypertrophy' as const, daysPerWeek: 2 as const, equipment: FULL_GYM, level: 'beginner' as const }
+
+  it('45 min → warmup + main + core présents (comportement normal)', () => {
+    const d = generateProgramDraft({ ...base, sessionDuration: 45 }, POOL)
+    const w = d.workouts[0]!
+    const hasCore = w.exercises.some((e) => {
+      const ex = POOL.find((p) => p.id === e.exerciseId)
+      return ex?.primaryMuscle === 'core' && !ex.isWarmupExercise
+    })
+    expect(hasCore).toBe(true)
+  })
+
+  it('20 min → core supprimé, warmup 1 série', () => {
+    const d = generateProgramDraft({ ...base, sessionDuration: 20 }, POOL)
+    const w = d.workouts[0]!
+    const hasCore = w.exercises.some((e) => {
+      const ex = POOL.find((p) => p.id === e.exerciseId)
+      return ex?.primaryMuscle === 'core' && !ex.isWarmupExercise
+    })
+    expect(hasCore).toBe(false)
+  })
+})
+
+// ── UX-C/D/H : Warnings contextuels ──────────────────────────────────────────
+
+describe('UX-C : warning force pour débutant', () => {
+  it('strength + beginner → warning dans generatorWarnings', () => {
+    const d = generateProgramDraft(
+      { goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('débutant') && w.includes('hypertrophie'))).toBe(true)
+  })
+
+  it('strength + intermediate → pas de warning force débutant', () => {
+    const d = generateProgramDraft(
+      { goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' },
+      POOL,
+    )
+    const hasBeginnerWarn = d.generatorWarnings?.some((w) => w.includes('hypertrophie')) ?? false
+    expect(hasBeginnerWarn).toBe(false)
+  })
+})
+
+describe('UX-D : warning programme unilatéral (spécialisation)', () => {
+  it('focusMuscles=[chest] 2j → push only → warning spécialisation', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest'] },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('spécialisation'))).toBe(true)
+  })
+
+  it('split fullbody (no focus) → pas de warning spécialisation', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    const hasSpecWarn = d.generatorWarnings?.some((w) => w.includes('spécialisation')) ?? false
+    expect(hasSpecWarn).toBe(false)
+  })
+})
+
+describe('UX-H : warning volume débutant 5j+', () => {
+  it('beginner 5j → warning volume élevé', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('récupération'))).toBe(true)
+  })
+
+  it('intermediate 5j → pas de warning volume débutant', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' },
+      POOL,
+    )
+    const hasVolWarn = d.generatorWarnings?.some((w) => w.includes('récupération')) ?? false
+    expect(hasVolWarn).toBe(false)
+  })
+})
+
+describe('UX-G : tri par muscle principal du slot (fullbody-quad)', () => {
+  it('fullbody-quad : premier exercice de travail = quad-dominant (squat, pas hip thrust)', () => {
+    // slot 1 de fullbody-quad = {muscles: ['quads', 'glutes'], compound: true}
+    // sans UX-G fix : hip thrust (glutes, popularity=8 dans le POOL réel) avant squat (quads)
+    // avec UX-G fix : squat ou similaire quad-dominant car slot.muscles[0] = 'quads'
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 2, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    const firstWorkout = d.workouts[0]!
+    // exercises[0] est le warmup (unshift), exercises[1] est le 1er slot de travail
+    const firstWorkEx = POOL.find((e) => e.id === firstWorkout.exercises[1]?.exerciseId)
+    // Le premier slot de fullbody-quad = quads+glutes compound → primaryMuscle doit être 'quads'
+    expect(firstWorkEx?.primaryMuscle).toBe('quads')
   })
 })

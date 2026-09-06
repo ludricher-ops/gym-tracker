@@ -543,13 +543,21 @@ function pickExercise(
     if (isolationFirst.length > 0) candidates = isolationFirst
   }
 
-  // Trier : muscles ciblés d'abord, puis (force+compound) équipement chargé,
-  // puis non-utilisé globalement, puis popularité desc.
+  // Trier : muscles ciblés d'abord, puis muscle principal du slot (slot.muscles[0]),
+  // puis (force+compound) équipement chargé, puis non-utilisé globalement, puis popularité desc.
+  // Le critère slot.muscles[0] garantit que fullbody-quad démarre par un quad-dominant
+  // (squat) et non un glute-dominant (hip thrust), même si ce dernier a plus de popularité.
   candidates.sort((a, b) => {
     if (focused.size > 0) {
       const aF = focused.has(a.primaryMuscle) ? 0 : 1
       const bF = focused.has(b.primaryMuscle) ? 0 : 1
       if (aF !== bF) return aF - bF
+    }
+    const slotPrimary = slot.muscles[0]
+    if (slotPrimary) {
+      const aP = a.primaryMuscle === slotPrimary ? 0 : 1
+      const bP = b.primaryMuscle === slotPrimary ? 0 : 1
+      if (aP !== bP) return aP - bP
     }
     if (goal === 'strength' && slot.compound) {
       const eqDiff = strengthEquipmentPrio(a.equipment) - strengthEquipmentPrio(b.equipment)
@@ -797,18 +805,23 @@ export function generateProgramDraft(
       draftExercises.push(makeDraftWE(ex, spec))
     }
 
+    // Séances très courtes (≤ 20 min) : warmup réduit à 1 série, core supprimé.
+    // Le warmup + core représentent ~8 min fixes, soit ~40 % d'une séance de 20 min.
+    const isVeryShort = sessionDuration <= 20
+    const effectiveWarmupSpec: SetSpec = isVeryShort ? { ...WARMUP_SPEC, sets: 1 } : WARMUP_SPEC
+
     // Échauffement en tête — varie par rotation entre les séances
     if (warmupPool.length > 0) {
       const warmupEx = warmupPool[workouts.length % warmupPool.length]
       if (warmupEx) {
-        const we = makeDraftWE(warmupEx, WARMUP_SPEC)
+        const we = makeDraftWE(warmupEx, effectiveWarmupSpec)
         we.autoProgress = false
         draftExercises.unshift(we)
       }
     }
 
-    // Abdos en queue — varie par rotation entre les séances
-    if (corePool.length > 0) {
+    // Abdos en queue — supprimé pour les séances ≤ 20 min (crédit temps insuffisant)
+    if (!isVeryShort && corePool.length > 0) {
       const coreEx = corePool[workouts.length % corePool.length]
       if (coreEx) {
         draftExercises.push(makeDraftWE(coreEx, CORE_SPEC))
@@ -838,6 +851,44 @@ export function generateProgramDraft(
     const day = days[i]
     const workout = workouts[i]
     if (day && workout) week[day] = workout.localId
+  }
+
+  // ── Warnings contextuels (non liés aux slots) ──────────────────────────────
+
+  // UX-C : Force pour débutant — specs 5×3-5 présupposent une technique maîtrisée
+  if (goal === 'strength' && level === 'beginner') {
+    generatorWarnings.unshift(
+      'Force pour débutant : les specs 5×3–5 supposent une technique parfaite. ' +
+      'Envisagez de commencer en hypertrophie (4×8–12) pour ancrer les patterns de mouvement.',
+    )
+  }
+
+  // UX-H : Volume élevé pour débutant
+  if (level === 'beginner' && daysPerWeek >= 5) {
+    generatorWarnings.push(
+      'Volume élevé pour débutant : 5 séances/semaine génère un volume proche d\'un programme intermédiaire. ' +
+      'Commencez à 3–4 jours pour favoriser la récupération.',
+    )
+  }
+
+  // UX-D : Programme unilatéral (push only, pull only, lower only) = spécialisation
+  const publicTypes = new Set(split.map(toPublicType))
+  if (publicTypes.size === 1) {
+    const t = [...publicTypes][0]
+    if (t === 'push' || t === 'pull' || t === 'lower') {
+      generatorWarnings.push(
+        'Programme de spécialisation : toutes les séances ciblent le même groupe. ' +
+        'Convient pour un bloc court (4–6 semaines) mais ne constitue pas un programme complet.',
+      )
+    }
+  }
+
+  // UX-B : Focus "bras" ou "épaules" + split push → biceps structurellement absent
+  if (split.every((t) => t === 'push') && (focusMuscles ?? []).some((f) => f === 'arms' || f === 'shoulders')) {
+    generatorWarnings.push(
+      'Focus bras en push : le biceps n\'est pas ciblé en séance push. ' +
+      'Pour des bras complets, envisagez un focus "haut du corps" (chest + back) incluant aussi le dos.',
+    )
   }
 
   return {

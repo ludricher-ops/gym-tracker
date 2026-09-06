@@ -3103,5 +3103,26 @@
       "importedAt": 1788679414727,
       "aspectRatio": 1
     }
+  },
+  {
+    "id": "seed-hip-thrust-machine",
+    "name": "Hip thrust machine",
+    "primaryMuscle": "glutes",
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/04/Hip-Thrust-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788080039623,
+      "aspectRatio": 1
+    }
   }
 ]
