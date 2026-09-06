@@ -342,8 +342,10 @@ describe('lower-quad / lower-hip — mollets systématiques', () => {
 
 describe('pull — slot forearms indépendant', () => {
   it('le workout pull contient un exercice forearms distinct du biceps', () => {
-    // PPL : level intermédiaire requis (beginner → fullbody)
-    const d = generateProgramDraft({ goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
+    // PPL : level intermédiaire requis (beginner → fullbody).
+    // Utilise hypertrophie : strength 60 min applique un facteur ×0.75 (4 slots)
+    // qui élide le slot forearms (6ème position). Hypertrophie = 6 slots complets.
+    const d = generateProgramDraft({ goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
     const pullWorkout = d.workouts.find((w) => w.type === 'pull')!
     const exIds = pullWorkout.exercises.map((e) => e.exerciseId)
     const forearmExs  = POOL.filter((e) => e.primaryMuscle === 'forearms').map((e) => e.id)
@@ -437,6 +439,18 @@ describe('adjustedSlotCount — durée de séance', () => {
     // adjustedSlotCount(9, 90) = min(11,8) = 8 (cap à 8)
     const ids = firstWorkoutIds({ ...base, sessionDuration: 90 })
     expect(ids).toHaveLength(10)
+  })
+
+  it('force 60 min → max(3, floor(9×0.75))=6 slots + warmup + core = 8 exercices', () => {
+    // strength 60 min décalé d'un cran : repos 180s → ×0.75 comme hypertrophie 45 min
+    const ids = firstWorkoutIds({ ...base, goal: 'strength', sessionDuration: 60 })
+    expect(ids).toHaveLength(8)
+  })
+
+  it('force 90 min → base=9 slots (pas de bonus +2) + warmup + core = 11 exercices', () => {
+    // strength 90 min = hypertrophie 60 min (repos longs absorbent le temps bonus)
+    const ids = firstWorkoutIds({ ...base, goal: 'strength', sessionDuration: 90 })
+    expect(ids).toHaveLength(11)
   })
 })
 

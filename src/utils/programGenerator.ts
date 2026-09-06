@@ -351,13 +351,29 @@ const WORKOUT_NAMES: Record<InternalWorkoutType, string> = {
   'fullbody-hip':  'Full Body',
 }
 
-// ── Ajustement du nombre de slots selon la durée ──────────────────────────────
+// ── Ajustement du nombre de slots selon la durée et l'objectif ───────────────
+// L'objectif force a des temps de repos longs (180 s vs 60–90 s) qui réduisent
+// le nombre d'exercices faisables dans le créneau déclaré. On décale d'un cran :
+//   force 60 min ≈ hypertrophie 45 min   → ×0.75
+//   force 90 min ≈ hypertrophie 60 min   → base (pas de bonus +2)
+//   force 45 min ≈ hypertrophie 20 min   → ×0.5  (créneau très court)
+// Les autres objectifs (hypertrophie, endurance, fat_loss) gardent le barème normal.
 
-function adjustedSlotCount(base: number, duration: 20 | 45 | 60 | 90): number {
+function adjustedSlotCount(
+  base: number,
+  duration: 20 | 45 | 60 | 90,
+  goal: ProgramGoal,
+): number {
+  const isStrength = goal === 'strength'
   if (duration === 20) return Math.max(2, Math.floor(base * 0.5))
-  if (duration === 45) return Math.max(3, Math.floor(base * 0.75))
-  if (duration === 90) return Math.min(base + 2, 8)
-  return base
+  if (duration === 45) return isStrength
+    ? Math.max(2, Math.floor(base * 0.5))
+    : Math.max(3, Math.floor(base * 0.75))
+  if (duration === 60) return isStrength
+    ? Math.max(3, Math.floor(base * 0.75))
+    : base
+  // 90 min
+  return isStrength ? base : Math.min(base + 2, 8)
 }
 
 // ── Ajustement du nombre de séries selon la durée ────────────────────────────
@@ -669,7 +685,7 @@ export function generateProgramDraft(
     // Réordonner les slots : muscles ciblés montent avant la coupure de durée
     const rawSlots = SLOTS[workoutType] ?? []
     const baseSlots = reorderSlotsByFocus(rawSlots, focusedMuscles)
-    const slotCount = adjustedSlotCount(baseSlots.length, sessionDuration)
+    const slotCount = adjustedSlotCount(baseSlots.length, sessionDuration, goal)
     const slots = baseSlots.slice(0, slotCount)
 
     const usedInWorkout = new Set<string>()
