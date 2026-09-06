@@ -1,4 +1,4 @@
-# Audit `generateProgramDraft` — 30 profils wizard (v3)
+# Audit `generateProgramDraft` — 40 profils wizard (v3)
 
 ## Rôle
 
@@ -111,7 +111,7 @@ Après la simulation, évalue en tant que coach :
 ```
 **Assertions techniques :**
 - Split = `['fullbody','fullbody']`
-- Chaque workout : 1 warmup + 8 slots + 1 core = **10 exercices**
+- Chaque workout : 1 warmup + 9 slots + 1 core = **11 exercices**
 - Pas de doublon intra-workout
 - Premier exercice = warmup (`isWarmupExercise: true`)
 - Dernier exercice = core (`primaryMuscle: 'core'`)
@@ -127,7 +127,7 @@ Après la simulation, évalue en tant que coach :
 **Assertions techniques :**
 - Split = `['fullbody','fullbody','fullbody']`
 - Beginner reste fullbody en strength — PPL nécessite intermediate+
-- 10 exercices par workout
+- 11 exercices par workout (9 slots + warmup + core)
 
 ---
 
@@ -162,9 +162,11 @@ Après la simulation, évalue en tant que coach :
 { goal:'endurance', daysPerWeek:3, sessionDuration:60, equipment:BW, level:'intermediate' }
 ```
 **Assertions techniques :**
-- Split = `['fullbody','fullbody','fullbody']`
-- **CRITIQUE** : `endurance` (isMass=false) ne produit JAMAIS PPL, même intermediate
-- Vérifier que la condition `isMass` dans selectSplit exclut endurance du PPL
+- Split = `['push','pull','fullbody']` — **push/pull/fullbody (PPF)**
+- **CRITIQUE** : `endurance` (isMass=false) + intermediate + 3j → PPF, **pas PPL ni fullbody×3**
+- Vérifier la branche `!isMass && level !== 'beginner'` dans `selectSplit` case 3
+- Noms : "Push — Poussée", "Pull — Tirage", "Full Body" (pas de suffixe A/B : une occurrence de chaque)
+- Pas de doublon intra-workout (chaque workout unique du split)
 
 **Coach :** reps en zone endurance (15+) ? Bodyweight only — quels exercices de jambes sont possibles ?
 
@@ -175,8 +177,9 @@ Après la simulation, évalue en tant que coach :
 { goal:'fat_loss', daysPerWeek:3, sessionDuration:60, equipment:BW, level:'intermediate' }
 ```
 **Assertions techniques :**
-- Split = `['fullbody','fullbody','fullbody']`
-- Même règle que P05 : fat_loss ≠ PPL
+- Split = `['push','pull','fullbody']` — **push/pull/fullbody (PPF)**
+- Même règle que P05 : fat_loss (isMass=false) + intermediate → PPF
+- Noms : "Push — Poussée", "Pull — Tirage", "Full Body"
 
 **Coach :** rapport cardio/force adapté à fat_loss ? Volume hebdomadaire raisonnable ?
 
@@ -187,9 +190,13 @@ Après la simulation, évalue en tant que coach :
 { goal:'hypertrophy', daysPerWeek:4, sessionDuration:60, equipment:FULL, level:'beginner' }
 ```
 **Assertions techniques :**
-- Split = `['upper','lower','upper','lower']`
-- Workout upper : muscles haut du corps uniquement
-- Workout lower : quads/hamstrings/glutes uniquement (pas de muscles dos/chest)
+- Split public = `['upper','lower','upper','lower']` (types internes : upper-push / lower-quad / upper-pull / lower-hip)
+- Noms : "Upper — Haut du corps A", "Lower — Bas du corps A", "Upper — Haut du corps B", "Lower — Bas du corps B"
+- Upper A (upper-push) : 8 slots → 10 exercices — chest compound en tête, puis back compound, puis OHP, puis isolations
+- Upper B (upper-pull) : 8 slots → 10 exercices — back compound en tête, puis chest compound, puis isolations
+- Lower A (lower-quad) : 6 slots → 8 exercices — quads/glutes compound en tête (squat/leg press)
+- Lower B (lower-hip)  : 6 slots → 8 exercices — glutes/hamstrings compound en tête (hip hinge/deadlift)
+- Chaque variant lower inclut un slot calves isolation
 
 **Coach :** équilibre haut/bas sur la semaine (2 upper + 2 lower) ? Récupération suffisante entre sessions upper ?
 
@@ -212,11 +219,14 @@ Après la simulation, évalue en tant que coach :
 { goal:'hypertrophy', daysPerWeek:5, sessionDuration:60, equipment:FULL, level:'beginner' }
 ```
 **Assertions techniques :**
-- Split = `['fullbody','fullbody','fullbody','fullbody','fullbody']`
-- **CRITIQUE** : beginner reste fullbody même à 5j — PPL nécessite intermediate
-- Nommés "Full Body A … E"
+- Split public = `['upper','lower','upper','lower','fullbody']`
+- Types internes : upper-push / lower-quad / upper-pull / lower-hip / fullbody-quad
+- **CRITIQUE** : beginner + isMass (hypertrophy) + 5j → upper/lower A/B + fullbody (**pas fullbody×5**)
+- Noms : "Upper — Haut du corps A", "Lower — Bas du corps A", "Upper — Haut du corps B", "Lower — Bas du corps B", "Full Body"
+- Note : fullbody×5 (public) seulement pour beginner + !isMass (endurance/fat_loss) à 5j
+- Exercices par workout : upper=10, lower=8, upper=10, lower=8, fullbody=11
 
-**Coach :** fullbody 5j pour un débutant — le volume cumulé est-il adapté ou excessif ?
+**Coach :** upper/lower A/B + fullbody pour un débutant en hypertrophie 5j — le volume est-il adapté ?
 
 ---
 
@@ -265,7 +275,11 @@ Après la simulation, évalue en tant que coach :
 ```
 **Assertions techniques :**
 - `workoutTypeFromFocus(['legs'])` : `hasLower=true, hasUpper=false` → `'lower'`
-- Split = `['lower','lower','lower','lower']`
+- Split public = `['lower','lower','lower','lower']` (types internes alternés : lower-quad / lower-hip / lower-quad / lower-hip)
+- Noms : "Lower — Bas du corps A", "Lower — Bas du corps B", "Lower — Bas du corps C", "Lower — Bas du corps D"
+- Lower-quad (A/C) : quads/glutes compound en tête — squat, leg press, puis hamstrings, glutes, calves en isolation
+- Lower-hip  (B/D) : glutes/hamstrings compound en tête — hip hinge, RDL, puis quads, calves en isolation
+- Vérifier que les 4 sessions ont une structure **différenciée** (pas seulement des exercices différents)
 
 **Cas limites coach :** bodyweight only + lower — quels exercices de jambes sont disponibles dans le seed ?
 
@@ -438,7 +452,7 @@ Après la simulation, évalue en tant que coach :
 { goal:'hypertrophy', daysPerWeek:2, sessionDuration:20, equipment:FULL, level:'beginner' }
 ```
 **Assertions techniques :**
-- `adjustedSlotCount(8, 20)` = `max(2, floor(8×0.5))` = `max(2,4)` = **4 slots**
+- `adjustedSlotCount(9, 20)` = `max(2, floor(9×0.5))` = `max(2,4)` = **4 slots**
 - Total exercices par workout = 4 + 1 warmup + 1 core = **6**
 
 **Coach :** 20min / 6 exercices à ~4 min/série — le timing tient-il ? Warmup + core compris ?
@@ -450,7 +464,7 @@ Après la simulation, évalue en tant que coach :
 { goal:'hypertrophy', daysPerWeek:2, sessionDuration:45, equipment:FULL, level:'beginner' }
 ```
 **Assertions techniques :**
-- `adjustedSlotCount(8, 45)` = `max(3, floor(8×0.75))` = `max(3,6)` = **6 slots**
+- `adjustedSlotCount(9, 45)` = `max(3, floor(9×0.75))` = `max(3,6)` = **6 slots**
 - Total = 6 + 1 warmup + 1 core = **8 exercices**
 
 **Coach :** 45min / 8 exercices — timing cohérent ?
@@ -462,9 +476,10 @@ Après la simulation, évalue en tant que coach :
 { goal:'hypertrophy', daysPerWeek:2, sessionDuration:90, equipment:FULL, level:'beginner' }
 ```
 **Assertions CRITIQUES :**
-- `adjustedSlotCount(8, 90)` = `min(8+2, 8)` = `min(10,8)` = **8 slots**
-- Cap à 8 → identique à 60min : total **10 exercices**
-- Expliquer pourquoi le cap existe et dans quel cas il serait dépassé
+- `adjustedSlotCount(9, 90)` = `min(9+2, 8)` = `min(11,8)` = **8 slots** (cap à 8)
+- Total = 8 + 1 warmup + 1 core = **10 exercices**
+- Note : sur un fullbody-quad (base=9 slots), la session 90min est capée à 8 slots — le slot le moins prioritaire (le dernier) est élidé
+- Expliquer pourquoi le cap à 8 existe et dans quel cas il serait atteint sans cap
 
 **Coach :** 90min pour seulement 10 exercices — le reste du temps est absorbé par les repos longs (force) ?
 
@@ -489,8 +504,8 @@ Après la simulation, évalue en tant que coach :
 |------|-----------|---------|
 | BUG3 | `focusMuscles:['core']` → null → jamais 'lower' | P14, P15 |
 | BUG4 | DB-only → slot dos non-vide (back_thickness dans le slot) | P22 |
-| SLOTS | Fullbody base = 8 slots (pas 7) | P01, P27–P29 |
-| PPL | endurance/fat_loss ≠ PPL même intermediate | P05, P06 |
+| SLOTS | Fullbody base = **9 slots** (pas 8) — fullbody-quad et fullbody-hip ont chacun 9 slots | P01, P27–P29 |
+| PPF | endurance/fat_loss intermediate 3j → **push/pull/fullbody** (PPF) — pas PPL ni fullbody×3 | P05, P06 |
 | 2J | 2j = fullbody toujours | P10 |
 | BEG5J | isMass+beginner+5j = ['upper','lower','upper','lower','fullbody'] — fullbody×5 seulement si !isMass | P09 |
 | LEGS+CORE | legs+core → lower (core ne neutralise pas) | P18 |
