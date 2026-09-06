@@ -110,8 +110,11 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
         dirty: true,
       })
     } else if (!existing.media?.url && seedMedia) {
-      // Exercice présent mais sans image → patch media uniquement
-      toUpdateMedia.push({ ...existing, media: seedMedia, updatedAt: SEED_UPDATED_AT, dirty: true })
+      // Exercice présent mais sans image → patch media uniquement.
+      // On utilise `now` (et non SEED_UPDATED_AT) pour que le push écrase bien
+      // la version serveur qui n'a pas encore ce champ media, et que les pulls
+      // suivants ne réécrasent pas le patch (LWW : le plus grand timestamp gagne).
+      toUpdateMedia.push({ ...existing, media: seedMedia, updatedAt: now, dirty: true })
     }
   }
 
@@ -120,9 +123,13 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
   await idbTx(['exercises', OUTBOX_STORE], 'readwrite', (tx) => {
     const store = tx.objectStore('exercises')
     const outbox = tx.objectStore(OUTBOX_STORE)
-    for (const ex of [...toInsert, ...toUpdateMedia]) {
+    for (const ex of toInsert) {
       store.put(ex)
       outbox.add({ store: 'exercises', id: ex.id, updatedAt: SEED_UPDATED_AT })
+    }
+    for (const ex of toUpdateMedia) {
+      store.put(ex)
+      outbox.add({ store: 'exercises', id: ex.id, updatedAt: ex.updatedAt })
     }
   })
 }
