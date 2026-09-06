@@ -250,27 +250,6 @@ export function GroupDetailScreen({ params }: ScreenProps) {
         </div>
       </div>
 
-      {/* Sélecteur de période — hors zone scroll, toujours visible en haut */}
-      <div
-        style={{
-          display: 'flex', flexWrap: 'nowrap', gap: 7, overflowX: 'auto', flexShrink: 0,
-          padding: '4px var(--pad-screen) 10px',
-          borderBottom: '1px solid var(--border)',
-          scrollbarWidth: 'none',
-        }}
-      >
-        {periodOptions.map((p) => (
-          <button
-            key={p}
-            type="button"
-            className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
-            onClick={() => handlePeriodChange(p)}
-          >
-            {p === 'week' ? 'Semaine' : formatPeriod(p)}
-          </button>
-        ))}
-      </div>
-
       <div className="gt-screen__scroll">
         {error && <p className="t-caption" style={{ color: 'var(--danger)', marginBottom: 8 }}>{error}</p>}
 
@@ -321,6 +300,20 @@ export function GroupDetailScreen({ params }: ScreenProps) {
             </div>
           </Card>
         )}
+
+        {/* Sélecteur de période — sous la carte niveau, dans le scroll normal */}
+        <div className="gt-chips">
+          {periodOptions.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`gt-chip ${period === p ? 'gt-chip--active' : ''}`}
+              onClick={() => handlePeriodChange(p)}
+            >
+              {p === 'week' ? 'Semaine' : formatPeriod(p)}
+            </button>
+          ))}
+        </div>
 
         <p className="t-eyebrow" style={{ marginTop: 0 }}>
           {formatPeriod(period)} {loading && '…'}
