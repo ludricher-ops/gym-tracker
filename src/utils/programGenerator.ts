@@ -506,8 +506,10 @@ function strengthEquipmentPrio(eq: Equipment): number {
     case 'cable':      return 1
     case 'dumbbell':   return 2
     case 'kettlebell': return 2
-    case 'band':       return 3
-    default:           return 4 // bodyweight
+    case 'band':           return 3
+    case 'pullup_bar':     return 4 // comme bodyweight
+    case 'cardio_machine': return 5 // jamais dans les slots de force
+    default:               return 4 // bodyweight
   }
 }
 
@@ -580,7 +582,7 @@ function pickExercise(
 
 function makeDraftWE(exercise: Exercise, spec: SetSpec): DraftWE {
   const progressStepKg =
-    exercise.equipment === 'bodyweight' || exercise.equipment === 'band' ? 0 : 2.5
+    exercise.equipment === 'bodyweight' || exercise.equipment === 'band' || exercise.equipment === 'pullup_bar' ? 0 : 2.5
   return {
     localId: uuid(),
     exerciseId: exercise.id,

@@ -25,6 +25,8 @@ export type MuscleGroup =
 export type Equipment =
   | 'barbell' | 'dumbbell' | 'cable' | 'machine'
   | 'bodyweight' | 'kettlebell' | 'band'
+  | 'pullup_bar'      // barre de traction / barres parallèles / barre horizontale
+  | 'cardio_machine'  // tapis, elliptique, vélo, rameur
 
 export type ExerciseCategory = 'compound' | 'isolation'
 export type TrackingType = 'weight_reps' | 'reps_only' | 'time'

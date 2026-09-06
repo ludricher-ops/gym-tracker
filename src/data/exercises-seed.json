@@ -188,7 +188,7 @@
     "name": "Course (tapis)",
     "primaryMuscle": "cardio",
     "secondaryMuscles": [],
-    "equipment": "machine",
+    "equipment": "cardio_machine",
     "category": "compound",
     "trackingType": "time",
     "isWarmupExercise": false,
@@ -658,7 +658,7 @@
       "triceps",
       "shoulders_front"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
@@ -679,7 +679,7 @@
     "secondaryMuscles": [
       "chest_lower"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
@@ -814,7 +814,7 @@
     "name": "Elliptique",
     "primaryMuscle": "cardio",
     "secondaryMuscles": [],
-    "equipment": "machine",
+    "equipment": "cardio_machine",
     "category": "compound",
     "trackingType": "time",
     "isWarmupExercise": false,
@@ -1679,7 +1679,7 @@
     "secondaryMuscles": [
       "back_thickness"
     ],
-    "equipment": "machine",
+    "equipment": "cardio_machine",
     "category": "compound",
     "trackingType": "time",
     "isWarmupExercise": false,
@@ -1719,7 +1719,7 @@
     "secondaryMuscles": [
       "forearms"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
@@ -1825,7 +1825,7 @@
       "biceps",
       "core"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
@@ -2147,7 +2147,7 @@
       "biceps",
       "forearms"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
@@ -2166,7 +2166,7 @@
     "name": "Vélo",
     "primaryMuscle": "cardio",
     "secondaryMuscles": [],
-    "equipment": "machine",
+    "equipment": "cardio_machine",
     "category": "compound",
     "trackingType": "time",
     "isWarmupExercise": false,
@@ -2693,7 +2693,7 @@
     "secondaryMuscles": [
       "back_width"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
@@ -2714,7 +2714,7 @@
     "secondaryMuscles": [
       "glutes"
     ],
-    "equipment": "bodyweight",
+    "equipment": "pullup_bar",
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,

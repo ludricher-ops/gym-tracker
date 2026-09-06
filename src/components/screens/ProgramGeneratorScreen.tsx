@@ -84,7 +84,7 @@ const LIEU_OPTIONS: LieuOption[] = [
     emoji: '🏟️',
     label: 'Salle de sport',
     sub: 'Barre, haltères, câbles, machines',
-    preset: ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight'],
+    preset: ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'pullup_bar', 'cardio_machine'],
   },
   {
     value: 'home',
@@ -97,8 +97,8 @@ const LIEU_OPTIONS: LieuOption[] = [
     value: 'outdoor',
     emoji: '🤸',
     label: 'Extérieur / Calisthenics',
-    sub: 'Poids du corps uniquement',
-    preset: ['bodyweight'],
+    sub: 'Poids du corps + barre de traction',
+    preset: ['bodyweight', 'pullup_bar'],
   },
   {
     value: 'custom',
@@ -118,14 +118,21 @@ interface EquipmentOption {
   sub: string
 }
 
+/** Musculation — force et hypertrophie */
 const EQUIPMENT_OPTIONS: EquipmentOption[] = [
-  { value: 'barbell',    emoji: '🏋️', label: 'Barre + rack',        sub: 'Squat, développé couché, SDT…'     },
-  { value: 'dumbbell',   emoji: '🔩',  label: 'Haltères',            sub: 'Unilatéral, rowing, press…'        },
-  { value: 'cable',      emoji: '🔗',  label: 'Station câbles',      sub: 'Tirage, face pull, cable cross…'   },
-  { value: 'machine',    emoji: '⚙️',  label: 'Appareils guidés',    sub: 'Leg press, pec deck, hack squat…'  },
-  { value: 'bodyweight', emoji: '🤸',  label: 'Poids du corps',      sub: 'Pompes, tractions, dips…'          },
-  { value: 'kettlebell', emoji: '🫙',  label: 'Kettlebell',          sub: 'Swing, goblet squat, press…'       },
-  { value: 'band',       emoji: '🪢',  label: 'Élastiques',          sub: 'Résistance, activation, mobilité'  },
+  { value: 'barbell',    emoji: '🏋️', label: 'Barre + rack',              sub: 'Squat, développé couché, SDT…'          },
+  { value: 'dumbbell',   emoji: '🔩',  label: 'Haltères',                  sub: 'Unilatéral, rowing, press…'             },
+  { value: 'cable',      emoji: '🔗',  label: 'Station câbles',            sub: 'Tirage, face pull, cable cross…'        },
+  { value: 'machine',    emoji: '⚙️',  label: 'Appareils guidés',          sub: 'Leg press, pec deck, hack squat…'       },
+  { value: 'bodyweight', emoji: '🤸',  label: 'Poids du corps (au sol)',   sub: 'Pompes, squats, abdos, fentes…'         },
+  { value: 'pullup_bar', emoji: '🏗️',  label: 'Barre de traction / dips', sub: 'Tractions, dips, rowing inversé…'       },
+  { value: 'kettlebell', emoji: '🫙',  label: 'Kettlebell',                sub: 'Swing, goblet squat, press…'            },
+  { value: 'band',       emoji: '🪢',  label: 'Élastiques',                sub: 'Résistance, activation, mobilité'       },
+]
+
+/** Cardio — équipements distinctement cardio */
+const CARDIO_OPTIONS: EquipmentOption[] = [
+  { value: 'cardio_machine', emoji: '🚴', label: 'Cardio machine', sub: 'Vélo, tapis de course, rameur, elliptique…' },
 ]
 
 const STEP_LEVEL: Step<ProgramLevel> = {
@@ -361,6 +368,45 @@ export function ProgramGeneratorScreen() {
       )
     }
 
+    function renderEquipmentButton(opt: EquipmentOption) {
+      const active = equipment.includes(opt.value)
+      return (
+        <button
+          key={opt.value}
+          onClick={() => toggleEquipment(opt.value)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-card)',
+            border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+            background: active
+              ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
+              : 'var(--surface)',
+            color: 'var(--fg)',
+            cursor: 'pointer',
+            textAlign: 'left',
+            transition: 'border-color 0.12s, background 0.12s',
+            width: '100%',
+          }}
+        >
+          <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+            <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 1 }}>
+              {opt.sub}
+            </div>
+          </div>
+          {active && (
+            <div style={{ color: 'var(--accent)', flexShrink: 0 }}>
+              <Icon name="check" size={18} strokeWidth={2.5} />
+            </div>
+          )}
+        </button>
+      )
+    }
+
     const availableCount = equipment.length === 0 ? 0 :
       store.exercises.filter(
         (ex) => !ex.deleted && !ex.isWarmupExercise && equipment.includes(ex.equipment),
@@ -383,46 +429,17 @@ export function ProgramGeneratorScreen() {
             : 'Sélectionne tout ce qui est disponible.'}
         </p>
 
-        {/* Grille équipements */}
+        {/* Grille équipements musculation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-          {EQUIPMENT_OPTIONS.map((opt) => {
-            const active = equipment.includes(opt.value)
-            return (
-              <button
-                key={opt.value}
-                onClick={() => toggleEquipment(opt.value)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 14px',
-                  borderRadius: 'var(--radius-card)',
-                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                  background: active
-                    ? 'color-mix(in oklch, var(--accent) 15%, var(--surface))'
-                    : 'var(--surface)',
-                  color: 'var(--fg)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'border-color 0.12s, background 0.12s',
-                  width: '100%',
-                }}
-              >
-                <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{opt.emoji}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
-                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 1 }}>
-                    {opt.sub}
-                  </div>
-                </div>
-                {active && (
-                  <div style={{ color: 'var(--accent)', flexShrink: 0 }}>
-                    <Icon name="check" size={18} strokeWidth={2.5} />
-                  </div>
-                )}
-              </button>
-            )
-          })}
+          {EQUIPMENT_OPTIONS.map((opt) => renderEquipmentButton(opt))}
+        </div>
+
+        {/* Section cardio */}
+        <p className="t-caption" style={{ fontWeight: 600, color: 'var(--fg-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Cardio
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {CARDIO_OPTIONS.map((opt) => renderEquipmentButton(opt))}
         </div>
 
         {/* Warning si peu d'exercices disponibles */}
