@@ -2453,7 +2453,7 @@
     "isWarmupExercise": false,
     "popularity": 3,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Kettlebell-Clean.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/kettlebell-hang-clean.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -2475,7 +2475,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-Lunge.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/kettlebell-lunge-pass-through.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -2497,7 +2497,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Turkish-Get-Up.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/kettlebell-turkish-get-up-squat-style.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3021,7 +3021,7 @@
     "createdAt": 1757100000003,
     "media": {
       "type": "gif",
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Machine-Chest-Press.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/pectorals/lever-chest-press.gif",
       "mime": "image/gif",
       "aspectRatio": 1.0
     }
@@ -3037,7 +3037,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Dumbbell-Calf-Raise.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/calves/dumbbell-standing-calf-raise.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3056,7 +3056,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Barbell-Standing-Calf-Raise.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/calves/barbell-standing-calf-raise.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3075,7 +3075,7 @@
     "isWarmupExercise": false,
     "popularity": 1,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2022/03/Prone-Y-Raise.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/delts/band-y-raise.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3096,7 +3096,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Band-Face-Pull.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/delts/band-reverse-fly.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
