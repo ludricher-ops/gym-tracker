@@ -752,6 +752,32 @@ export function ProgramGeneratorScreen() {
           )
         })()}
 
+        {/* UX-2 : Focus bras sans pectoraux → triceps absents des séances de tirage */}
+        {focusMuscles.includes('arms') && !focusMuscles.includes('chest') && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--warn, #f59e0b) 12%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--warn, #f59e0b) 40%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <div className="t-caption" style={{ color: 'var(--fg)', fontWeight: 700 }}>
+                Triceps peu couverts sans focus Pectoraux.
+              </div>
+              <div className="t-caption" style={{ color: 'var(--fg)', marginTop: 2 }}>
+                Les triceps ne sont entraînés que sur les séances <strong>Push</strong> — ils n'ont aucun slot
+                dans les séances de tirage (dos, biceps). Pour maximiser la couverture des bras,
+                ajoute le focus <strong>Pectoraux</strong>.
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleGenerate}
           style={{
