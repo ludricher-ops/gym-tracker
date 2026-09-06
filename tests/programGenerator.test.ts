@@ -915,3 +915,68 @@ describe('UX-G : tri par muscle principal du slot (fullbody-quad)', () => {
     expect(firstWorkEx?.primaryMuscle).toBe('quads')
   })
 })
+
+describe('UX-5 : warning déséquilibre push/pull (risque épaule)', () => {
+  it('chest seul 3j → split push only → warning déséquilibre push/pull', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest'] },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('Déséquilibre push/pull'))).toBe(true)
+  })
+
+  it('back seul 3j → split pull only → pas de warning push/pull (tirage présent)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['back'] },
+      POOL,
+    )
+    const hasWarn = d.generatorWarnings?.some((w) => w.includes('Déséquilibre push/pull')) ?? false
+    expect(hasWarn).toBe(false)
+  })
+
+  it('split fullbody par défaut (3j beginner) → pas de warning push/pull', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner' },
+      POOL,
+    )
+    const hasWarn = d.generatorWarnings?.some((w) => w.includes('Déséquilibre push/pull')) ?? false
+    expect(hasWarn).toBe(false)
+  })
+})
+
+describe('UX-6 : message explicatif quand focus change le type de programme', () => {
+  it('core seul → warning "programme full body" (contre-intuitif)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['core'] },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('gainage'))).toBe(true)
+  })
+
+  it('arms seul → warning "programme haut du corps complet"', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['arms'] },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('programme haut du corps complet'))).toBe(true)
+  })
+
+  it('chest+back+legs → warning "Sélection complète" (fullbody par défaut)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'beginner', focusMuscles: ['chest', 'back', 'legs'] },
+      POOL,
+    )
+    expect(d.generatorWarnings?.some((w) => w.includes('Sélection complète'))).toBe(true)
+  })
+
+  it('chest seul → pas de warning UX-6 (focus push = attendu)', () => {
+    const d = generateProgramDraft(
+      { goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate', focusMuscles: ['chest'] },
+      POOL,
+    )
+    const hasWarn = d.generatorWarnings?.some((w) =>
+      w.includes('gainage') || w.includes('programme haut du corps complet') || w.includes('Sélection complète'),
+    ) ?? false
+    expect(hasWarn).toBe(false)
+  })
+})

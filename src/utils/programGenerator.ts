@@ -891,6 +891,58 @@ export function generateProgramDraft(
     )
   }
 
+  // UX-5 : Déséquilibre push/pull → risque posture et épaule
+  // Détecte un split sans aucune séance de tirage (pull, upper-pull, lower_pull ou fullbody).
+  const hasPullSession = split.some(
+    (t) => t === 'pull' || t === 'upper-pull' || t === 'lower_pull' || t === 'fullbody-quad' || t === 'fullbody-hip',
+  )
+  const hasPushSession = split.some(
+    (t) => t === 'push' || t === 'upper-push' || t === 'lower_push',
+  )
+  if (hasPushSession && !hasPullSession) {
+    generatorWarnings.push(
+      'Déséquilibre push/pull : aucune séance de tirage dans la semaine. ' +
+      'Les muscles postérieurs (rhomboïdes, rotateurs de l\'épaule) restent sous-sollicités, ' +
+      'ce qui favorise une posture avancée et les douleurs à l\'épaule à terme. ' +
+      'Ajoutez au moins 1 séance pull ou haut du corps complet.',
+    )
+  }
+
+  // UX-6 : Explication quand le focus muscles change le type de programme de façon contre-intuitive
+  const fm = focusMuscles ?? []
+  if (fm.length > 0) {
+    const hasFocusLower = fm.includes('legs')
+    const hasFocusPush  = fm.includes('chest') || fm.includes('shoulders')
+    const hasFocusPull  = fm.includes('back')
+    const hasFocusArms  = fm.includes('arms')
+    const hasFocusCore  = fm.includes('core')
+    const hasFocusUpper = hasFocusPush || hasFocusPull || hasFocusArms
+
+    // "Core seul" → programme fullbody (counter-intuitif : l'utilisateur attend du gainage, pas des squats)
+    if (hasFocusCore && !hasFocusLower && !hasFocusUpper) {
+      generatorWarnings.unshift(
+        'Focus gainage : "core" seul ne définit pas de type de séance — le programme généré est un full body ' +
+        'équilibré avec 1 exercice de gainage en fin de séance. Pour un programme 100 % gainage, ' +
+        'combinez avec un autre groupe (ex. core + haut du corps).',
+      )
+    }
+    // "Bras seul" → programme upper complet (l'utilisateur attend des curls, reçoit aussi bench press et tractions)
+    else if (hasFocusArms && !hasFocusPush && !hasFocusPull && !hasFocusLower) {
+      generatorWarnings.unshift(
+        'Focus bras : "arms" seul génère un programme haut du corps complet (poitrine, dos, épaules + bras) ' +
+        'avec priorité donnée aux exercices de bras. Les bras étant des muscles assistants, ' +
+        'ils progressent mieux dans un contexte de programme haut du corps.',
+      )
+    }
+    // Push + pull + jambes (ou toute combinaison "totale") → fullbody par défaut
+    else if (hasFocusLower && hasFocusPush && hasFocusPull) {
+      generatorWarnings.unshift(
+        'Sélection complète : votre focus couvre poitrine, dos et jambes — le programme généré est un full body ' +
+        'avec priorité donnée aux muscles sélectionnés. Tous les groupes musculaires sont entraînés.',
+      )
+    }
+  }
+
   return {
     name: `${PROGRAM_NAMES[goal]!} · ${LEVEL_SUFFIX[level]}`,
     goal,
