@@ -151,15 +151,16 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       )
     }
 
-    // Patch seed-hip-adduction-machine : primaryMuscle et category manquants dans le seed initial.
-    // DO UPDATE ciblé → updated_at = now pour passer le LWW lors de la propagation.
+    // Patch seed-hip-adduction-machine : primaryMuscle corrigé de 'glutes' → 'hamstrings'
+    // (BUG-C5 fix : la machine adducteurs cible les adducteurs / inner thigh, pas les fessiers).
+    // Le patch s'applique aussi aux users existants dont la donnée est déjà en base.
     await pool.query(
       `UPDATE sync_records
           SET data = data || $1::jsonb,
               updated_at = $2
         WHERE user_id = $3 AND store = 'exercises' AND id = 'seed-hip-adduction-machine'
-          AND (data->>'primaryMuscle' IS NULL OR data->>'category' IS NULL)`,
-      [JSON.stringify({ primaryMuscle: 'glutes', category: 'isolation', popularity: 2 }), now, ADMIN_USER_ID],
+          AND (data->>'primaryMuscle' IS NULL OR data->>'primaryMuscle' = 'glutes' OR data->>'category' IS NULL)`,
+      [JSON.stringify({ primaryMuscle: 'hamstrings', category: 'isolation', popularity: 2 }), now, ADMIN_USER_ID],
     )
 
     // Propagation immédiatement après la migration (même bloc, séquentiel).

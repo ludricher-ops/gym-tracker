@@ -78,7 +78,8 @@ const COMPOUND_SPEC: Record<ProgramGoal, SetSpec> = {
 }
 
 const ISOLATION_SPEC: Record<ProgramGoal, SetSpec> = {
-  strength:    { sets: 3, repsMin: 5,  repsMax: 8,  restSec: 120, range: true  },
+  // BUG-A4 fix : 5-8 reps lourdes inadaptées aux mouvements d'isolation (fly, écarté…)
+  strength:    { sets: 3, repsMin: 8,  repsMax: 12, restSec: 75,  range: true  },
   hypertrophy: { sets: 3, repsMin: 10, repsMax: 15, restSec: 75,  range: true  },
   endurance:   { sets: 3, repsMin: 15, repsMax: 20, restSec: 45,  range: true  },
   fat_loss:    { sets: 3, repsMin: 12, repsMax: 15, restSec: 60,  range: true  },
@@ -129,6 +130,9 @@ function toPublicType(t: InternalWorkoutType): Exclude<WorkoutType, 'custom'> {
 // Slots pour une séance de 60 min (référence).
 // L'ajustement de durée réduit / augmente le nombre de slots pris.
 const SLOTS: Record<InternalWorkoutType, Slot[]> = {
+  // BUG-A2 fix : étendre push/pull/legs à 8 slots pour que le bonus 90min (base+2→8) soit opérant.
+  // Les slots 7-8 (index 6-7) sont uniquement atteints à 90 min ; ils offrent
+  // une isolation supplémentaire sans perturber les séances 60 min (6 slots).
   push: [
     { muscles: ['chest', 'chest_upper', 'chest_lower'], compound: true  },
     { muscles: ['shoulders', 'shoulders_front'],         compound: true  },
@@ -136,6 +140,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['triceps'],                              compound: false },
     { muscles: ['shoulders_lateral', 'shoulders'],       compound: false },
     { muscles: ['shoulders_rear'],                       compound: false }, // face pull / écarté penché — équilibre épaule
+    { muscles: ['chest_upper', 'chest'],                 compound: false }, // slot 7 — fly incliné / cable crossover haut (90 min)
+    { muscles: ['triceps'],                              compound: false }, // slot 8 — 2e triceps : extension poulie haute (90 min)
   ],
   pull: [
     { muscles: ['back_width', 'back'],                   compound: true  },
@@ -144,6 +150,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['biceps'],                               compound: false },
     { muscles: ['shoulders_rear'],                       compound: false },
     { muscles: ['forearms'],                             compound: false },
+    { muscles: ['biceps'],                               compound: false }, // slot 7 — curl marteau / concentré (90 min)
+    { muscles: ['back_width', 'back'],                   compound: false }, // slot 8 — straight arm pulldown (90 min)
   ],
   legs: [
     { muscles: ['quads'],                compound: true  },
@@ -152,6 +160,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['glutes'],               compound: false },
     { muscles: ['hamstrings'],           compound: false },
     { muscles: ['calves'],               compound: false },
+    { muscles: ['glutes'],               compound: false }, // slot 7 — 2e fessiers : cable kickback / abducteur (90 min)
+    { muscles: ['hamstrings'],           compound: false }, // slot 8 — 2e ischio : nordic curl (90 min)
   ],
   upper: [
     { muscles: ['chest', 'chest_upper'],                          compound: true  },
@@ -170,6 +180,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['glutes'],               compound: false },
     { muscles: ['hamstrings'],           compound: false },
     { muscles: ['calves'],               compound: false },
+    { muscles: ['glutes'],               compound: false }, // slot 7 — 2e fessiers (90 min)
+    { muscles: ['hamstrings'],           compound: false }, // slot 8 — 2e ischio (90 min)
   ],
   fullbody: [
     // Conservé pour compatibilité — non utilisé par le générateur automatique
@@ -221,6 +233,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['hamstrings'],                     compound: false }, // Leg curl
     { muscles: ['glutes'],                         compound: false }, // Hip abduction / donkey kick
     { muscles: ['calves'],                         compound: false },
+    { muscles: ['glutes'],                         compound: false }, // slot 7 — 2e fessiers : cable kickback (90 min)
+    { muscles: ['hamstrings'],                     compound: false }, // slot 8 — 2e ischio : nordic curl (90 min)
   ],
   'lower-hip': [
     // Composés (hip thrust-first)
@@ -231,6 +245,8 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['hamstrings'],                     compound: false }, // Leg curl
     { muscles: ['quads'],                          compound: false }, // Leg extension
     { muscles: ['calves'],                         compound: false },
+    { muscles: ['glutes'],                         compound: false }, // slot 7 — 2e fessiers (90 min)
+    { muscles: ['quads'],                          compound: false }, // slot 8 — 2e quads : leg extension alt. (90 min)
   ],
   // ── Chaîne postérieure (lower_pull) ─────────────────────────────────────────
   // Pour les utilisateurs qui ciblent jambes + dos (± core, ± bras).
@@ -311,6 +327,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['chest_lower'],                                  compound: false }, // Cable crossover bas
     { muscles: ['triceps'],                                      compound: false }, // Extension overhead
     { muscles: ['shoulders_rear'],                               compound: false }, // Face pull — équilibre (pos 7)
+    { muscles: ['chest_upper', 'chest'],                         compound: false }, // slot 8 — 2e isolation pec sup. (90 min)
   ],
   // back-bi : séance dos + biceps (synergistes — les biceps sont pré-fatigués
   // par le tirage). Volume dos maximal (largeur + épaisseur) + finitions biceps.
@@ -549,8 +566,11 @@ function selectSplit(params: GeneratorParams): Split {
       return ['fullbody-quad', 'fullbody-hip']
 
     case 3:
-      // Mass + intermédiaire/confirmé → PPL classique
-      if (isMass && level !== 'beginner') return ['push', 'pull', 'legs']
+      // INC-1 fix : la force préfère le fullbody×3 (fréquence 3×/groupe/sem.)
+      // PPL est explicitement bloqué pour 'strength' côté wizard → cohérence avec l'auto.
+      if (goal === 'strength' && level !== 'beginner') return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad']
+      // Hypertrophie + intermédiaire/confirmé → PPL classique
+      if (goal === 'hypertrophy' && level !== 'beginner') return ['push', 'pull', 'legs']
       // Non-mass + intermédiaire/confirmé → Push/Pull/Full Body
       if (!isMass && level !== 'beginner') return ['push', 'pull', 'fullbody-quad']
       // Débutants → fullbody A/B/A
@@ -565,8 +585,9 @@ function selectSplit(params: GeneratorParams): Split {
       return ['fullbody-quad', 'fullbody-hip', 'fullbody-quad', 'fullbody-hip']
 
     case 5:
-      // Mass + intermédiaire/confirmé → PPL + upper + lower
-      if (isMass && level !== 'beginner') return ['push', 'pull', 'legs', 'upper', 'lower']
+      // BUG-A1 fix : 'lower' était un doublon exact de 'legs' → remplacé par lower-quad/lower-hip
+      // Mass + intermédiaire/confirmé → PPL + upper + lower-hip (variété jambes garantie)
+      if (isMass && level !== 'beginner') return ['push', 'pull', 'lower-quad', 'upper', 'lower-hip']
       // Mass + débutant → upper-push/lower-quad/upper-pull/lower-hip/fullbody
       if (isMass) return ['upper-push', 'lower-quad', 'upper-pull', 'lower-hip', 'fullbody-quad']
       // Non-mass + intermédiaire/confirmé → Push/Pull/Lower A/Lower B/Full Body
@@ -630,28 +651,35 @@ function adjustedSlotCount(
   goal: ProgramGoal,
 ): number {
   const isStrength = goal === 'strength'
-  if (duration === 20) return Math.max(2, Math.floor(base * 0.5))
+  // BUG-A2 fix : les templates de base ont été étendus à 8 slots.
+  // Pour la force, on plafonne explicitement à 3 à 20/45 min pour rester dans le créneau
+  // (5 séries × 3 min de repos × 3 exos ≈ 45 min ; × 2 séries × 3 min ≈ 18-21 min à 20 min).
+  if (duration === 20) return isStrength
+    ? Math.min(3, Math.max(2, Math.floor(base * 0.5)))
+    : Math.max(2, Math.floor(base * 0.5))
   if (duration === 45) return isStrength
-    ? Math.max(2, Math.floor(base * 0.5))
-    : Math.max(3, Math.floor(base * 0.75))
+    ? Math.min(3, Math.max(2, Math.floor(base * 0.5)))  // cap 3 — 3×5s×3min repos ≈ 45 min
+    : Math.max(4, Math.floor(base * 0.75))
   if (duration === 60) return isStrength
     ? Math.max(4, Math.floor(base * 0.5))   // 4 slots pour tous les templates
     : base
-  // 90 min
+  // 90 min — BUG-A2 fix : min(base+2, 8) était inopérant avec base=6, désormais base=8
   return isStrength
     ? Math.min(base, 5)                      // cap à 5 — 5 slots ≈ 85-90 min avec repos 3 min
     : Math.min(base + 2, 8)
 }
 
 // ── Ajustement du nombre de séries selon la durée ────────────────────────────
-// Pour les séances courtes, on réduit les séries proportionnellement pour que
-// la durée réelle (travail + repos) corresponde à la durée annoncée.
-// 20 min → ×0.5 (min 2)   45 min → ×0.75 (min 2)   60/90 min → inchangé
+// BUG-A3 fix : la réduction des séries à 45 min combinée à la réduction du nombre
+// de slots produisait une double réduction → volume réel ≈ 20 min pour 45 annoncées.
+// Désormais seules les séances de 20 min subissent une réduction des séries (×0.5).
+// À 45 min, le volume est géré uniquement par le nombre de slots (adjustedSlotCount).
+// 20 min → ×0.5 (min 2)   45/60/90 min → inchangé
 
 export function adjustedSpec(spec: SetSpec, duration: 20 | 45 | 60 | 90): SetSpec {
-  if (duration === 60 || duration === 90) return spec
-  const factor = duration === 20 ? 0.5 : 0.75
-  return { ...spec, sets: Math.max(2, Math.floor(spec.sets * factor)) }
+  if (duration >= 45) return spec
+  // 20 min uniquement
+  return { ...spec, sets: Math.max(2, Math.floor(spec.sets * 0.5)) }
 }
 
 // ── Noms et couleurs de programme ─────────────────────────────────────────────
@@ -751,7 +779,10 @@ function pickExercise(
   }
 
   // Trier : muscles ciblés d'abord, puis muscle principal du slot (slot.muscles[0]),
-  // puis (force+compound) équipement chargé, puis non-utilisé globalement, puis popularité desc.
+  // puis non-utilisé globalement (BUG-C2 fix : anti-répétition avant préférence équipement),
+  // puis (force+compound) équipement chargé, puis popularité desc.
+  // L'anti-répétition globale passe EN PREMIER sur la priorité d'équipement pour éviter
+  // bench barbell ×3 en fullbody force sans alternance.
   // Le critère slot.muscles[0] garantit que fullbody-quad démarre par un quad-dominant
   // (squat) et non un glute-dominant (hip thrust), même si ce dernier a plus de popularité.
   candidates.sort((a, b) => {
@@ -766,13 +797,15 @@ function pickExercise(
       const bP = b.primaryMuscle === slotPrimary ? 0 : 1
       if (aP !== bP) return aP - bP
     }
+    // BUG-C2 fix : anti-répétition globale avant préférence équipement force
+    const aUsed = usedGlobally.has(a.id) ? 1 : 0
+    const bUsed = usedGlobally.has(b.id) ? 1 : 0
+    if (aUsed !== bUsed) return aUsed - bUsed
+    // Parmi les exercices non encore utilisés, préférer barbell pour les composés force
     if (goal === 'strength' && slot.compound) {
       const eqDiff = strengthEquipmentPrio(a.equipment) - strengthEquipmentPrio(b.equipment)
       if (eqDiff !== 0) return eqDiff
     }
-    const aUsed = usedGlobally.has(a.id) ? 1 : 0
-    const bUsed = usedGlobally.has(b.id) ? 1 : 0
-    if (aUsed !== bUsed) return aUsed - bUsed
     return (b.popularity ?? 0) - (a.popularity ?? 0)
   })
 
@@ -1014,6 +1047,7 @@ export function generateProgramDraft(
 
     // Séances très courtes (≤ 20 min) : warmup réduit à 1 série, core supprimé.
     // Le warmup + core représentent ~8 min fixes, soit ~40 % d'une séance de 20 min.
+    // BUG-E2 : un warning contextuel est émis (voir section warnings plus bas).
     const isVeryShort = sessionDuration <= 20
     const effectiveWarmupSpec: SetSpec = isVeryShort ? { ...WARMUP_SPEC, sets: 1 } : WARMUP_SPEC
 
@@ -1061,6 +1095,14 @@ export function generateProgramDraft(
   }
 
   // ── Warnings contextuels (non liés aux slots) ──────────────────────────────
+
+  // BUG-E2 : Séance express — informer l'utilisateur des suppressions silencieuses
+  if (sessionDuration <= 20) {
+    generatorWarnings.unshift(
+      'Séance express (20 min) : l\'échauffement est réduit à 1 série et les abdominaux sont supprimés ' +
+      'pour tenir dans le créneau. Pour un programme complet incluant core et warmup, optez pour 45 min minimum.',
+    )
+  }
 
   // UX-C : Force pour débutant — specs 5×3-5 présupposent une technique maîtrisée
   if (goal === 'strength' && level === 'beginner') {

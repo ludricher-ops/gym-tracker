@@ -649,7 +649,7 @@ const PHASE_NAME_FR: Record<PhaseKey, string> = {
   adaptation: 'Adaptation',
   progression: 'Progression',
   intensification: 'Intensification',
-  deload: 'Décharge',
+  deload: 'Récup.', // INC-4 fix : alignement vocabulaire v4 (wizard dit "récup.", même terme ici)
 }
 
 function ExRow({ info: { wet, ex }, locked = false }: { info: WetInfo; locked?: boolean }) {

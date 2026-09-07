@@ -1461,7 +1461,7 @@
   {
     "id": "seed-hip-adduction-machine",
     "name": "Machine adducteurs",
-    "primaryMuscle": "glutes",
+    "primaryMuscle": "hamstrings",
     "secondaryMuscles": [],
     "equipment": "machine",
     "category": "isolation",

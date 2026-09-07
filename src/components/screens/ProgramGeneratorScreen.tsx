@@ -308,7 +308,8 @@ export function ProgramGeneratorScreen() {
           <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
           <span className="t-caption" style={{ color: 'var(--fg)' }}>
             Force : les repos de 3 min entre séries limitent le volume.
-            20 min = 2 exercices · 45 min = 3 exercices · 60 min = 4 exercices · 90 min = 5 exercices.
+            {/* BUG-E1 fix : 20 min = 3 exercices (plancher de 2 jamais atteint en pratique) */}
+            20 min = 3 exercices · 45 min = 3 exercices · 60 min = 4 exercices · 90 min = 5 exercices.
           </span>
         </div>
       ) : null
@@ -630,17 +631,25 @@ export function ProgramGeneratorScreen() {
           if (level === 'beginner') return 'Fréquence trop faible par muscle pour un débutant'
           if (goal === 'strength') return 'Force requiert 2-3 stimuli/sem. par muscle — Brosplit n\'en donne qu\'un'
           if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — Brosplit trop peu fréquent'
+          // INC-5 fix : fat_loss bénéficie aussi d'une haute fréquence par groupe
+          if (goal === 'fat_loss') return 'Remise en forme : fréquence élevée par muscle recommandée — Brosplit stimule chaque muscle 1×/sem.'
           return null
         case 'arnold':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
           if (level === 'beginner') return 'Volume et complexité élevés — déconseillé en débutant'
           if (goal === 'strength') return 'Split bodybuilding — Force préfère Full Body ou Upper/Lower (fréquence 2-3×/sem.)'
           if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — préfère Full Body ou Upper/Lower'
+          // INC-5 fix
+          if (goal === 'fat_loss') return 'Remise en forme : fréquence élevée par muscle recommandée — préfère Full Body ou Upper/Lower'
           return null
         case 'ppl':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
           if (goal === 'strength') return 'Split orienté hypertrophie — Force préfère Full Body ou Upper/Lower (2-3 stimuli/sem.)'
           if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — préfère Full Body ou Upper/Lower'
+          return null
+        // BUG-D6 / INC-3 fix : glutes-focus passe désormais par incompatibleReason
+        case 'glutes-focus':
+          if (goal === 'strength') return 'Programme spécialisation bas du corps — Force préfère des splits incluant des composés haut du corps'
           return null
         default:
           return null
@@ -670,15 +679,19 @@ export function ProgramGeneratorScreen() {
           <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {renderSplitButton({
-            value: 'glutes-focus',
-            icon: '🍑',
-            label: 'Glutes+Dos',
-            sub: 'Fessiers & dos — séances sans push (pecs, épaules, bras)',
-            active: splitPreference === 'glutes-focus',
-            disabled: false,
-            reason: null,
-          })}
+          {(() => {
+            // BUG-D6 / INC-3 fix : glutes-focus passe maintenant par incompatibleReason
+            const gluteReason = incompatibleReason('glutes-focus')
+            return renderSplitButton({
+              value: 'glutes-focus',
+              icon: '🍑',
+              label: 'Glutes+Dos',
+              sub: 'Fessiers & dos — séances sans push (pecs, épaules, bras)',
+              active: splitPreference === 'glutes-focus',
+              disabled: gluteReason !== null,
+              reason: gluteReason,
+            })
+          })()}
         </div>
       </div>
     )
@@ -691,6 +704,7 @@ export function ProgramGeneratorScreen() {
     active: boolean; disabled: boolean; reason: string | null
   }) {
     return (
+      // BUG-D1 fix : ajout de disabled + aria-disabled pour accessibilité
       <button
         key={value}
         onClick={() => {
@@ -704,6 +718,8 @@ export function ProgramGeneratorScreen() {
             setFocusMuscles([])            // reset au cas où
           }
         }}
+        disabled={disabled}
+        aria-disabled={disabled}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -1052,7 +1068,7 @@ export function ProgramGeneratorScreen() {
     const PHASE_ROWS: { key: keyof typeof PHASE_COLORS; emoji: string; name: string }[] = [
       { key: 'adaptation',      emoji: '🌱', name: 'Adaptation' },
       { key: 'intensification', emoji: '🔥', name: 'Intensification' },
-      { key: 'deload',          emoji: '🔄', name: 'Décharge' },
+      { key: 'deload',          emoji: '🔄', name: 'Récup.' }, // INC-4 fix : cohérence v4
     ]
 
     return (
