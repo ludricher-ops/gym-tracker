@@ -841,9 +841,10 @@ describe('B12 — Glutes+dos × Salle, fat_loss, 3j, 45min, beginner', () => {
     sessionDuration: 45, equipment: SALLE, splitPreference: 'glutes-focus',
   }
 
-  it('adjustedSlotCount = 6 (fat_loss 45min, base=8 → max(4,6)=6) → ≤6 slots effectifs', () => {
+  it('adjustedSlotCount = 6 (fat_loss 45min, base=8 → max(4,6)=6) → ≤7 slots effectifs (+1 finisher cardio fat_loss)', () => {
+    // fat_loss ajoute un finisher cardio (burpees/high knees) avant le core → 6 slots + 1 finisher = 7 max
     const d = gen(params)
-    expect(slotCount(w(d, 0))).toBeLessThanOrEqual(6)
+    expect(slotCount(w(d, 0))).toBeLessThanOrEqual(7)
   })
 
   it('glutes-hip : seed-lat-pulldown OU seed-pullup (slot[3] dos inclus dans les 6)', () => {
