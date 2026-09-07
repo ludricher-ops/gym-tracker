@@ -2284,7 +2284,7 @@
     "equipment": "bodyweight",
     "category": "isolation",
     "trackingType": "time",
-    "isWarmupExercise": false,
+    "isWarmupExercise": true,
     "popularity": 2,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png",
@@ -2292,6 +2292,27 @@
       "type": "photo",
       "sizeBytes": 0,
       "importedAt": 1784106270149,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "bw-sissy-squat",
+    "name": "Sissy squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 3,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Sissy-Squat.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1789000000000,
       "aspectRatio": 1
     }
   },
