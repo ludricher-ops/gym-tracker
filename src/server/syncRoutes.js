@@ -108,6 +108,7 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       { id: 'dumbbell-rdl',          name: 'Soulevé de terre jambes tendues haltères', primaryMuscle: 'hamstrings', secondaryMuscles: ['glutes', 'back_thickness'],    equipment: 'dumbbell',   category: 'compound',  trackingType: 'weight_reps', popularity: 2 },
       { id: 'machine-pullover',      name: 'Pullover machine',                         primaryMuscle: 'back_width',    secondaryMuscles: ['chest'],                       equipment: 'machine',    category: 'isolation', trackingType: 'weight_reps', popularity: 2, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Lever-Pullover.gif' },
       { id: 'machine-low-row',       name: 'Tirage buste machine',                     primaryMuscle: 'back_thickness', secondaryMuscles: ['biceps'],                     equipment: 'machine',    category: 'isolation', trackingType: 'weight_reps', popularity: 2, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Lever-Seated-Row.gif' },
+      { id: 'machine-biceps-curl',   name: 'Curl biceps machine',                      primaryMuscle: 'biceps',         secondaryMuscles: ['forearms'],                   equipment: 'machine',    category: 'isolation', trackingType: 'weight_reps', popularity: 2, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicep-Curl-Machine.gif' },
     ]
     const now = Date.now()
     let inserted = 0

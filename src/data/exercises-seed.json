@@ -437,6 +437,27 @@
     }
   },
   {
+    "id": "machine-biceps-curl",
+    "name": "Curl biceps machine",
+    "primaryMuscle": "biceps",
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicep-Curl-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788700000003,
+      "aspectRatio": 1
+    }
+  },
+  {
     "id": "seed-dead-bug",
     "name": "Dead bug",
     "primaryMuscle": "core",
