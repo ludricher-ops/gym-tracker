@@ -657,57 +657,86 @@ export function ProgramGeneratorScreen() {
             const active = splitPreference === value
             const reason = incompatibleReason(value)
             const disabled = reason !== null
-            return (
-              <button
-                key={value}
-                onClick={() => {
-                  if (disabled) return
-                  setSplitPreference(value)
-                  if (value === 'auto') {
-                    advance()                      // → étape 5 (Muscles)
-                  } else {
-                    // Sauter Muscles : inutile si la structure est explicite
-                    setStepIndex((s) => s + 2)    // → étape 6 (Jours)
-                    setFocusMuscles([])            // reset au cas où
-                  }
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '14px 16px',
-                  borderRadius: 'var(--radius-card)',
-                  border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                  background: active ? 'color-mix(in oklch, var(--accent) 10%, var(--surface))' : 'var(--surface)',
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                  textAlign: 'left',
-                  width: '100%',
-                  opacity: disabled ? 0.45 : 1,
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                <span style={{ fontSize: 24, flexShrink: 0 }}>{icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div className="t-body" style={{ fontWeight: 600, color: active ? 'var(--accent)' : 'var(--fg)' }}>
-                    {label}
-                  </div>
-                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
-                    {sub}
-                  </div>
-                  {reason && (
-                    <div className="t-caption" style={{ color: 'var(--warn, #f59e0b)', marginTop: 4, fontWeight: 600 }}>
-                      ⚠ {reason}
-                    </div>
-                  )}
-                </div>
-                {active && !disabled && (
-                  <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontSize: 18, flexShrink: 0 }}>✓</span>
-                )}
-              </button>
-            )
+            return renderSplitButton({ value, icon, label, sub, active, disabled, reason })
+          })}
+        </div>
+
+        {/* ── Programmes spécialisés ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0 10px' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          <span className="t-eyebrow" style={{ color: 'var(--fg-muted)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+            Programmes spécialisés
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {renderSplitButton({
+            value: 'glutes-focus',
+            icon: '🍑',
+            label: 'Glutes+Dos',
+            sub: 'Fessiers & dos — séances sans push (pecs, épaules, bras)',
+            active: splitPreference === 'glutes-focus',
+            disabled: false,
+            reason: null,
           })}
         </div>
       </div>
+    )
+  }
+
+  function renderSplitButton({
+    value, icon, label, sub, active, disabled, reason,
+  }: {
+    value: SplitPreference; icon: string; label: string; sub: string
+    active: boolean; disabled: boolean; reason: string | null
+  }) {
+    return (
+      <button
+        key={value}
+        onClick={() => {
+          if (disabled) return
+          setSplitPreference(value)
+          if (value === 'auto') {
+            advance()                      // → étape 5 (Muscles)
+          } else {
+            // Sauter Muscles : inutile si la structure est explicite
+            setStepIndex((s) => s + 2)    // → étape 6 (Jours)
+            setFocusMuscles([])            // reset au cas où
+          }
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          padding: '14px 16px',
+          borderRadius: 'var(--radius-card)',
+          border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+          background: active ? 'color-mix(in oklch, var(--accent) 10%, var(--surface))' : 'var(--surface)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          textAlign: 'left',
+          width: '100%',
+          opacity: disabled ? 0.45 : 1,
+          transition: 'opacity 0.15s',
+        }}
+      >
+        <span style={{ fontSize: 24, flexShrink: 0 }}>{icon}</span>
+        <div style={{ flex: 1 }}>
+          <div className="t-body" style={{ fontWeight: 600, color: active ? 'var(--accent)' : 'var(--fg)' }}>
+            {label}
+          </div>
+          <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+            {sub}
+          </div>
+          {reason && (
+            <div className="t-caption" style={{ color: 'var(--warn, #f59e0b)', marginTop: 4, fontWeight: 600 }}>
+              ⚠ {reason}
+            </div>
+          )}
+        </div>
+        {active && !disabled && (
+          <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontSize: 18, flexShrink: 0 }}>✓</span>
+        )}
+      </button>
     )
   }
 
@@ -792,15 +821,6 @@ export function ProgramGeneratorScreen() {
   // ── Sélecteur de muscles prioritaires ────────────────────────────────────
 
   function renderMusclePicker() {
-    // Glutes+Dos : sélection uniquement sur jambes/dos/core, au moins l'un des deux premiers
-    const pushMuscles: FocusMuscle[] = ['chest', 'shoulders', 'arms']
-    const glutesGroup: FocusMuscle[] = ['legs', 'back', 'core']
-    const isGlutesCandidate =
-      focusMuscles.length > 0 &&
-      focusMuscles.every((m) => glutesGroup.includes(m)) &&
-      (focusMuscles.includes('legs') || focusMuscles.includes('back')) &&
-      !focusMuscles.some((m) => pushMuscles.includes(m))
-
     return (
       <div style={{ padding: '0 16px' }}>
         <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
@@ -846,51 +866,8 @@ export function ProgramGeneratorScreen() {
           })}
         </div>
 
-        {/* Suggestion Glutes+Dos — apparaît quand la sélection correspond au profil sans push */}
-        {isGlutesCandidate && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 10,
-            padding: '12px 14px',
-            borderRadius: 'var(--radius-card)',
-            background: 'color-mix(in oklch, var(--accent) 10%, var(--surface))',
-            border: '1.5px solid color-mix(in oklch, var(--accent) 35%, transparent)',
-            marginBottom: 12,
-          }}>
-            <span style={{ fontSize: 20, flexShrink: 0 }}>🍑</span>
-            <div style={{ flex: 1 }}>
-              <div className="t-caption" style={{ fontWeight: 700, color: 'var(--fg)', marginBottom: 2 }}>
-                Ta sélection correspond au programme Glutes+Dos
-              </div>
-              <div className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 10 }}>
-                Fessiers, dos et jambes — séances sans push (pecs, épaules, bras).
-              </div>
-              <button
-                onClick={() => {
-                  setSplitPreference('glutes-focus')
-                  setFocusMuscles([])
-                  advance()
-                }}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-card)',
-                  border: 'none',
-                  background: 'var(--accent)',
-                  color: 'var(--accent-ink)',
-                  fontSize: 'var(--fs-caption)',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Utiliser le programme Glutes+Dos →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Warning déséquilibre musculaire — masqué si la suggestion Glutes+Dos est active */}
-        {!isGlutesCandidate && focusMuscles.length > 0 && (() => {
+        {/* Warning déséquilibre musculaire */}
+        {focusMuscles.length > 0 && (() => {
           const noBack = !focusMuscles.includes('back')
           const noLegs = !focusMuscles.includes('legs')
           if (!noBack && !noLegs) return null
