@@ -30,7 +30,7 @@ const STEP_GOAL: Step<ProgramGoal> = {
     { value: 'hypertrophy', label: '📈 Masse',       sub: 'Prise de volume musculaire'        },
     { value: 'strength',    label: '💪 Force',        sub: 'Soulever plus lourd'               },
     { value: 'fat_loss',    label: '🏃 Forme',        sub: 'Perdre du gras, tonifier'          },
-    { value: 'endurance',   label: '🧘 Bien-être',    sub: 'Condition physique générale'       },
+    { value: 'endurance',   label: '🔁 Endurance',    sub: 'Séries longues, peu de repos — cardio non inclus' },
   ],
 }
 
@@ -630,18 +630,18 @@ export function ProgramGeneratorScreen() {
           if (days !== null && days < 5) return `Nécessite 5 séances/sem. — tu en as ${days}`
           if (level === 'beginner') return 'Fréquence trop faible par muscle pour un débutant'
           if (goal === 'strength') return 'Force requiert 2-3 stimuli/sem. par muscle — Brosplit n\'en donne qu\'un'
-          if (goal === 'endurance') return 'Endurance musculaire nécessite une fréquence élevée — Brosplit trop peu fréquent'
+          if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — Brosplit trop peu fréquent'
           return null
         case 'arnold':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
           if (level === 'beginner') return 'Volume et complexité élevés — déconseillé en débutant'
           if (goal === 'strength') return 'Split bodybuilding — Force préfère Full Body ou Upper/Lower (fréquence 2-3×/sem.)'
-          if (goal === 'endurance') return 'Endurance musculaire nécessite une fréquence élevée — préfère Full Body ou Upper/Lower'
+          if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — préfère Full Body ou Upper/Lower'
           return null
         case 'ppl':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
           if (goal === 'strength') return 'Split orienté hypertrophie — Force préfère Full Body ou Upper/Lower (2-3 stimuli/sem.)'
-          if (goal === 'endurance') return 'Endurance musculaire nécessite une fréquence élevée — préfère Full Body ou Upper/Lower'
+          if (goal === 'endurance') return 'Endurance : fréquence élevée par muscle requise — préfère Full Body ou Upper/Lower'
           return null
         default:
           return null
