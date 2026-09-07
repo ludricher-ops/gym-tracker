@@ -148,6 +148,15 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     nav.back()
   }
 
+  const toggleTemplate = async () => {
+    const next = !program.isTemplate
+    const msg = next
+      ? `Publier « ${program.name} » comme template partagé ?\nTous les utilisateurs pourront l'utiliser.`
+      : `Retirer « ${program.name} » des templates partagés ?`
+    if (!confirm(msg)) return
+    await store.program.save({ ...program, isTemplate: next })
+  }
+
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
@@ -379,6 +388,15 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           )
         })}
 
+        {store.isAdmin && (
+          <Button
+            variant="ghost"
+            icon={program.isTemplate ? 'close' : 'share'}
+            onClick={toggleTemplate}
+          >
+            {program.isTemplate ? 'Retirer des templates' : 'Publier comme template'}
+          </Button>
+        )}
         {canEdit && (
           <Button variant="ghost" icon="trash" onClick={del}>
             Supprimer le programme
