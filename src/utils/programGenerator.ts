@@ -560,6 +560,13 @@ function selectSplit(params: GeneratorParams): Split {
       }
     }
 
+    // ── Glutes seul : alterner glutes-hip (hip-thrust) / quad-glutes (squat) ──
+    if (focusType === 'glutes-hip') {
+      return Array.from({ length: daysPerWeek }, (_, i) =>
+        i % 2 === 0 ? 'glutes-hip' : 'quad-glutes',
+      ) as Split
+    }
+
     // ── lower_pull / lower_push / legs : type fixe par session ───────────────
     return Array.from({ length: daysPerWeek }, () => focusType) as Split
   }
