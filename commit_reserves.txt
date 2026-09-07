@@ -1,0 +1,22 @@
+fix: seed + slots — machine-lat-pulldown, pullover compound, tirage vertical
+
+SEED-MACHINE-LATLIFT: ajout machine-lat-pulldown dans le seed
+  - Nouvel exercice : Tirage vertical machine (back_width, compound, pop 2)
+  - Debloque le slot tirage vertical pour les utilisateurs machine-only
+
+SEED-PULLOVER-COMPOUND: seed-pullover passe en category compound
+  - Pull-over haltere (back_width, dumbbell) : isolation -> compound
+  - Permet aux utilisateurs DB-only d'avoir un exercice tirage vertical compound
+  - Remplace le deadlift dans le slot back_width compound pour les halteres
+
+SEED-DEADLIFT-SLOT: resserrement des slots tirage vertical
+  - 6 slots compound ['back_width','back'] -> ['back_width','back_thickness']
+  - pull[0], upper-pull[0], lower_pull[1], chest-back[1], back-bi[0], glutes-hip[3]
+  - Le deadlift (primaryMuscle=back) ne remplit plus le slot traction / lat pulldown
+  - Les slots fullbody (['back_width','back_thickness','back']) sont conserves
+
+SEED-BW-NOBACK: warning UX quand aucun compound dos disponible sans seance pull
+  - Emis quand hasCompoundBack=false ET hasPullInSplit=false
+  - Couvre les utilisateurs fullbody BW-only : dos structurellement non couvert
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

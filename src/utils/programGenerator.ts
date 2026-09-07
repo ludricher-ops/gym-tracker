@@ -145,7 +145,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['triceps'],                              compound: false }, // slot 8 — 2e triceps : extension poulie haute (90 min)
   ],
   pull: [
-    { muscles: ['back_width', 'back'],                   compound: true  },
+    { muscles: ['back_width', 'back_thickness'],         compound: true  }, // Traction / tirage vertical (SEED-DEADLIFT-SLOT fix)
     { muscles: ['back_thickness', 'back'],               compound: true  },
     { muscles: ['back_thickness', 'back_width', 'back'], compound: false },
     { muscles: ['biceps'],                               compound: false },
@@ -212,7 +212,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
   ],
   'upper-pull': [
     // Composés (traction-first — 2 composés dos)
-    { muscles: ['back_width', 'back'],                            compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_width', 'back_thickness'],                   compound: true  }, // Traction / lat pulldown (SEED-DEADLIFT-SLOT fix)
     { muscles: ['back_thickness', 'back'],                        compound: true  }, // Rowing
     { muscles: ['chest', 'chest_upper'],                          compound: true  }, // Développé incliné
     // Isolations
@@ -257,7 +257,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
   'lower_pull': [
     // Composés (deadlift-first)
     { muscles: ['hamstrings', 'glutes'],                  compound: true  }, // Deadlift / RDL
-    { muscles: ['back_width', 'back'],                    compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_width', 'back_thickness'],           compound: true  }, // Traction / lat pulldown (SEED-DEADLIFT-SLOT fix)
     { muscles: ['back_thickness', 'back'],                compound: true  }, // Rowing barre / DB
     { muscles: ['quads', 'glutes'],                       compound: true  }, // Squat / leg press (couverture quads)
     // Isolations
@@ -291,7 +291,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
   'chest-back': [
     // Composés (antagonistes en alternance)
     { muscles: ['chest', 'chest_upper'],                         compound: true  }, // Développé couché
-    { muscles: ['back_width', 'back'],                           compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_width', 'back_thickness'],                  compound: true  }, // Traction / lat pulldown (SEED-DEADLIFT-SLOT fix)
     { muscles: ['shoulders', 'shoulders_front'],                 compound: true  }, // OHP — clôt les composés
     { muscles: ['back_thickness', 'back'],                       compound: true  }, // Rowing barre / DB
     // Isolations
@@ -333,7 +333,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
   // back-bi : séance dos + biceps (synergistes — les biceps sont pré-fatigués
   // par le tirage). Volume dos maximal (largeur + épaisseur) + finitions biceps.
   'back-bi': [
-    { muscles: ['back_width', 'back'],                           compound: true  }, // Traction / lat pulldown
+    { muscles: ['back_width', 'back_thickness'],                  compound: true  }, // Traction / lat pulldown (SEED-DEADLIFT-SLOT fix)
     { muscles: ['back_thickness', 'back'],                       compound: true  }, // Rowing barre / DB
     { muscles: ['biceps'],                                       compound: false }, // Curl barre EZ
     { muscles: ['back_thickness', 'back_width', 'back'],         compound: false }, // Isolation dos (pull-over, cable)
@@ -351,7 +351,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     { muscles: ['glutes', 'hamstrings'],                         compound: true  }, // Hip thrust / Sumo DL
     { muscles: ['hamstrings', 'glutes'],                         compound: true  }, // RDL
     { muscles: ['quads', 'glutes'],                              compound: true  }, // Fente bulgare / split squat
-    { muscles: ['back_width', 'back'],                           compound: true  }, // Lat pulldown (posture)
+    { muscles: ['back_width', 'back_thickness'],                  compound: true  }, // Lat pulldown (posture) (SEED-DEADLIFT-SLOT fix)
     // Isolations
     { muscles: ['glutes'],                                       compound: false }, // Hip abduction
     { muscles: ['hamstrings'],                                   compound: false }, // Leg curl
@@ -1026,6 +1026,17 @@ export function generateProgramDraft(
       'Séance "Pull" remplacée par "Full Body" : aucun exercice de tirage compound (dos) ' +
       'n\'est disponible avec votre équipement. ' +
       'Ajoutez une barre de traction, des haltères ou une machine pour retrouver le split Push/Pull.',
+    )
+  }
+
+  // SEED-BW-NOBACK : aucun compound dos disponible, et pas de séance pull pour l'annoncer
+  // → avertir l'utilisateur que son programme n'inclura pas de tirage (dos sous-entraîné).
+  if (!hasCompoundBack && !hasPullInSplit) {
+    generatorWarnings.push(
+      'Dos non couvert : aucun exercice de tirage compound (dos) n\'est disponible ' +
+      'avec votre équipement actuel (les exercices de dos nécessitent une barre de ' +
+      'traction, des haltères, un câble ou une machine). ' +
+      'Ajoutez l\'un de ces équipements pour un programme équilibré.',
     )
   }
 

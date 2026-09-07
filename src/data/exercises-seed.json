@@ -1667,7 +1667,7 @@
       "chest"
     ],
     "equipment": "dumbbell",
-    "category": "isolation",
+    "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
     "popularity": 1,
@@ -1865,6 +1865,28 @@
       "type": "gif",
       "sizeBytes": 0,
       "importedAt": 1788087708550,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "machine-lat-pulldown",
+    "name": "Tirage vertical machine",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "biceps",
+      "back_thickness"
+    ],
+    "equipment": "machine",
+    "category": "compound",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Lat-Pulldown-Machine.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788700000000,
       "aspectRatio": 1
     }
   },
