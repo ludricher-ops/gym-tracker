@@ -745,18 +745,20 @@ export function ProgramGeneratorScreen() {
   function renderProgramWeeksPicker() {
     const options = programWeeksOptions(level)
 
-    // Étiquette de la phase de périodisation — délègue à buildPhases (source de vérité)
+    // Étiquette des blocs en langage accessible — délègue à buildPhases (source de vérité)
     function phaseLabel(weeks: number): string {
       const phases = buildPhases(weeks)
       if (!phases) return ''
+      const plain: Record<string, string> = {
+        adaptation:      'rodage',
+        progression:     'progression',
+        intensification: 'pic d\'effort',
+        deload:          'récup.',
+      }
       return phases.map((ph) => {
         const dur = ph.weekEnd - ph.weekStart + 1
-        const names: Record<string, string> = {
-          adaptation: 'adaptation', progression: 'progression',
-          intensification: 'intensification', deload: 'décharge',
-        }
-        return `${dur} sem. ${names[ph.focus] ?? ph.focus}`
-      }).join(' · ')
+        return `${dur} sem. ${plain[ph.focus] ?? ph.focus}`
+      }).join(' → ')
     }
 
     return (
@@ -765,7 +767,7 @@ export function ProgramGeneratorScreen() {
           Sur combien de semaines ?
         </p>
         <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 20 }}>
-          Un programme plus long permet une périodisation par blocs — chaque phase adapte le volume et l'intensité.
+          Le volume et l'intensité évoluent automatiquement semaine après semaine selon des blocs progressifs.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
