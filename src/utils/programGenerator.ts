@@ -1023,16 +1023,23 @@ export function generateProgramDraft(
   const hasCompoundBack = available.some(
     (ex) => ex.category === 'compound' && backMuscles.includes(ex.primaryMuscle),
   )
-  const hasPullInSplit = rawSplit.some((t) => t === 'pull')
+  // BUG-BW-PULL : les séances 'pull', 'back-bi' (brosplit) et 'chest-back' (Arnold)
+  // sont toutes des séances dos qui deviennent vides sans exercice compound dos disponible.
+  const backSessionTypes = ['pull', 'back-bi', 'chest-back'] as const
+  const hasPullInSplit = rawSplit.some((t) => (backSessionTypes as readonly string[]).includes(t))
   const split: Split = (!hasCompoundBack && hasPullInSplit)
-    ? rawSplit.map((t) => (t === 'pull' ? 'fullbody-quad' : t)) as Split
+    ? rawSplit.map((t) => {
+        if (t === 'pull' || t === 'back-bi') return 'fullbody-quad'
+        if (t === 'chest-back') return 'push'
+        return t
+      }) as Split
     : rawSplit
 
   if (!hasCompoundBack && hasPullInSplit) {
     generatorWarnings.unshift(
-      'Séance "Pull" remplacée par "Full Body" : aucun exercice de tirage compound (dos) ' +
-      'n\'est disponible avec votre équipement. ' +
-      'Ajoutez une barre de traction, des haltères ou une machine pour retrouver le split Push/Pull.',
+      'Séance(s) dos remplacée(s) : aucun exercice de tirage compound (dos) ' +
+      'n\'est disponible avec votre équipement (barre de traction, haltères, câble ou machine). ' +
+      'Les séances dos ont été remplacées par des séances Full Body ou Push.',
     )
   }
 
