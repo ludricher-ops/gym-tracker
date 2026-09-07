@@ -127,9 +127,10 @@ describe('selectSplit', () => {
       .toEqual(['fullbody', 'fullbody'])
   })
 
-  it('3 j + force + intermédiaire → PPL', () => {
+  it('3 j + force + intermédiaire → fullbody × 3 (INC-1 : PPL bloqué pour force)', () => {
+    // INC-1 fix : strength préfère la fréquence élevée par groupe → fullbody×3, pas PPL
     expect(splitTypes({ goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
-      .toEqual(['push', 'pull', 'legs'])
+      .toEqual(['fullbody', 'fullbody', 'fullbody'])
   })
 
   it('3 j + fat_loss + intermédiaire → Push / Pull / Full Body', () => {
@@ -152,9 +153,11 @@ describe('selectSplit', () => {
       .toEqual(['push', 'pull', 'lower', 'fullbody'])
   })
 
-  it('5 j + force + intermédiaire → PPL + upper + lower', () => {
+  it('5 j + force + intermédiaire → Push / Pull / Lower-quad / Upper / Lower-hip (BUG-A1 : lower-quad et lower-hip distincts)', () => {
+    // BUG-A1 fix : 'legs' et 'lower' étaient des doublons identiques → remplacés par lower-quad/lower-hip
+    // toPublicType mappe lower-quad → 'lower' et lower-hip → 'lower'
     expect(splitTypes({ goal: 'strength', daysPerWeek: 5, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }))
-      .toEqual(['push', 'pull', 'legs', 'upper', 'lower'])
+      .toEqual(['push', 'pull', 'lower', 'upper', 'lower'])
   })
 
   it('5 j + hypertrophie + débutant → upper/lower/upper/lower/fullbody', () => {
@@ -391,8 +394,8 @@ describe('workout naming', () => {
   })
 
   it('PPL → pas de suffixe lettre', () => {
-    // level intermediate requis : beginner 3j force → fullbody
-    const d = generateProgramDraft({ goal: 'strength', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
+    // hypertrophy+intermediate+3j → PPL classique (strength va en fullbody depuis INC-1)
+    const d = generateProgramDraft({ goal: 'hypertrophy', daysPerWeek: 3, sessionDuration: 60, equipment: FULL_GYM, level: 'intermediate' }, POOL)
     expect(d.workouts[0]!.name).toBe('Push — Poussée')
     expect(d.workouts[1]!.name).toBe('Pull — Tirage')
     expect(d.workouts[2]!.name).toBe('Legs — Jambes')
@@ -486,10 +489,12 @@ describe('adjustedSpec — sets selon sessionDuration', () => {
     expect(adjustedSpec(compound4, 90).sets).toBe(4)
   })
 
-  it('45 min → floor(sets × 0.75), min 2', () => {
-    expect(adjustedSpec(compound4, 45).sets).toBe(3)  // floor(4×0.75)=3
-    expect(adjustedSpec(compound5, 45).sets).toBe(3)  // floor(5×0.75)=3
-    expect(adjustedSpec(compound3, 45).sets).toBe(2)  // floor(3×0.75)=2
+  it('45 min → inchangé (BUG-A3 : pas de double réduction, le volume est géré par adjustedSlotCount)', () => {
+    // BUG-A3 fix : à 45min on réduisait à la fois les slots ET les séries → double réduction.
+    // Maintenant seuls les slots changent ; adjustedSpec ne réduit qu'à 20min.
+    expect(adjustedSpec(compound4, 45).sets).toBe(4)
+    expect(adjustedSpec(compound5, 45).sets).toBe(5)
+    expect(adjustedSpec(compound3, 45).sets).toBe(3)
   })
 
   it('20 min → floor(sets × 0.5), min 2', () => {
