@@ -973,7 +973,7 @@ export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks, splitPreference } = params
   const durationWeeks = totalWeeks ?? DURATION_WEEKS[level]!
 
   // Construire le Set<MuscleGroup> des muscles ciblés une seule fois
@@ -1038,7 +1038,8 @@ export function generateProgramDraft(
 
   // SEED-BW-NOBACK : aucun compound dos disponible, et pas de séance pull pour l'annoncer
   // → avertir l'utilisateur que son programme n'inclura pas de tirage (dos sous-entraîné).
-  if (!hasCompoundBack && !hasPullInSplit) {
+  // Exception : glutes-focus explicite — l'absence de dos compound est intentionnelle.
+  if (!hasCompoundBack && !hasPullInSplit && splitPreference !== 'glutes-focus') {
     generatorWarnings.push(
       'Dos non couvert : aucun exercice de tirage compound (dos) n\'est disponible ' +
       'avec votre équipement actuel (les exercices de dos nécessitent une barre de ' +
