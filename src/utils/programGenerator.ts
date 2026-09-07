@@ -1045,8 +1045,10 @@ export function generateProgramDraft(
 
   // SEED-BW-NOBACK : aucun compound dos disponible, et pas de séance pull pour l'annoncer
   // → avertir l'utilisateur que son programme n'inclura pas de tirage (dos sous-entraîné).
-  // Exception : glutes-focus explicite — l'absence de dos compound est intentionnelle.
-  if (!hasCompoundBack && !hasPullInSplit && splitPreference !== 'glutes-focus') {
+  // Exception : split glutes (explicite via splitPreference ou auto via focusMuscles=['glutes'])
+  // — dans les deux cas, l'absence de dos compound est intentionnelle.
+  const isGlutesSplit = rawSplit.every((t) => t === 'glutes-hip' || t === 'quad-glutes')
+  if (!hasCompoundBack && !hasPullInSplit && splitPreference !== 'glutes-focus' && !isGlutesSplit) {
     generatorWarnings.push(
       'Dos non couvert : aucun exercice de tirage compound (dos) n\'est disponible ' +
       'avec votre équipement actuel (les exercices de dos nécessitent une barre de ' +
