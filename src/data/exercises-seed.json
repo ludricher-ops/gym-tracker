@@ -1145,7 +1145,7 @@
     "equipment": "bodyweight",
     "category": "compound",
     "trackingType": "reps_only",
-    "isWarmupExercise": true,
+    "isWarmupExercise": false,
     "popularity": 1,
     "media": {
       "url": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif",

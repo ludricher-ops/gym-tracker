@@ -116,13 +116,17 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
       const equipmentChanged = existing.equipment !== ex.equipment
       const nameChanged = existing.name !== ex.name
       const categoryChanged = existing.category !== ex.category
+      const warmupChanged = (existing.isWarmupExercise ?? false) !== (ex.isWarmupExercise ?? false)
+      const trackingTypeChanged = existing.trackingType !== ex.trackingType
 
-      if (mediaUrlChanged || equipmentChanged || nameChanged || categoryChanged) {
+      if (mediaUrlChanged || equipmentChanged || nameChanged || categoryChanged || warmupChanged || trackingTypeChanged) {
         toUpdate.push({
           ...existing,
           name: ex.name,
           equipment: ex.equipment,
           category: ex.category,
+          isWarmupExercise: ex.isWarmupExercise,
+          trackingType: ex.trackingType,
           media: seedMedia,
           updatedAt: now,
           dirty: true,
