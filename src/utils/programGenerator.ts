@@ -392,7 +392,7 @@ const SLOTS: Record<InternalWorkoutType, Slot[]> = {
     // Composés (tous en premier)
     { muscles: ['hamstrings', 'glutes'],                compound: true  }, // RDL / hip thrust
     { muscles: ['chest', 'chest_upper'],                compound: true  }, // Développé couché ou incliné
-    { muscles: ['back_width', 'back'],                  compound: true  }, // Traction / tirage vertical
+    { muscles: ['back_width', 'back_thickness', 'back'], compound: true  }, // Traction / tirage vertical (BUG-HIP-BACK fix)
     { muscles: ['shoulders', 'shoulders_front'],        compound: true  }, // OHP
     // Isolations
     { muscles: ['quads'],                               compound: false }, // Leg extension
@@ -987,7 +987,7 @@ export function generateProgramDraft(
     (allowed.has(ex.equipment) || ex.equipment === 'bodyweight'),
   )
 
-  const split = selectSplit(params)
+  const rawSplit = selectSplit(params)
   // Jours choisis par l'utilisateur ou défaut par nombre de séances
   const days: Weekday[] = (selectedDays && selectedDays.length === daysPerWeek)
     ? selectedDays
@@ -1004,6 +1004,26 @@ export function generateProgramDraft(
   // Dédupliqués par clé "{workoutType}:{muscle}" pour éviter les répétitions cross-séances.
   const warnKeys = new Set<string>()
   const generatorWarnings: string[] = []
+
+  // BUG-BW-PULL fix : si le split contient un jour 'pull' mais qu'aucun exercice de dos
+  // compound n'est disponible (pas de barre, d'haltères ni de machine), la séance Pull serait
+  // entièrement vide. On remplace chaque 'pull' par 'fullbody-quad' et on émet un warning.
+  const backMuscles: MuscleGroup[] = ['back_width', 'back_thickness', 'back']
+  const hasCompoundBack = available.some(
+    (ex) => ex.category === 'compound' && backMuscles.includes(ex.primaryMuscle),
+  )
+  const hasPullInSplit = rawSplit.some((t) => t === 'pull')
+  const split: Split = (!hasCompoundBack && hasPullInSplit)
+    ? rawSplit.map((t) => (t === 'pull' ? 'fullbody-quad' : t)) as Split
+    : rawSplit
+
+  if (!hasCompoundBack && hasPullInSplit) {
+    generatorWarnings.unshift(
+      'Séance "Pull" remplacée par "Full Body" : aucun exercice de tirage compound (dos) ' +
+      'n\'est disponible avec votre équipement. ' +
+      'Ajoutez une barre de traction, des haltères ou une machine pour retrouver le split Push/Pull.',
+    )
+  }
 
   for (const workoutType of split) {
     // Clé canonique : variantes A/B comptent ensemble pour le suffixe (upper-push + upper-pull = Upper A/B)
