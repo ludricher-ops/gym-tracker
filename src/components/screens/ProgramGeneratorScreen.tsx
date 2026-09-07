@@ -183,9 +183,9 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 }
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Niveau  2: Fréquence  3: Structure  4: Muscles(si auto)  5: Jours  6: Durée  7: Lieu  8: Équipement  9: Programme
-// Si splitPreference !== 'auto', l'étape 4 (Muscles) est sautée → 9 étapes effectives
-const STEP_TITLE = ['Objectif', 'Niveau', 'Fréquence', 'Structure', 'Muscles', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Programme']
+// 0: Objectif  1: Niveau  2: Fréquence  3: Durée  4: Structure  5: Muscles(si auto)  6: Jours  7: Lieu  8: Équipement  9: Programme
+// Si splitPreference !== 'auto', l'étape 5 (Muscles) est sautée → 9 étapes effectives
+const STEP_TITLE = ['Objectif', 'Niveau', 'Fréquence', 'Durée', 'Structure', 'Muscles', 'Jours', 'Lieu', 'Équipement', 'Programme']
 const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -220,8 +220,8 @@ export function ProgramGeneratorScreen() {
 
   function handleBack() {
     if (stepIndex === 0) nav.back()
-    // Si on est à Jours (5) avec un split explicite, sauter Muscles (4) au retour
-    else if (stepIndex === 5 && splitPreference !== 'auto') setStepIndex(3)
+    // Si on est à Jours (6) avec un split explicite, sauter Muscles (5) au retour
+    else if (stepIndex === 6 && splitPreference !== 'auto') setStepIndex(4)
     else setStepIndex((s) => s - 1)
   }
 
@@ -292,13 +292,7 @@ export function ProgramGeneratorScreen() {
         advance()
       })
     }
-    // Étape 3 : Structure — si 'auto', on affiche ensuite les muscles (étape 4)
-    //           si preset explicite, on saute directement aux jours (étape 5)
-    if (stepIndex === 3) return renderSplitPicker()
-    // Étape 4 : Muscles — uniquement si 'auto' (sinon on ne passe jamais ici)
-    if (stepIndex === 4) return renderMusclePicker()
-    if (stepIndex === 5) return renderDayPicker()
-    if (stepIndex === 6) {
+    if (stepIndex === 3) {
       // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
       const durationNote = goal === 'strength' ? (
         <div style={{
@@ -325,6 +319,12 @@ export function ProgramGeneratorScreen() {
         </div>
       )
     }
+    // Étape 4 : Structure — si 'auto', on affiche ensuite les muscles (étape 5)
+    //           si preset explicite, on saute directement aux jours (étape 6)
+    if (stepIndex === 4) return renderSplitPicker()
+    // Étape 5 : Muscles — uniquement si 'auto' (sinon on ne passe jamais ici)
+    if (stepIndex === 5) return renderMusclePicker()
+    if (stepIndex === 6) return renderDayPicker()
     if (stepIndex === 7) return renderLieuPicker()
     if (stepIndex === 8) return renderEquipmentPicker()
     return renderProgramWeeksPicker()
@@ -664,10 +664,10 @@ export function ProgramGeneratorScreen() {
                   if (disabled) return
                   setSplitPreference(value)
                   if (value === 'auto') {
-                    advance()                      // → étape 4 (Muscles)
+                    advance()                      // → étape 5 (Muscles)
                   } else {
                     // Sauter Muscles : inutile si la structure est explicite
-                    setStepIndex((s) => s + 2)    // → étape 5 (Jours)
+                    setStepIndex((s) => s + 2)    // → étape 6 (Jours)
                     setFocusMuscles([])            // reset au cas où
                   }
                 }}
