@@ -1219,12 +1219,13 @@ export function generateProgramDraft(
   // UX-6 : Explication quand le focus muscles change le type de programme de façon contre-intuitive
   const fm = focusMuscles ?? []
   if (fm.length > 0) {
-    const hasFocusLower = fm.includes('legs')
-    const hasFocusPush  = fm.includes('chest') || fm.includes('shoulders')
-    const hasFocusPull  = fm.includes('back')
-    const hasFocusArms  = fm.includes('arms')
-    const hasFocusCore  = fm.includes('core')
-    const hasFocusUpper = hasFocusPush || hasFocusPull || hasFocusArms
+    const hasFocusLower  = fm.includes('legs')
+    const hasFocusPush   = fm.includes('chest') || fm.includes('shoulders')
+    const hasFocusPull   = fm.includes('back')
+    const hasFocusArms   = fm.includes('arms')
+    const hasFocusCore   = fm.includes('core')
+    const hasFocusGlutes = fm.includes('glutes')
+    const hasFocusUpper  = hasFocusPush || hasFocusPull || hasFocusArms
 
     // "Core seul" → programme fullbody (counter-intuitif : l'utilisateur attend du gainage, pas des squats)
     if (hasFocusCore && !hasFocusLower && !hasFocusUpper) {
@@ -1240,6 +1241,16 @@ export function generateProgramDraft(
         'Focus bras : "arms" seul génère un programme haut du corps complet (poitrine, dos, épaules + bras) ' +
         'avec priorité donnée aux exercices de bras. Les bras étant des muscles assistants, ' +
         'ils progressent mieux dans un contexte de programme haut du corps.',
+      )
+    }
+    // "Dos + fessiers" → workoutTypeFromFocus retourne 'pull' (dos prime sur fessiers), aucune séance fessiers dédiée.
+    // L'utilisateur qui sélectionne 'glutes' + 'back' s'attend à des séances fessiers — on l'informe du comportement réel.
+    else if (hasFocusPull && hasFocusGlutes && !hasFocusLower) {
+      generatorWarnings.unshift(
+        'Focus dos + fessiers : la combinaison "dos" et "fessiers" génère un programme de tirage (dos) ' +
+        'où les fessiers sont sollicités en muscles secondaires, sans séance dédiée fessiers. ' +
+        'Pour des séances fessiers autonomes, sélectionnez uniquement "fessiers" ou utilisez ' +
+        'l\'objectif Fessiers+dos dans le choix du type de programme.',
       )
     }
     // Push + pull + jambes (ou toute combinaison "totale") → fullbody par défaut
