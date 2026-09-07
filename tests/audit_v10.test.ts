@@ -388,8 +388,8 @@ describe('A07 — Fullbody × KB+DB+BW, hypertrophy, 3j, 60min, intermediate ⭐
     expect(appearsInPool(params, 0, 'seed-row-dumbbell')).toBe(true)
   })
 
-  it('fullbody-hip : bw-sissy-squat ✅ R3', () => {
-    expect(inW(w(gen(params), 1), 'bw-sissy-squat')).toBe(true)
+  it('fullbody-hip : bw-sissy-squat ✅ R3 (intermediate → top-3 random, appearsInPool)', () => {
+    expect(appearsInPool(params, 1, 'bw-sissy-squat')).toBe(true)
     expect(slotIds(w(gen(params), 1))).not.toContain('bw-wall-sit')
   })
 
@@ -566,8 +566,8 @@ describe('B01 — Glutes+dos × BW, fat_loss, 3j, 60min, intermediate ⭐ CRITIQ
     expect(appearsInPool(params, 0, 'seed-good-morning-bw')).toBe(true)
   })
 
-  it('quad-glutes : bw-sissy-squat (quads isolation slot[3]) ✅ FIXÉ R3', () => {
-    expect(inW(w(gen(params), 1), 'bw-sissy-squat')).toBe(true)
+  it('quad-glutes : bw-sissy-squat (quads isolation slot[3]) ✅ R3 (intermediate → top-3 random, appearsInPool)', () => {
+    expect(appearsInPool(params, 1, 'bw-sissy-squat')).toBe(true)
     expect(slotIds(w(gen(params), 1))).not.toContain('bw-wall-sit')
   })
 })
@@ -652,8 +652,8 @@ describe('B04 — Glutes+dos × DB+BW, fat_loss, 4j, 60min, intermediate ⭐ CRI
     expect(appearsInPool(params, 0, 'seed-pullover-dumbbell')).toBe(true)
   })
 
-  it('quad-glutes : bw-sissy-squat (quads isolation slot[3]) ✅ FIXÉ R3', () => {
-    expect(inW(w(gen(params), 1), 'bw-sissy-squat')).toBe(true)
+  it('quad-glutes : bw-sissy-squat (quads isolation slot[3]) ✅ R3 (intermediate → top-3 random, appearsInPool)', () => {
+    expect(appearsInPool(params, 1, 'bw-sissy-squat')).toBe(true)
     expect(slotIds(w(gen(params), 1))).not.toContain('bw-wall-sit')
   })
 })
