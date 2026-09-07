@@ -183,9 +183,9 @@ function programWeeksOptions(level: ProgramLevel | null): ProgramWeeksOption[] {
 }
 
 // ── Ordre des étapes ──────────────────────────────────────────────────────────
-// 0: Objectif  1: Fréquence  2: Structure  3: Muscles(si auto)  4: Jours  5: Durée  6: Lieu  7: Équipement  8: Niveau  9: Programme
-// Si splitPreference !== 'auto', l'étape 3 (Muscles) est sautée → 9 étapes effectives
-const STEP_TITLE = ['Objectif', 'Fréquence', 'Structure', 'Muscles', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Niveau', 'Programme']
+// 0: Objectif  1: Niveau  2: Fréquence  3: Structure  4: Muscles(si auto)  5: Jours  6: Durée  7: Lieu  8: Équipement  9: Programme
+// Si splitPreference !== 'auto', l'étape 4 (Muscles) est sautée → 9 étapes effectives
+const STEP_TITLE = ['Objectif', 'Niveau', 'Fréquence', 'Structure', 'Muscles', 'Jours', 'Durée', 'Lieu', 'Équipement', 'Programme']
 const TOTAL = 10
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -220,8 +220,8 @@ export function ProgramGeneratorScreen() {
 
   function handleBack() {
     if (stepIndex === 0) nav.back()
-    // Si on est à Jours (4) avec un split explicite, sauter Muscles (3) au retour
-    else if (stepIndex === 4 && splitPreference !== 'auto') setStepIndex(2)
+    // Si on est à Jours (5) avec un split explicite, sauter Muscles (4) au retour
+    else if (stepIndex === 5 && splitPreference !== 'auto') setStepIndex(3)
     else setStepIndex((s) => s - 1)
   }
 
@@ -283,19 +283,22 @@ export function ProgramGeneratorScreen() {
       return renderGoalPicker()
     }
     if (stepIndex === 1) {
+      return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
+    }
+    if (stepIndex === 2) {
       return renderChips(STEP_DAYS, days, (v: 2 | 3 | 4 | 5) => {
         setDays(v)
         setSelectedDays([])
         advance()
       })
     }
-    // Étape 2 : Structure — si 'auto', on affiche ensuite les muscles (étape 3)
-    //           si preset explicite, on saute directement aux jours (étape 4)
-    if (stepIndex === 2) return renderSplitPicker()
-    // Étape 3 : Muscles — uniquement si 'auto' (sinon on ne passe jamais ici)
-    if (stepIndex === 3) return renderMusclePicker()
-    if (stepIndex === 4) return renderDayPicker()
-    if (stepIndex === 5) {
+    // Étape 3 : Structure — si 'auto', on affiche ensuite les muscles (étape 4)
+    //           si preset explicite, on saute directement aux jours (étape 5)
+    if (stepIndex === 3) return renderSplitPicker()
+    // Étape 4 : Muscles — uniquement si 'auto' (sinon on ne passe jamais ici)
+    if (stepIndex === 4) return renderMusclePicker()
+    if (stepIndex === 5) return renderDayPicker()
+    if (stepIndex === 6) {
       // UX-4 : Force + durée courte — repos 3 min réduit drastiquement le volume
       const durationNote = goal === 'strength' ? (
         <div style={{
@@ -322,11 +325,8 @@ export function ProgramGeneratorScreen() {
         </div>
       )
     }
-    if (stepIndex === 6) return renderLieuPicker()
-    if (stepIndex === 7) return renderEquipmentPicker()
-    if (stepIndex === 8) {
-      return renderChips(STEP_LEVEL, level, (v: ProgramLevel) => { setLevel(v); advance() })
-    }
+    if (stepIndex === 7) return renderLieuPicker()
+    if (stepIndex === 8) return renderEquipmentPicker()
     return renderProgramWeeksPicker()
   }
 
@@ -636,10 +636,10 @@ export function ProgramGeneratorScreen() {
                 onClick={() => {
                   setSplitPreference(value)
                   if (value === 'auto') {
-                    advance()                      // → étape 3 (Muscles)
+                    advance()                      // → étape 4 (Muscles)
                   } else {
                     // Sauter Muscles : inutile si la structure est explicite
-                    setStepIndex((s) => s + 2)    // → étape 4 (Jours)
+                    setStepIndex((s) => s + 2)    // → étape 5 (Jours)
                     setFocusMuscles([])            // reset au cas où
                   }
                 }}
