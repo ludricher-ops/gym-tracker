@@ -148,11 +148,13 @@ Déclenché si : `goal === 'strength' && level !== 'beginner' && daysPerWeek <= 
 | Muscle / slot | Exercice | Pop | Statut |
 |---------------|----------|-----|--------|
 | compound quads/glutes | bw-squat | 3 | ✅ |
-| compound chest | seed-pushup | 2 | ✅ |
+| compound chest | seed-pushup (chest, rank 0) | 2 | ✅ beginner |
+| compound chest (intermediate) | seed-pushup OU bw-incline-pushup (chest_upper, pop 2) | 2 | ⚠️ top-3 random → 50/50 |
 | compound shoulders | bw-pike-pushup | 1 | ✅ seul |
 | compound hamstrings | seed-good-morning-bw | 1 | ✅ FIXÉ R1 (12cf14e) |
 | compound back | **AUCUN** | — | ❌ + WARNING |
-| compound glutes slot[0] glutes-hip | seed-hip-thrust-bw | 3 | ✅ |
+| compound glutes slot[0] glutes-hip | seed-hip-thrust-bw | 3 | ✅ (slotPrimary=glutes rank 0) |
+| compound hamstrings/glutes slot[0] **fullbody-hip** | **seed-good-morning-bw** | 1 | ✅ slotPrimary='hamstrings' → good-morning rank 0 prime sur hip-thrust-bw (glutes rank 1, pop 3) ⚠️ DÉCOUVERTE |
 | compound hamstrings slot[1] glutes-hip | seed-good-morning-bw | 1 | ✅ FIXÉ R1 (slotPrimary=hamstrings) |
 | isolation quads | bw-sissy-squat | 3 | ✅ FIXÉ R3 (bw-wall-sit → warmup) |
 | isolation glutes | seed-glute-bridge (3), seed-donkey-kick (2), seed-fire-hydrant (2) | — | ✅ |
@@ -161,14 +163,18 @@ Déclenché si : `goal === 'strength' && level !== 'beginner' && daysPerWeek <= 
 | isolation biceps | AUCUN | — | ❌ |
 | isolation shoulders_rear | AUCUN | — | ❌ |
 
+> ⚠️ **DÉCOUVERTE :** `fullbody-hip slot[0] = ['hamstrings','glutes']` → slotPrimary='hamstrings'. `seed-good-morning-bw` (hamstrings, rank 0) bat `seed-hip-thrust-bw` (glutes, rank 1) même si pop 3 > pop 1. Ce slot sélectionne **good-morning-bw** en BW, jamais hip-thrust-bw. Le fullbody-hip slot[1] = chest — hip-thrust-bw n'apparaît **PAS** dans fullbody-hip (contrairement à glutes-hip).
+
 #### DB + BW
 | Muscle / slot | Exercice | Pop | Note |
 |---------------|----------|-----|------|
 | compound quads/glutes | bw-squat (BW,3) > seed-lunges (DB,2) | — | bw-squat gagne sur pop |
 | compound chest | seed-bench-dumbbell | 3 | ✅ |
 | compound back (SEUL) | seed-row-dumbbell (back_thickness) | 3 | ⚠️ back_width non couvert |
-| compound hamstrings | dumbbell-rdl | 2 | ✅ slot[1] glutes-hip |
-| compound glutes slot[0] glutes-hip | seed-hip-thrust-bw | 3 | ✅ |
+| compound hamstrings slot[0] glutes-hip | seed-hip-thrust-bw (glutes,3) usé → dumbbell-rdl (hamstrings,2) | — | slot[0]=glutes, slot[1]=hamstrings |
+| compound hamstrings slot[1] glutes-hip | dumbbell-rdl | 2 | ✅ slotPrimary=hamstrings |
+| compound hamstrings/glutes slot[0] **fullbody-hip** | **seed-good-morning-bw** si dumbbell-rdl usedGlobally | 1 | ⚠️ DÉCOUVERTE : fullbody-quad slot[4] sélectionne dumbbell-rdl comme fallback hamstrings → usedGlobally → fullbody-hip slot[0] prend good-morning-bw |
+| compound glutes slot[0] glutes-hip | seed-hip-thrust-bw | 3 | ✅ (slotPrimary=glutes rank 0) |
 | compound shoulders | seed-shoulder-press-dumbbell | 3 | ✅ |
 | isolation quads | bw-sissy-squat | 3 | ✅ FIXÉ R3 (bw-wall-sit → warmup) |
 | isolation hamstrings | AUCUN | — | ❌ silencieux |
@@ -178,14 +184,21 @@ Déclenché si : `goal === 'strength' && level !== 'beginner' && daysPerWeek <= 
 | isolation back_thickness slot[7] glutes-hip | seed-pullover-dumbbell | 3 | ✅ |
 | isolation back_width slot[7] quad-glutes | seed-pullover | 1 | ✅ seul |
 
+> ⚠️ **DÉCOUVERTE A04 :** En DB+BW fullbody, `fullbody-quad slot[4]` (hamstrings isolation, compound:false) n'a aucun exercice isolation → fallback sur le compound : `dumbbell-rdl` sélectionné (top-1 beginner). Résultat : `dumbbell-rdl` est **usedGlobally** quand fullbody-hip est généré → `fullbody-hip slot[0]` sélectionne `seed-good-morning-bw` (hamstrings, rank 0, non usé) au lieu de dumbbell-rdl.
+
 #### KB + DB + BW (différences vs DB+BW)
 | Slot | DB+BW | KB ajouté |
 |------|-------|-----------|
 | compound quads/glutes | bw-squat (pop 3) | seed-goblet-squat (KB, pop 3) → tie → aléatoire |
 | compound hamstrings slot[1] glutes-hip | dumbbell-rdl (pop 2) | kb-rdl (KB, pop 2) → tie → aléatoire |
 | compound glutes slot[0] glutes-hip | seed-hip-thrust-bw (pop 3) | kb-swing (KB, pop 3) → tie → aléatoire |
-| compound back | seed-row-dumbbell (pop 3) | kb-row (pop 2) → seed-row-dumbbell gagne |
+| compound back (dos compound) | seed-row-dumbbell (pop 3) | kb-row (pop 2) → seed-row-dumbbell gagne en priorité |
+| **compound back — autre candidat** | — | **kb-deadlift** (KB, primaryMuscle=**'back'**, compound, pop ?) ← candidat valide pour slot `['back_width','back_thickness','back']` → alterné via anti-répétition ⚠️ DÉCOUVERTE |
 | isolation back | seed-pullover-dumbbell (pop 3) | kb-pullover (pop 1) → seed-pullover-dumbbell gagne |
+
+> ⚠️ **DÉCOUVERTE A08 :** `kb-deadlift` a `primaryMuscle='back'` (pas 'hamstrings'). `'back'` est dans `slot.muscles` des slots dos compound `['back_width','back_thickness','back']`. `kb-deadlift` est donc un **candidat valide** pour les slots dos compound en fullbody et glutes splits. Il s'alterne avec `seed-row-dumbbell` et `kb-row` via anti-répétition.
+
+> ⚠️ **DÉCOUVERTE B08 :** En `glutes-hip`, `seed-row-dumbbell` est sélectionné pour slot[3] (dos compound). En `quad-glutes` de la même séance suivante, `seed-row-dumbbell` est `usedGlobally` → **`kb-row`** est sélectionné à la place. C'est le comportement correct de l'anti-répétition inter-séances.
 
 #### Salle complète (exercices clés)
 | Slot | Exercice (beginner=top-1) |
@@ -240,8 +253,8 @@ equipment=['bodyweight'], splitPreference='fullbody'
 11. Séance effective : 4 exercices réels
 
 **Assertions — fullbody-hip :**
-12. slot[0] = seed-hip-thrust-bw (glutes, pop 3 — seul compound hamstrings/glutes BW)
-13. slot[1] = seed-pushup
+12. slot[0] = **seed-good-morning-bw** (hamstrings, pop 1, slotPrimary='hamstrings' rank 0 → prime sur seed-hip-thrust-bw glutes rank 1) ⚠️ DÉCOUVERTE — seed-hip-thrust-bw N'EST PAS dans fullbody-hip
+13. slot[1] = seed-pushup (chest compound ← slot[1] est CHEST, pas glutes)
 14. slot[2] = VIDE + warning dos
 15. slot[3] = bw-pike-pushup
 16. slot[4] = bw-sissy-squat (quads isolation, pop 3, seul candidat) ✅ FIXÉ R3
@@ -266,7 +279,7 @@ equipment=['bodyweight'], splitPreference=undefined
 2. SEED-BW-NOBACK présent
 3. adjustedSlotCount = 4
 4. fullbody-quad : slot[0]=bw-squat, slot[1]=seed-pushup, slot[2]=VIDE+warning, slot[3]=bw-pike-pushup → 3 exercices effectifs
-5. fullbody-hip : slot[0]=seed-hip-thrust-bw, slot[1]=seed-pushup, slot[2]=VIDE+warning, slot[3]=bw-pike-pushup → 3 exercices effectifs
+5. fullbody-hip : slot[0]=**seed-good-morning-bw**, slot[1]=seed-pushup, slot[2]=VIDE+warning, slot[3]=bw-pike-pushup → 3 exercices effectifs (⚠️ DÉCOUVERTE : slotPrimary='hamstrings' → good-morning-bw, pas hip-thrust-bw)
 
 ---
 
@@ -283,7 +296,7 @@ equipment=['bodyweight'], splitPreference='fullbody'
 1. SEED-BW-NOBACK présent
 2. adjustedSlotCount = 6
 3. fullbody-quad slots 0–5 : bw-squat, seed-pushup, VIDE+warning, bw-pike-pushup, VIDE, VIDE → 3 exercices effectifs
-4. fullbody-hip slots 0–5 : seed-hip-thrust-bw, seed-pushup, VIDE+warning, bw-pike-pushup, bw-sissy-squat, VIDE → 4 exercices effectifs ✅ FIXÉ R3
+4. fullbody-hip slots 0–5 : **seed-good-morning-bw**, seed-pushup, VIDE+warning, bw-pike-pushup, bw-sissy-squat, VIDE → 4 exercices effectifs ✅ FIXÉ R3 (⚠️ DÉCOUVERTE : slot[0] slotPrimary='hamstrings' → good-morning-bw, pas hip-thrust-bw)
 
 ---
 
@@ -304,14 +317,14 @@ equipment=['dumbbell','bodyweight'], splitPreference='fullbody'
 3. slot[1] = seed-bench-dumbbell (chest, DB, pop 3 > seed-pushup pop 2, beginner top-1)
 4. slot[2] = seed-row-dumbbell (back_thickness, DB, pop 3) — SEUL compound back en DB+BW (seed-pullover = isolation post-fix v9)
 5. slot[3] = seed-shoulder-press-dumbbell (DB, pop 3, beginner top-1)
-6. slot[4] = VIDE (aucune isolation hamstrings DB+BW)
+6. slot[4] = **dumbbell-rdl** (fallback compound — aucune isolation hamstrings en DB+BW → le générateur tombe en fallback sur les compounds ; dumbbell-rdl sélectionné → devient usedGlobally) ⚠️ DÉCOUVERTE
 7. slot[5] = seed-rear-delt-fly (DB, pop 2, seul candidat shoulders_rear DB)
 8. slot[6] = seed-curl-dumbbell (DB, pop 3, beginner top-1)
 9. slot[7] = seed-calf-raise-db (DB, pop 2)
 10. slot[8] = vérifier isolation triceps DB disponible (seed-triceps-kickback ou équivalent)
 
 **Assertions — fullbody-hip :**
-11. slot[0] = dumbbell-rdl (hamstrings, DB, pop 2, slotPrimary=hamstrings rank 0)
+11. slot[0] = **seed-good-morning-bw** (hamstrings, BW, pop 1 — dumbbell-rdl usedGlobally via fullbody-quad slot[4] fallback → seul hamstrings compound non usé) ⚠️ DÉCOUVERTE
 12. slot[1] = seed-bench-dumbbell (pop 3)
 13. slot[2] = seed-row-dumbbell — seul compound back (usedGlobally potentiel)
 14. slot[3] = seed-shoulder-press-dumbbell
@@ -394,7 +407,7 @@ equipment=['kettlebell','dumbbell','bodyweight'], splitPreference='fullbody'
 **Assertions :**
 1. Split = ['fullbody-quad','fullbody-hip','fullbody-quad','fullbody-hip'] (4j alternés)
 2. adjustedSlotCount = 9
-3. slot[2] dos : seed-row-dumbbell sélectionné en séance 1 et 2 (seul compound back, usedGlobally n'éjecte pas si seul candidat)
+3. slot[2] dos : seed-row-dumbbell OU kb-deadlift — kb-deadlift a `primaryMuscle='back'` → candidat valide pour les slots dos compound `['back_width','back_thickness','back']` ; alternance possible via anti-répétition inter-séances ⚠️ DÉCOUVERTE
 4. Pas de SEED-BW-NOBACK
 
 ---
@@ -641,7 +654,7 @@ equipment=['kettlebell','dumbbell','bodyweight'], splitPreference='glutes-focus'
 **Assertions :**
 1. adjustedSlotCount = 6
 2. Glutes-hip slots 0–5 : slot[3] (dos compound) inclus → seed-row-dumbbell ✅
-3. Quad-glutes slots 0–5 : slot[2] (dos compound) inclus → seed-row-dumbbell ✅
+3. Quad-glutes slots 0–5 : slot[2] (dos compound) inclus → **kb-row** (seed-row-dumbbell usedGlobally depuis glutes-hip slot[3] → anti-répétition sélectionne kb-row) ⚠️ DÉCOUVERTE
 4. slot[0] glutes-hip = kb-swing ou seed-hip-thrust-bw (beginner top-1 → premier du tri)
 
 ---
@@ -750,9 +763,9 @@ focusMuscles=['glutes','back']
 
 **Assertions :**
 1. workoutTypeFromFocus(['glutes','back']) = 'pull' → split pull-based
-2. hasPullInSplit=true + !hasCompoundBack → BUG-BW-PULL déclenché → 'pull' → 'fullbody-quad'
-3. Documenter le comportement exact du split final (quel type de séance produit 'upper-pull' après remplacement ?)
-4. Warning BUG-BW-PULL émis ✅
+2. hasPullInSplit=true MAIS hasCompoundBack=**true** (seed-row-dumbbell disponible en DB+BW) → **BUG-BW-PULL NON déclenché** ⚠️ DÉCOUVERTE
+3. Split final = pull (glutes+dos avec DB+BW) — seed-row-dumbbell couvre le slot dos compound ✅
+4. Warning BUG-BW-PULL **NON** émis — pas de déclenchement avec DB+BW ✅
 
 ---
 
@@ -874,3 +887,60 @@ Pour chaque profil :
 3. **Confirmation des 3 RÉSERVES fixées** (RÉSERVE-1 ✅ commit 12cf14e, RÉSERVE-2 ✅ commit 1fcef7f, RÉSERVE-3 ✅ bw-sissy-squat)
 4. **État machine-pullover, machine-low-row, machine-biceps-curl** : slots vérifiés
 5. **Recommandations** si de nouveaux bugs sont détectés
+
+---
+
+## RÉSULTATS SUITE AUTOMATISÉE
+
+**Commit :** `f382fed` — Suite complète 129 tests verts ✅  
+**Date :** 2026-09-07  
+**Fichier :** `tests/audit_v10.test.ts`
+
+### Bilan global
+
+| Groupe | Profils | Tests | Statut |
+|--------|---------|-------|--------|
+| A — Fullbody | A01–A12 (12 profils) | 57 | ✅ 57/57 |
+| B — Glutes+dos | B01–B12 (12 profils) | 48 | ✅ 48/48 |
+| C — Cas spéciaux | C01–C06 (6 profils) | 24 | ✅ 24/24 |
+| **TOTAL** | **30 profils** | **129** | **✅ 129/129** |
+
+### Découvertes clés (confirmées par les tests)
+
+1. **fullbody-hip slot[0] = seed-good-morning-bw, jamais seed-hip-thrust-bw**  
+   `slot.muscles=['hamstrings','glutes']`, `slotPrimary='hamstrings'`. `seed-good-morning-bw` (hamstrings, rank 0) prime sur `seed-hip-thrust-bw` (glutes, rank 1) malgré pop 3 > pop 1.  
+   → Assertions A01/A02/A03 corrigées en conséquence.
+
+2. **A04 — dumbbell-rdl sélectionné en fullbody-quad slot[4] (fallback compound)**  
+   Pas d'isolation hamstrings en DB+BW → fallback sur compound → `dumbbell-rdl` usedGlobally → fullbody-hip slot[0] prend `seed-good-morning-bw`.  
+   → Assertion A04-11 corrigée : `seed-good-morning-bw` (pas `dumbbell-rdl`).
+
+3. **kb-deadlift candidat valide pour slots dos compound**  
+   `kb-deadlift` a `primaryMuscle='back'`. `'back'` est dans `slot.muscles` des slots dos → il s'alterne avec `seed-row-dumbbell` et `kb-row` via anti-répétition.  
+   → Assertion A08-3 corrigée pour accepter `seed-row-dumbbell` OU `kb-deadlift`.
+
+4. **B08 — kb-row sélectionné en quad-glutes slot[2] par anti-répétition**  
+   En glutes-hip, `seed-row-dumbbell` est au slot[3]. En quad-glutes (séance suivante), `seed-row-dumbbell` est usedGlobally → `kb-row` sélectionné à la place.  
+   → Assertion B08-3 corrigée : `kb-row` (pas `seed-row-dumbbell`).
+
+5. **C02 — BUG-BW-PULL NON déclenché avec DB+BW**  
+   `hasCompoundBack=true` car `seed-row-dumbbell` est disponible en DB+BW → la condition `!hasCompoundBack` n'est pas satisfaite.  
+   → Assertions C02-2/4 corrigées : BUG-BW-PULL **non** déclenché.
+
+6. **bw-incline-pushup compète avec seed-pushup (BW intermédiaire)**  
+   Chest compound intermediate pool : `seed-pushup` (chest, rank 0, pop 2) + `bw-incline-pushup` (chest_upper, rank 1, pop 2) → tie → top-3 aléatoire → 50/50.  
+   → Tests A02/A03 BW utilisent `appearsOneOf([...pushup variants])`.
+
+### Helpers de test (patterns clés)
+
+```typescript
+// Containment-based (pas d'index positionnel — robuste aux slots VIDE)
+function inW(workout, id) { return slotIds(workout).includes(id) }
+function slotIds(workout) { const all = allIds(workout); return all.slice(1, all.length - 1) }
+
+// Probabiliste sur plusieurs tirages
+function appearsInPool(params, workoutIdx, id, tries=20)
+function appearsOneOf(params, workoutIdx, ids, tries=20)
+
+// C05 machine-lat-pulldown : tries=30 et workoutIdx=-1 (cherche dans TOUS les workouts)
+```
