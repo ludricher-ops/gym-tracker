@@ -640,6 +640,8 @@ export function ProgramGeneratorScreen() {
           return null
         case 'ppl':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
+          if (goal === 'strength') return 'Split orienté hypertrophie — Force préfère Full Body ou Upper/Lower (2-3 stimuli/sem.)'
+          if (goal === 'endurance') return 'Endurance musculaire nécessite une fréquence élevée — préfère Full Body ou Upper/Lower'
           return null
         default:
           return null
