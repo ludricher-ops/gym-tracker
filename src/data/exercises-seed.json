@@ -1667,7 +1667,7 @@
       "chest"
     ],
     "equipment": "dumbbell",
-    "category": "compound",
+    "category": "isolation",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
     "popularity": 1,
