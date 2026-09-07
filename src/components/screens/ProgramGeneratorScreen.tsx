@@ -629,6 +629,8 @@ export function ProgramGeneratorScreen() {
         case 'brosplit':
           if (days !== null && days < 5) return `Nécessite 5 séances/sem. — tu en as ${days}`
           if (level === 'beginner') return 'Fréquence trop faible par muscle pour un débutant'
+          if (goal === 'strength') return 'Force requiert 2-3 stimuli/sem. par muscle — Brosplit n\'en donne qu\'un'
+          if (goal === 'endurance') return 'Endurance musculaire nécessite une fréquence élevée — Brosplit trop peu fréquent'
           return null
         case 'arnold':
           if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
