@@ -1891,6 +1891,48 @@
     }
   },
   {
+    "id": "machine-pullover",
+    "name": "Pullover machine",
+    "primaryMuscle": "back_width",
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Lever-Pullover.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788700000001,
+      "aspectRatio": 1
+    }
+  },
+  {
+    "id": "machine-low-row",
+    "name": "Tirage buste machine",
+    "primaryMuscle": "back_thickness",
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "equipment": "machine",
+    "category": "isolation",
+    "trackingType": "weight_reps",
+    "isWarmupExercise": false,
+    "popularity": 2,
+    "media": {
+      "url": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Lever-Seated-Row.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1788700000002,
+      "aspectRatio": 1
+    }
+  },
+  {
     "id": "seed-row-tbar",
     "name": "Rowing T-bar",
     "primaryMuscle": "back_thickness",

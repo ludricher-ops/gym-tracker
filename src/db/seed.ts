@@ -115,12 +115,14 @@ async function ensureBuiltinExercises(now: number): Promise<void> {
       const mediaUrlChanged = (existing.media?.url ?? null) !== (seedMedia?.url ?? null)
       const equipmentChanged = existing.equipment !== ex.equipment
       const nameChanged = existing.name !== ex.name
+      const categoryChanged = existing.category !== ex.category
 
-      if (mediaUrlChanged || equipmentChanged || nameChanged) {
+      if (mediaUrlChanged || equipmentChanged || nameChanged || categoryChanged) {
         toUpdate.push({
           ...existing,
           name: ex.name,
           equipment: ex.equipment,
+          category: ex.category,
           media: seedMedia,
           updatedAt: now,
           dirty: true,
