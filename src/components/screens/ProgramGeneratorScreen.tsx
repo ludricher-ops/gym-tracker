@@ -620,7 +620,6 @@ export function ProgramGeneratorScreen() {
       { value: 'ppl',         icon: '🔄', label: 'PPL',           sub: 'Push · Pull · Legs — le classique'               },
       { value: 'arnold',      icon: '🏆', label: 'Arnold Split',  sub: 'Pecs+Dos / Épaules+Bras / Jambes'                },
       { value: 'brosplit',    icon: '💪', label: 'Bro Split',     sub: 'Un groupe musculaire par séance, volume max'      },
-      { value: 'glutes-focus', icon: '🍑', label: 'Glutes Focus', sub: 'Fessiers & dos — programme féminin sans push'    },
     ]
 
     // Retourne la raison d'incompatibilité, ou null si le split est compatible.
@@ -793,6 +792,15 @@ export function ProgramGeneratorScreen() {
   // ── Sélecteur de muscles prioritaires ────────────────────────────────────
 
   function renderMusclePicker() {
+    // Glutes+Dos : sélection uniquement sur jambes/dos/core, au moins l'un des deux premiers
+    const pushMuscles: FocusMuscle[] = ['chest', 'shoulders', 'arms']
+    const glutesGroup: FocusMuscle[] = ['legs', 'back', 'core']
+    const isGlutesCandidate =
+      focusMuscles.length > 0 &&
+      focusMuscles.every((m) => glutesGroup.includes(m)) &&
+      (focusMuscles.includes('legs') || focusMuscles.includes('back')) &&
+      !focusMuscles.some((m) => pushMuscles.includes(m))
+
     return (
       <div style={{ padding: '0 16px' }}>
         <p className="t-title" style={{ fontWeight: 700, marginBottom: 4 }}>
@@ -838,8 +846,51 @@ export function ProgramGeneratorScreen() {
           })}
         </div>
 
-        {/* Warning déséquilibre musculaire */}
-        {focusMuscles.length > 0 && (() => {
+        {/* Suggestion Glutes+Dos — apparaît quand la sélection correspond au profil sans push */}
+        {isGlutesCandidate && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-card)',
+            background: 'color-mix(in oklch, var(--accent) 10%, var(--surface))',
+            border: '1.5px solid color-mix(in oklch, var(--accent) 35%, transparent)',
+            marginBottom: 12,
+          }}>
+            <span style={{ fontSize: 20, flexShrink: 0 }}>🍑</span>
+            <div style={{ flex: 1 }}>
+              <div className="t-caption" style={{ fontWeight: 700, color: 'var(--fg)', marginBottom: 2 }}>
+                Ta sélection correspond au programme Glutes+Dos
+              </div>
+              <div className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 10 }}>
+                Fessiers, dos et jambes — séances sans push (pecs, épaules, bras).
+              </div>
+              <button
+                onClick={() => {
+                  setSplitPreference('glutes-focus')
+                  setFocusMuscles([])
+                  advance()
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--radius-card)',
+                  border: 'none',
+                  background: 'var(--accent)',
+                  color: 'var(--accent-ink)',
+                  fontSize: 'var(--fs-caption)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Utiliser le programme Glutes+Dos →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Warning déséquilibre musculaire — masqué si la suggestion Glutes+Dos est active */}
+        {!isGlutesCandidate && focusMuscles.length > 0 && (() => {
           const noBack = !focusMuscles.includes('back')
           const noLegs = !focusMuscles.includes('legs')
           if (!noBack && !noLegs) return null
