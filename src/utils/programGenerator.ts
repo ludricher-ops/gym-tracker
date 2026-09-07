@@ -14,7 +14,7 @@ import { uuid } from './uuid'
 // ── Types publics ────────────────────────────────────────────────────────────
 
 /** Groupes musculaires larges sélectionnables dans le wizard. */
-export type FocusMuscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core'
+export type FocusMuscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' | 'glutes'
 
 /** Mapping FocusMuscle → MuscleGroup fins utilisés dans les slots. */
 export const FOCUS_TO_MUSCLES: Record<FocusMuscle, MuscleGroup[]> = {
@@ -24,6 +24,7 @@ export const FOCUS_TO_MUSCLES: Record<FocusMuscle, MuscleGroup[]> = {
   arms:      ['biceps', 'triceps', 'forearms'],
   legs:      ['quads', 'hamstrings', 'glutes', 'calves'],
   core:      ['core'],
+  glutes:    ['glutes', 'hamstrings'],  // NEW-GLUTES-FOCUS : fessiers seuls → split glutes-hip/quad-glutes
 }
 
 /**
@@ -443,6 +444,9 @@ function workoutTypeFromFocus(
   // Chaîne postérieure : jambes + dos (± core, ± bras, sans push)
   // → deadlift-first : le soulevé de terre travaille simultanément jambes et dos.
   if (hasLower && hasPull && !hasPush) return 'lower_pull'
+  // Fessiers seuls → programme glutes-hip / quad-glutes (NEW-GLUTES-FOCUS fix)
+  const hasGlutes = focusMuscles.includes('glutes')
+  if (hasGlutes && !hasUpper && !hasLower) return 'glutes-hip'
   // Ambiguïté totale (push + pull + jambes, etc.) → split par défaut
   return null
 }
@@ -934,7 +938,7 @@ export function buildPhases(totalWeeks: number, goal: ProgramGoal = 'strength'):
   w += intensive
 
   phases.push({
-    name: 'Décharge',
+    name: 'Récup.',  // INC-4-RÉSIDUEL fix : aligne avec PHASE_NAME_FR.deload
     focus: 'deload',
     weekStart: w,
     weekEnd: totalWeeks,
@@ -962,7 +966,7 @@ export function generateProgramDraft(
   params: GeneratorParams,
   exercises: Exercise[],
 ): DraftProgram {
-  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks, splitPreference } = params
+  const { goal, daysPerWeek, sessionDuration, equipment, level, selectedDays, focusMuscles, totalWeeks } = params
   const durationWeeks = totalWeeks ?? DURATION_WEEKS[level]!
 
   // Construire le Set<MuscleGroup> des muscles ciblés une seule fois
@@ -1153,7 +1157,8 @@ export function generateProgramDraft(
   }
 
   // UX-B : Focus "bras" ou "épaules" + split push → biceps structurellement absent
-  if (split.every((t) => t === 'push') && (focusMuscles ?? []).some((f) => f === 'arms' || f === 'shoulders')) {
+  // NEW-UX-B fix : couvre aussi 'upper-push' (split upper-lower avec focus bras)
+  if (split.every((t) => t === 'push' || t === 'upper-push') && (focusMuscles ?? []).some((f) => f === 'arms' || f === 'shoulders')) {
     generatorWarnings.push(
       'Focus bras en push : le biceps n\'est pas ciblé en séance push. ' +
       'Pour des bras complets, envisagez un focus "haut du corps" (chest + back) incluant aussi le dos.',

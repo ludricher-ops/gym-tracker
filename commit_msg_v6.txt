@@ -1,0 +1,17 @@
+﻿fix: audit v6 — INC-4-RESIDUEL, NEW-GLUTES-FOCUS, NEW-UX-B
+
+INC-4-RESIDUEL: buildPhases() name 'Décharge' → 'Récup.'
+  - Aligne avec PHASE_NAME_FR.deload (seul l'exercice-lock était corrigé)
+  - La section périodisation dans ProgramDetailScreen affiche maintenant 'Récup.'
+
+NEW-GLUTES-FOCUS: 'glutes' ajouté comme FocusMuscle
+  - FocusMuscle étendu : 'chest'|'back'|'shoulders'|'arms'|'legs'|'core'|'glutes'
+  - FOCUS_TO_MUSCLES['glutes'] = ['glutes','hamstrings']
+  - workoutTypeFromFocus : 'glutes' seul (sans upper ni lower) → 'glutes-hip'
+  - Le split glutes-hip/quad-glutes s'active correctement depuis le focus wizard
+
+NEW-UX-B: warning UX-B étendu à 'upper-push'
+  - split.every(t === 'push') → split.every(t === 'push' || t === 'upper-push')
+  - Un split PPU avec focus bras/épaules déclenche maintenant le warning biceps
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
