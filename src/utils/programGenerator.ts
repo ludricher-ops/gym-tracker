@@ -87,8 +87,11 @@ const ISOLATION_SPEC: Record<ProgramGoal, SetSpec> = {
 }
 
 // Specs fixes pour l'échauffement et les abdos (ajoutés systématiquement)
-const WARMUP_SPEC: SetSpec = { sets: 2, repsMin: 10, repsMax: 10, restSec: 0,  range: false }
-const CORE_SPEC:   SetSpec = { sets: 3, repsMin: 15, repsMax: 15, restSec: 60, range: false }
+const WARMUP_SPEC:  SetSpec = { sets: 2, repsMin: 10, repsMax: 10, restSec: 0,  range: false }
+const CORE_SPEC:    SetSpec = { sets: 3, repsMin: 15, repsMax: 15, restSec: 60, range: false }
+// Finisher cardio — ajouté en fin de séance pour endurance et fat_loss.
+// 3×10-15 avec 30 s de repos : effort métabolique sans empiéter sur la récupération musculaire.
+const CARDIO_SPEC: SetSpec = { sets: 3, repsMin: 10, repsMax: 15, restSec: 30, range: true  }
 
 // ── Définition de slots ───────────────────────────────────────────────────────
 // compound: true  → filtrer sur category === 'compound' uniquement
@@ -997,6 +1000,17 @@ export function generateProgramDraft(
     (ex) => !ex.deleted && !ex.isWarmupExercise && ex.primaryMuscle === 'core' &&
     (allowed.has(ex.equipment) || ex.equipment === 'bodyweight'),
   )
+  // Finisher cardio — burpees en tête (popularity 2), puis high knees, jumping jacks…
+  // Limité aux objectifs endurance et fat_loss. Inclut bodyweight quelle que soit la sélection.
+  const isConditioningGoal = goal === 'endurance' || goal === 'fat_loss'
+  const cardioPool = isConditioningGoal
+    ? exercises.filter(
+        (ex) =>
+          !ex.deleted && !ex.isWarmupExercise &&
+          ex.primaryMuscle === 'cardio' &&
+          (allowed.has(ex.equipment) || ex.equipment === 'bodyweight'),
+      ).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+    : []
 
   const rawSplit = selectSplit(params)
   // Jours choisis par l'utilisateur ou défaut par nombre de séances
@@ -1110,6 +1124,17 @@ export function generateProgramDraft(
         const we = makeDraftWE(warmupEx, effectiveWarmupSpec)
         we.autoProgress = false
         draftExercises.unshift(we)
+      }
+    }
+
+    // Finisher cardio (endurance et fat_loss) — avant les abdos, supprimé à 20 min.
+    // Rotation entre les exercices du pool (burpees, high knees, jumping jacks…).
+    if (!isVeryShort && cardioPool.length > 0) {
+      const cardioEx = cardioPool[workouts.length % cardioPool.length]
+      if (cardioEx) {
+        const we = makeDraftWE(cardioEx, adjustedSpec(CARDIO_SPEC, sessionDuration))
+        we.autoProgress = false
+        draftExercises.push(we)
       }
     }
 
