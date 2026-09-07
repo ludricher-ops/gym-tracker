@@ -615,13 +615,33 @@ export function ProgramGeneratorScreen() {
   function renderSplitPicker() {
     const OPTIONS: { value: SplitPreference; label: string; sub: string; icon: string }[] = [
       { value: 'auto',        icon: '🤖', label: 'Auto',          sub: 'Le coach choisit selon tes critères'             },
-      { value: 'ppl',         icon: '🔄', label: 'PPL',           sub: 'Push · Pull · Legs — le classique'               },
+      { value: 'fullbody',    icon: '🌐', label: 'Full Body',      sub: 'Corps entier à chaque séance'                    },
       { value: 'upper-lower', icon: '↕️', label: 'Upper / Lower', sub: 'Haut et bas du corps en alternance'               },
+      { value: 'ppl',         icon: '🔄', label: 'PPL',           sub: 'Push · Pull · Legs — le classique'               },
       { value: 'arnold',      icon: '🏆', label: 'Arnold Split',  sub: 'Pecs+Dos / Épaules+Bras / Jambes'                },
       { value: 'brosplit',    icon: '💪', label: 'Bro Split',     sub: 'Un groupe musculaire par séance, volume max'      },
-      { value: 'fullbody',       icon: '🌐', label: 'Full Body',      sub: 'Corps entier à chaque séance'                            },
-      { value: 'glutes-focus',   icon: '🍑', label: 'Glutes Focus',   sub: 'Fessiers & dos — programme féminin sans push'            },
+      { value: 'glutes-focus', icon: '🍑', label: 'Glutes Focus', sub: 'Fessiers & dos — programme féminin sans push'    },
     ]
+
+    // Retourne la raison d'incompatibilité, ou null si le split est compatible.
+    function incompatibleReason(value: SplitPreference): string | null {
+      switch (value) {
+        case 'brosplit':
+          if (days !== null && days < 5) return `Nécessite 5 séances/sem. — tu en as ${days}`
+          if (level === 'beginner') return 'Fréquence trop faible par muscle pour un débutant'
+          return null
+        case 'arnold':
+          if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
+          if (level === 'beginner') return 'Volume et complexité élevés — déconseillé en débutant'
+          return null
+        case 'ppl':
+          if (days !== null && days < 3) return `Nécessite 3 séances/sem. minimum — tu en as ${days}`
+          return null
+        default:
+          return null
+      }
+    }
+
     return (
       <div style={{ padding: '0 16px 16px' }}>
         <p className="t-caption" style={{ color: 'var(--fg-muted)', marginBottom: 16 }}>
@@ -630,10 +650,13 @@ export function ProgramGeneratorScreen() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {OPTIONS.map(({ value, icon, label, sub }) => {
             const active = splitPreference === value
+            const reason = incompatibleReason(value)
+            const disabled = reason !== null
             return (
               <button
                 key={value}
                 onClick={() => {
+                  if (disabled) return
                   setSplitPreference(value)
                   if (value === 'auto') {
                     advance()                      // → étape 4 (Muscles)
@@ -651,22 +674,29 @@ export function ProgramGeneratorScreen() {
                   borderRadius: 'var(--radius-card)',
                   border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
                   background: active ? 'color-mix(in oklch, var(--accent) 10%, var(--surface))' : 'var(--surface)',
-                  cursor: 'pointer',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
                   textAlign: 'left',
                   width: '100%',
+                  opacity: disabled ? 0.45 : 1,
+                  transition: 'opacity 0.15s',
                 }}
               >
                 <span style={{ fontSize: 24, flexShrink: 0 }}>{icon}</span>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div className="t-body" style={{ fontWeight: 600, color: active ? 'var(--accent)' : 'var(--fg)' }}>
                     {label}
                   </div>
                   <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
                     {sub}
                   </div>
+                  {reason && (
+                    <div className="t-caption" style={{ color: 'var(--warn, #f59e0b)', marginTop: 4, fontWeight: 600 }}>
+                      ⚠ {reason}
+                    </div>
+                  )}
                 </div>
-                {active && (
-                  <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontSize: 18 }}>✓</span>
+                {active && !disabled && (
+                  <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontSize: 18, flexShrink: 0 }}>✓</span>
                 )}
               </button>
             )
