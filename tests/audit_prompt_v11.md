@@ -1,23 +1,37 @@
 # Prompt d'audit v11 — programGenerator.ts
 **Date :** 2026-09-08
 **Objectif :** Référence complète — fusion exhaustive v8+v9+v10, doublons stricts retirés.
-**Profils :** ~154 (30 v10 + 96 v8 + 28 v9)
+**Profils :** ~143 (29 v10 + 84 v8 + 30 v9)
 **Suite de tests :** `tests/audit_v11.test.ts` — 196 tests ✅
 
 ---
 
 ## TABLE DE DÉDUPLICATION
 
-Les profils suivants de v8/v9 sont retirés car couverts par v10 :
+Les profils suivants sont retirés (doublons couverts par un profil plus complet) :
 
-| Profil retiré | Doublon v10 | Raison |
+| Profil retiré | Doublon gardé | Raison |
 |---|---|---|
 | v8 P48 — BW glutes-focus 4j SEED-BW-NOBACK absent | B01 | splitPreference='glutes-focus' → exception identique |
-| v8 P58 — BW focusMuscles=['glutes'] → isGlutesSplit (sans splitPreference) | C03 | mêmes paramètres BW+focusMuscles=['glutes']+3j |
 | v8 P86 — focusMuscles=['glutes'] 3j intermediate (fat_loss) | C03 | mêmes params (equipment DB+machine, légère diff) |
 | v9 P19 — BW focusMuscles=['glutes'] sans splitPreference → pas de warning | C03 | même comportement isGlutesSplit |
-
-Tous les autres profils v8 (P01–P47, P49–P57, P59–P85, P87–P100) et v9 (P01–P18, P20–P30) sont inclus.
+| D-P01 — Machine seul, PPL 3j hypertrophy intermediate | G-V9-P06 | même profil machine PPL 60min, assertions machine-low-row + machine-pullover |
+| D-P03 — Machine seul, PPL 3j strength intermediate (INC-1) | G-V9-P10 | même profil machine strength INC-1 fullbody, assertions plus complètes |
+| D-P05 — Machine seul, 20min hypertrophy intermediate | G-V9-P05 | même profil machine pull 20min, assertions machine-low-row complètes |
+| D-P06 — Machine seul, 45min hypertrophy intermediate | G-V9-P01 | même profil machine pull 45min, assertions isolation dos remplies |
+| D-P11 — Machine + câble, upper-lower 4j intermediate | G-V9-P24 | même profil machine+câble upper-pull, assertions isolation dos |
+| D-P21 — DB seul, PPL 3j hypertrophy intermediate | G-V9-P12 | même profil DB pull, seed-pullover reclassifié isolation |
+| D-P38 — DB seul, chest-back Arnold 5j intermediate | G-V9-P25 | même profil DB arnold, seed-pullover en isolation |
+| D-P41 — BW seul, PPL 3j intermediate → BUG-BW-PULL | G-V9-P13 | même profil BW PPL, assertions BUG-BW-PULL inchangées |
+| D-P42 — BW seul, fullbody 3j beginner → SEED-BW-NOBACK | G-V9-P18 | même profil BW fullbody beginner, comportement inchangé |
+| D-P43 — BW seul, fat_loss 3j intermediate → BUG-BW-PULL (PPF) | G-V9-P17 | même profil BW fat_loss PPF, assertions BUG-BW-PULL |
+| D-P47 — BW seul, upper-lower 4j → SEED-BW-NOBACK | G-V9-P16 | même profil BW upper-lower, hasPullInSplit=false confirmé |
+| D-P49 — BW seul, strength 3j intermediate (INC-1 + BW) | A02 | même profil BW strength INC-1 fullbody, assertions plus complètes |
+| D-P58 — BW seul, focusMuscles=['glutes'] 3j intermediate | C03 | assertions incorrectes (pré-fix) — C03 couvre isGlutesSplit=true |
+| D-P81 — focusMuscles=['chest'] 3j intermediate | D-P94 | D-P81 subset de D-P94 (UX-B absent confirmé) |
+| D-P82 — focusMuscles=['shoulders'] 3j intermediate | D-P93 | D-P82 subset de D-P93 (UX-B présent) |
+| D-P83 — focusMuscles=['arms'] 3j intermediate | D-P92 | D-P83 subset de D-P92 (UX-B appliqué) |
+| B11 — Glutes+dos × Salle, strength 4j, 60min | C06 | C06 identique + assertion strengthEquipmentPrio explicite (5 vs 4 assertions) |
 
 ---
 
@@ -839,23 +853,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 
 ---
 
-#### B11 — Glutes+dos × Salle, strength, 4j, 60min, intermediate → 4 slots
-
-```
-goal='strength', level='intermediate', daysPerWeek=4, duration=60
-equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference='glutes-focus'
-```
-
-**adjustedSlotCount :** max(4,⌊8×0.5⌋) = **4 slots**
-
-**Assertions :**
-1. adjustedSlotCount = 4
-2. Glutes-hip slots 0–3 : slot[3] = seed-lat-pulldown ou seed-pullup ✅ (compound dos inclus)
-3. Quad-glutes slots 0–3 : slot[2] = seed-row-barbell ✅
-4. slot[0] glutes-hip = seed-hip-thrust (barbell, pop 4) — strengthEquipmentPrio + barbell compound
-
----
-
 #### B12 — Glutes+dos × Salle, fat_loss, 3j, 45min, beginner
 
 ```
@@ -988,22 +985,10 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 
 ## Groupe A (P01-P20) — Équipements machine : couverture élargie
 
-### D-P01 — Machine seul, PPL 3j hypertrophy intermediate *(régression v7)*
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[machine], level=intermediate  
-**Assertions :**
-- pull[0] `['back_width','back_thickness']` → machine-lat-pulldown ✅
-
 ### D-P02 — Machine seul, fullbody 3j fat_loss beginner *(régression v7)*
 **Profil :** goal=fat_loss, days=3, duration=60, equipment=[machine], level=beginner, splitPreference=fullbody  
 **Assertions :**
 - fullbody[2] dos compound servi (machine-lat-pulldown) ✅
-
-### D-P03 — Machine seul, PPL 3j **strength intermediate** (INC-1 attendu)
-**Profil :** goal=strength, days=3, duration=60, equipment=[machine], level=intermediate  
-**Assertions :**
-- selectSplit → `['fullbody-quad','fullbody-hip','fullbody-quad']` (INC-1)
-- adjustedSlotCount(fullbody-quad, 60, strength) = max(4, ⌊9×0.5⌋) = max(4,4) = **4 slots**
-- fullbody[2] compound dos : machine-lat-pulldown candidat (back_width slotPrimary) ✅
 
 ### D-P04 — Machine seul, PPL 3j **strength beginner** (fullbody attendu)
 **Profil :** goal=strength, days=3, duration=60, equipment=[machine], level=beginner  
@@ -1011,24 +996,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 - selectSplit beginner → fullbody×3 (pas INC-1, déjà fullbody de base)
 - adjustedSlotCount = max(4, ⌊9×0.5⌋) = 4 slots (strength 60min)
 - fullbody[2] : machine-lat-pulldown ✅
-
-### D-P05 — Machine seul, **20 min** hypertrophy intermediate
-**Profil :** goal=hypertrophy, days=3, duration=20, equipment=[machine], level=intermediate  
-**Assertions :**
-- split PPL → pull séance
-- adjustedSlotCount(pull, 20, hypertrophy) = max(2, ⌊8×0.5⌋) = max(2,4) = **4 slots**
-- pull[0] compound dos : machine-lat-pulldown (back_width) ✅
-- pull[1] compound dos : seed-row-machine ✅
-
-### D-P06 — Machine seul, **45 min** hypertrophy intermediate
-**Profil :** goal=hypertrophy, days=3, duration=45, equipment=[machine], level=intermediate  
-**Assertions :**
-- adjustedSlotCount(pull, 45, hypertrophy) = max(4, ⌊8×0.75⌋) = max(4,6) = **6 slots**
-- pull[0] et pull[1] servis ✅
-- pull[3] `['back_thickness','back_width','back'] compound:false` (slot isolation) :
-  - machine-lat-pulldown déjà usedInWorkout → exclu
-  - seed-row-machine (back_thickness) probablement déjà usedInWorkout → exclu
-  - Candidats isolation machine dos : à vérifier dans le seed (possible slot vide)
 
 ### D-P07 — Machine seul, **90 min** hypertrophy intermediate
 **Profil :** goal=hypertrophy, days=3, duration=90, equipment=[machine], level=intermediate  
@@ -1060,13 +1027,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 - Tri secondaire : popularité → seed-pullup (pop 3) > machine-lat-pulldown (pop 2)
 - intermediate top-3 → seed-pullup probable (pop plus élevé) ✅
 - machine-lat-pulldown reste dans le pool → variété possible
-
-### D-P11 — Machine + câble, upper-lower 4j intermediate
-**Profil :** goal=hypertrophy, days=4, duration=60, equipment=[machine, cable], level=intermediate, splitPreference=upper-lower  
-**Assertions :**
-- upper-pull[0] : seed-lat-pulldown (cable, pop 3) vs machine-lat-pulldown (machine, pop 2)
-- seed-lat-pulldown priorisé (pop 3 > 2) ✅
-- machine-lat-pulldown dans le pool top-3 intermediate ✅
 
 ### D-P12 — Machine + dumbbell, PPL 3j intermediate
 **Profil :** goal=hypertrophy, days=3, duration=60, equipment=[machine, dumbbell], level=intermediate  
@@ -1135,12 +1095,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 ---
 
 ## Groupe B (P21-P40) — Pullover compound + Slots deadlift : couverture élargie
-
-### D-P21 — DB seul, PPL 3j hypertrophy intermediate *(régression v7 P13)*
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[dumbbell], level=intermediate  
-**Assertions :**
-- pull[0] `['back_width','back_thickness']` : seed-pullover (back_width, compound, slotPrimary) ✅
-- pull[1] : seed-row-dumbbell ✅
 
 ### D-P22 — DB seul, **strength 3j beginner** (INC-1 + pullover fullbody)
 **Profil :** goal=strength, days=3, duration=60, equipment=[dumbbell], level=beginner  
@@ -1263,12 +1217,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 **Assertions :**
 - lower_pull[1] : seed-pullover (back_width, slotPrimary) ✅
 
-### D-P38 — DB seul, **chest-back Arnold 5j intermediate**
-**Profil :** goal=hypertrophy, days=5, duration=60, equipment=[dumbbell], level=intermediate, splitPreference=arnold  
-**Assertions :**
-- chest-back[1] `['back_width','back_thickness']` : seed-pullover (back_width, slotPrimary, compound) ✅
-- chest-back[4] isolation dos : seed-pullover-dumbbell ou seed-shrug ✅
-
 ### D-P39 — KB + band, **fullbody 3j intermediate** *(band-row vs kb-row)*
 **Profil :** goal=fat_loss, days=3, duration=60, equipment=[kettlebell, band], level=intermediate, splitPreference=fullbody  
 **Assertions :**
@@ -1289,21 +1237,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 
 ## Groupe C (P41-P60) — BW interactions + warnings : couverture élargie
 
-### D-P41 — BW seul, PPL 3j intermediate → BUG-BW-PULL only *(régression v7 P25)*
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[bodyweight], level=intermediate  
-**Assertions :**
-- BUG-BW-PULL émis, SEED-BW-NOBACK absent ✅
-
-### D-P42 — BW seul, fullbody 3j beginner → SEED-BW-NOBACK *(régression v7 P26)*
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[bodyweight], level=beginner  
-**Assertions :**
-- SEED-BW-NOBACK émis, BUG-BW-PULL absent ✅
-
-### D-P43 — BW seul, fat_loss 3j intermediate → BUG-BW-PULL (PPF) *(régression v7 P27)*
-**Profil :** goal=fat_loss, days=3, duration=60, equipment=[bodyweight], level=intermediate  
-**Assertions :**
-- rawSplit = ['push','pull','fullbody-quad'] → hasPullInSplit=true → BUG-BW-PULL ✅
-
 ### D-P44 — BW seul, 2j fullbody beginner → SEED-BW-NOBACK *(régression v7 P28)*
 **Profil :** goal=hypertrophy, days=2, duration=60, equipment=[bodyweight], level=beginner  
 **Assertions :**
@@ -1319,22 +1252,10 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 **Assertions :**
 - hasCompoundBack=true (band-row compound) → aucun warning dos ✅
 
-### D-P47 — BW seul, upper-lower 4j → SEED-BW-NOBACK *(régression v7 P31)*
-**Profil :** goal=hypertrophy, days=4, duration=60, equipment=[bodyweight], level=intermediate, splitPreference=upper-lower  
-**Assertions :**
-- 'upper-pull' ≠ 'pull' → hasPullInSplit=false → SEED-BW-NOBACK émis ✅
-
 ### D-P48 — BW seul, glutes-focus 4j → **PAS** de SEED-BW-NOBACK *(régression v7 P32, fix c64cba7)*
 **Profil :** goal=fat_loss, days=4, duration=60, equipment=[bodyweight], level=intermediate, splitPreference=glutes-focus  
 **Assertions :**
 - splitPreference='glutes-focus' → exception dans la condition → SEED-BW-NOBACK **NON émis** ✅
-
-### D-P49 — BW seul, **strength 3j intermediate** (INC-1 + BW + fullbody)
-**Profil :** goal=strength, days=3, duration=60, equipment=[bodyweight], level=intermediate  
-**Assertions :**
-- INC-1 → fullbody×3
-- hasCompoundBack=false, hasPullInSplit=false → SEED-BW-NOBACK émis ✅
-- Programme fullbody généré quand même (warning non bloquant) ✅
 
 ### D-P50 — BW seul, **strength 3j beginner**
 **Profil :** goal=strength, days=3, duration=60, equipment=[bodyweight], level=beginner  
@@ -1399,15 +1320,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 - BUG-BW-PULL non déclenché ✅
 - SEED-BW-NOBACK non émis ✅
 - pull[0] : seed-deadlift EXCLU → seed-row-barbell (back_thickness, pop 7) ✅
-
-### D-P58 — BW seul, **focusMuscles=['glutes']** 3j intermediate
-**Profil :** goal=fat_loss, days=3, duration=60, equipment=[bodyweight], level=intermediate, focusMuscles=['glutes']  
-**Assertions :**
-- workoutTypeFromFocus → 'glutes-hip'
-- selectSplit avec focusType='glutes-hip' → `['glutes-hip','quad-glutes','glutes-hip']` *(fix P36)* ✅
-- splitPreference='auto' (pas 'glutes-focus') → exception non déclenchée
-- hasPullInSplit=false, hasCompoundBack=false → SEED-BW-NOBACK **ÉMIS**
-  *(car splitPreference !== 'glutes-focus' — l'utilisateur n'a pas explicitement choisi glutes-focus)*
 
 ### D-P59 — BW seul, **focusMuscles=['core']** 3j intermediate
 **Profil :** goal=fat_loss, days=3, duration=60, equipment=[bodyweight], level=intermediate, focusMuscles=['core']  
@@ -1574,25 +1486,6 @@ equipment=['barbell','dumbbell','cable','pullup_bar','machine'], splitPreference
 ---
 
 ## Groupe E (P81-P100) — FocusMuscles, split selection, UX warnings
-
-### D-P81 — focusMuscles=['chest'] 3j intermediate
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[barbell,dumbbell,cable], level=intermediate  
-**Assertions :**
-- workoutTypeFromFocus(['chest']) → 'push'
-- selectSplit : 3j push → `['push','upper-push','push']`
-- Aucune séance dos ✅ (focus pec → pas de tirage attendu)
-
-### D-P82 — focusMuscles=['shoulders'] 3j intermediate
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[barbell,dumbbell,cable], level=intermediate  
-**Assertions :**
-- workoutTypeFromFocus(['shoulders']) → 'push' (shoulders = hasPush)
-- split 3j push : `['push','upper-push','push']`
-
-### D-P83 — focusMuscles=['arms'] 3j intermediate
-**Profil :** goal=hypertrophy, days=3, duration=60, equipment=[barbell,dumbbell,cable], level=intermediate  
-**Assertions :**
-- workoutTypeFromFocus(['arms']) → 'upper' (bras seuls → haut du corps mixte)
-- split 3j upper : `['push','pull','upper']` (PPU) si level≠beginner ✅
 
 ### D-P84 — focusMuscles=['legs'] 3j intermediate
 **Profil :** goal=hypertrophy, days=3, duration=60, equipment=[barbell,dumbbell,cable,machine], level=intermediate  
