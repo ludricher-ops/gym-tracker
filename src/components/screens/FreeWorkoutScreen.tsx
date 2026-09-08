@@ -5,10 +5,12 @@ import { logActivitySession } from '../../utils/sessionOps'
 import {
   generateFreeWorkout,
   GOAL_PROFILES,
+  EQUIPMENT_LABELS,
   type EnergyLevel,
   type SleepQuality,
   type WorkoutGoal,
   type AvailableTime,
+  type EquipmentPreset,
   type SuggestedWorkout,
   type FreeWorkoutInput,
 } from '../../utils/freeWorkout'
@@ -78,6 +80,7 @@ export function FreeWorkoutScreen() {
   const [painZones,     setPainZones]     = useState<string[]>([])
   const [availableTime, setAvailableTime] = useState<AvailableTime>(45)
   const [goal,          setGoal]          = useState<WorkoutGoal>('hypertrophie')
+  const [equipment,     setEquipment]     = useState<EquipmentPreset>('full')
   const [targetZones,   setTargetZones]   = useState<string[]>(['full_body'])
   const [workout,       setWorkout]       = useState<SuggestedWorkout | null>(null)
   const [showFinish,    setShowFinish]    = useState(false)
@@ -101,7 +104,7 @@ export function FreeWorkoutScreen() {
   }
 
   const goToSession = () => {
-    const input: FreeWorkoutInput = { energyLevel, sleepQuality, painZones, availableTime, goal, targetZones }
+    const input: FreeWorkoutInput = { energyLevel, sleepQuality, painZones, availableTime, goal, equipment, targetZones }
     const generated = generateFreeWorkout(input)
     setWorkout(generated)
     setFinalDuration(generated.estimatedMin)
@@ -232,6 +235,37 @@ export function FreeWorkoutScreen() {
           <StepDots current={1} total={3} />
         </div>
         <div className="gt-screen__scroll" style={{ padding: 'var(--pad-screen)', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Matériel */}
+          <section>
+            <div className="t-eyebrow" style={{ marginBottom: 10 }}>Matériel disponible</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
+              {(Object.entries(EQUIPMENT_LABELS) as [EquipmentPreset, typeof EQUIPMENT_LABELS[EquipmentPreset]][]).map(([preset, info]) => (
+                <button
+                  key={preset}
+                  onClick={() => setEquipment(preset)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: equipment === preset ? 'var(--accent)' : 'var(--surface)',
+                    color: equipment === preset ? '#fff' : 'var(--fg)',
+                    border: 'none', borderRadius: 'var(--radius-card)',
+                    padding: '11px var(--pad-card)', cursor: 'pointer', textAlign: 'left',
+                    width: '100%',
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>{info.emoji}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{info.label}</div>
+                    <div style={{
+                      fontSize: 'var(--fs-caption)',
+                      color: equipment === preset ? undefined : 'var(--fg-muted)',
+                      opacity: equipment === preset ? 0.85 : 1,
+                    }}>{info.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
 
           {/* Temps */}
           <section>
