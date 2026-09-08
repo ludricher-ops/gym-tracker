@@ -13,6 +13,17 @@ import type { ScheduledSession } from '../../utils/programSchedule'
 import { buildPhases } from '../../utils/programGenerator'
 import type { DraftPhase } from '../programBuilder/programDraft'
 import { Button, Card, Icon, Row, SectionHeader, StatTile } from '../ui'
+import type { WorkoutType } from '../../types'
+
+const WORKOUT_FILTER: { key: WorkoutType | 'all'; label: string }[] = [
+  { key: 'all',      label: 'Tous'      },
+  { key: 'push',     label: 'Push'      },
+  { key: 'pull',     label: 'Pull'      },
+  { key: 'legs',     label: 'Legs'      },
+  { key: 'upper',    label: 'Upper'     },
+  { key: 'lower',    label: 'Lower'     },
+  { key: 'fullbody', label: 'Full body' },
+]
 
 // Couleurs et labels des phases de périodisation
 const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
@@ -188,6 +199,7 @@ export function DashboardScreen() {
   )
 
   const [showSeancesPicker, setShowSeancesPicker] = useState(false)
+  const [seancesTypeFilter, setSeancesTypeFilter] = useState<WorkoutType | 'all'>('all')
 
   const startFromWorkout = async (wtId: string) => {
     const wt = store.workoutTemplates.find((w) => w.id === wtId)
@@ -208,11 +220,25 @@ export function DashboardScreen() {
     openSession(session.id)
   }
 
-  /** Toutes les séances (templates workout) non supprimées. */
+  /** Toutes les séances (workout templates) non supprimées, filtrées par type. */
   const allWorkouts = useMemo(
     () => store.workoutTemplates.filter((w) => !w.deleted),
     [store.workoutTemplates],
   )
+
+  const { filteredPersoWorkouts, filteredTemplateWorkouts } = useMemo(() => {
+    const visible = seancesTypeFilter === 'all'
+      ? allWorkouts
+      : allWorkouts.filter((w) => w.type === seancesTypeFilter)
+    const perso: typeof visible = []
+    const tmpl: typeof visible = []
+    for (const wt of visible) {
+      const prog = store.programs.find((p) => p.id === wt.programId)
+      if (prog?.isTemplate) tmpl.push(wt)
+      else perso.push(wt)
+    }
+    return { filteredPersoWorkouts: perso, filteredTemplateWorkouts: tmpl }
+  }, [allWorkouts, seancesTypeFilter, store.programs])
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
 
@@ -721,21 +747,37 @@ export function DashboardScreen() {
               >×</button>
             </div>
 
+            {/* Filter chips */}
+            <div style={{ display: 'flex', gap: 8, padding: '10px 20px 10px', overflowX: 'auto', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+              {WORKOUT_FILTER.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className="gt-chip"
+                  onClick={() => setSeancesTypeFilter(key)}
+                  style={{
+                    flexShrink: 0,
+                    cursor: 'pointer',
+                    background: seancesTypeFilter === key ? 'var(--accent)' : undefined,
+                    color: seancesTypeFilter === key ? 'var(--accent-ink)' : undefined,
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Scrollable content */}
             <div style={{ overflowY: 'auto', flex: 1, padding: '0 0 20px' }}>
 
-              {/* Séances existantes */}
-              {allWorkouts.length > 0 && (
+              {/* Mes séances (perso) */}
+              {filteredPersoWorkouts.length > 0 && (
                 <>
-                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>SÉANCES EXISTANTES</p>
-                  {allWorkouts.map((wt) => (
+                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>MES SÉANCES</p>
+                  {filteredPersoWorkouts.map((wt) => (
                     <Row
                       key={wt.id}
-                      leading={
-                        wt.icon
-                          ? <SessionEmoji emoji={wt.icon} />
-                          : undefined
-                      }
+                      leading={wt.icon ? <SessionEmoji emoji={wt.icon} /> : undefined}
                       icon={wt.icon ? undefined : 'dumbbell'}
                       label={wt.name}
                       chevron
@@ -743,6 +785,29 @@ export function DashboardScreen() {
                     />
                   ))}
                 </>
+              )}
+
+              {/* Séances templates */}
+              {filteredTemplateWorkouts.length > 0 && (
+                <>
+                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>SÉANCES TEMPLATES</p>
+                  {filteredTemplateWorkouts.map((wt) => (
+                    <Row
+                      key={wt.id}
+                      leading={wt.icon ? <SessionEmoji emoji={wt.icon} /> : undefined}
+                      icon={wt.icon ? undefined : 'dumbbell'}
+                      label={wt.name}
+                      chevron
+                      onClick={() => startFromWorkout(wt.id)}
+                    />
+                  ))}
+                </>
+              )}
+
+              {filteredPersoWorkouts.length === 0 && filteredTemplateWorkouts.length === 0 && allWorkouts.length > 0 && (
+                <p className="t-caption" style={{ padding: '16px 20px', color: 'var(--muted)', textAlign: 'center' }}>
+                  Aucune séance dans cette catégorie
+                </p>
               )}
 
               {/* Nouvelle séance */}
