@@ -10,7 +10,6 @@ export type EquipmentPreset = 'full' | 'dumbbells' | 'barbell' | 'bodyweight'
 export interface FreeWorkoutInput {
   energyLevel:   EnergyLevel
   sleepQuality:  SleepQuality
-  painZones:     string[]
   availableTime: AvailableTime
   goal:          WorkoutGoal
   targetZones:   string[]       // 'full_body' ou valeurs de MUSCLE_GROUP_OPTIONS
@@ -155,20 +154,18 @@ export function generateFreeWorkout(input: FreeWorkoutInput): SuggestedWorkout {
   // Nombre d'exercices selon le temps disponible
   const numExercises = Math.max(3, Math.min(10, Math.floor(input.availableTime / profile.minPerEx)))
 
-  // Zones cibles (résoudre full_body + exclure zones douloureuses)
+  // Zones cibles (résoudre full_body)
   const allMuscles = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'core', 'calves']
   const isFullBody  = input.targetZones.includes('full_body')
-  const targetMuscles = (isFullBody ? allMuscles : input.targetZones)
-    .filter(z => !input.painZones.includes(z))
+  const targetMuscles = isFullBody ? allMuscles : input.targetZones
 
   // Matériel disponible
   const availableGear = PRESET_GEAR[input.equipment]
 
-  // Candidats : exercices couvrant au moins un muscle cible, avec matériel dispo, sans zone douloureuse
+  // Candidats : exercices couvrant au moins un muscle cible, avec matériel dispo
   const candidates = EXERCISES.filter(ex =>
     availableGear.includes(ex.gear) &&
-    ex.muscles.some(m => targetMuscles.includes(m)) &&
-    !ex.muscles.every(m => input.painZones.includes(m))
+    ex.muscles.some(m => targetMuscles.includes(m))
   )
 
   // Sélection : couvrir un maximum de zones, polyarticulaires en premier

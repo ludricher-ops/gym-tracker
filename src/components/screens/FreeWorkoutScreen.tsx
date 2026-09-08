@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { logActivitySession } from '../../utils/sessionOps'
@@ -15,6 +15,7 @@ import {
   type FreeWorkoutInput,
 } from '../../utils/freeWorkout'
 import { Button, Icon } from '../ui'
+import { MediaImage } from '../exercises/MediaImage'
 
 // ── Constantes d'affichage ────────────────────────────────────────────────────
 
@@ -77,7 +78,6 @@ export function FreeWorkoutScreen() {
   const [step,          setStep]          = useState<Step>('energy')
   const [energyLevel,   setEnergyLevel]   = useState<EnergyLevel>(3)
   const [sleepQuality,  setSleepQuality]  = useState<SleepQuality>('medium')
-  const [painZones,     setPainZones]     = useState<string[]>([])
   const [availableTime, setAvailableTime] = useState<AvailableTime>(45)
   const [goal,          setGoal]          = useState<WorkoutGoal>('hypertrophie')
   const [equipment,     setEquipment]     = useState<EquipmentPreset>('full')
@@ -89,10 +89,11 @@ export function FreeWorkoutScreen() {
   const [expandedTip,   setExpandedTip]   = useState<number | null>(null)
   const [saving,        setSaving]        = useState(false)
 
-  const togglePainZone = (val: string) =>
-    setPainZones(prev =>
-      prev.includes(val) ? prev.filter(z => z !== val) : [...prev, val]
-    )
+  // Index nom → exercice pour afficher les GIFs dans "Ta séance"
+  const exerciseByName = useMemo(
+    () => new Map(store.exercises.map(e => [e.name, e])),
+    [store.exercises]
+  )
 
   const toggleTargetZone = (val: string) => {
     if (val === 'full_body') { setTargetZones(['full_body']); return }
@@ -104,7 +105,7 @@ export function FreeWorkoutScreen() {
   }
 
   const goToSession = () => {
-    const input: FreeWorkoutInput = { energyLevel, sleepQuality, painZones, availableTime, goal, equipment, targetZones }
+    const input: FreeWorkoutInput = { energyLevel, sleepQuality, availableTime, goal, equipment, targetZones }
     const generated = generateFreeWorkout(input)
     setWorkout(generated)
     setFinalDuration(generated.estimatedMin)
@@ -116,7 +117,7 @@ export function FreeWorkoutScreen() {
     try {
       const muscleGroups = targetZones.includes('full_body')
         ? ['chest', 'back', 'shoulders', 'quads', 'glutes', 'core']
-        : targetZones.filter(z => !painZones.includes(z))
+        : targetZones
       await logActivitySession({
         kind: 'strength_free',
         durationMin: finalDuration,
@@ -187,28 +188,6 @@ export function FreeWorkoutScreen() {
                 >
                   <span>{opt.emoji}</span>
                   <span>{opt.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Zones douloureuses */}
-          <section>
-            <div className="t-eyebrow" style={{ marginBottom: 10 }}>Zones douloureuses à éviter (optionnel)</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gap-tile)' }}>
-              {MUSCLE_OPTIONS.map(m => (
-                <button
-                  key={m.value}
-                  onClick={() => togglePainZone(m.value)}
-                  style={{
-                    background: painZones.includes(m.value) ? 'var(--danger-ink)' : 'var(--surface)',
-                    color: painZones.includes(m.value) ? '#fff' : 'var(--fg)',
-                    border: 'none', borderRadius: 100, padding: '6px 14px',
-                    cursor: 'pointer', fontSize: 'var(--fs-caption)',
-                    fontWeight: painZones.includes(m.value) ? 600 : 400,
-                  }}
-                >
-                  {m.label}
                 </button>
               ))}
             </div>
@@ -372,26 +351,22 @@ export function FreeWorkoutScreen() {
             <div className="t-eyebrow" style={{ marginBottom: 10 }}>Ou des zones spécifiques</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-tile)' }}>
               {MUSCLE_OPTIONS.map(m => {
-                const isPain     = painZones.includes(m.value)
                 const isSelected = !targetZones.includes('full_body') && targetZones.includes(m.value)
                 return (
                   <button
                     key={m.value}
-                    onClick={() => !isPain && toggleTargetZone(m.value)}
-                    disabled={isPain}
+                    onClick={() => toggleTargetZone(m.value)}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      display: 'flex', alignItems: 'center',
                       background: isSelected ? 'var(--accent)' : 'var(--surface)',
-                      color: isPain ? 'var(--fg-muted)' : isSelected ? '#fff' : 'var(--fg)',
-                      border: isPain ? '1.5px dashed var(--border)' : 'none',
+                      color: isSelected ? '#fff' : 'var(--fg)',
+                      border: 'none',
                       borderRadius: 'var(--radius-card)',
-                      padding: '10px 12px', cursor: isPain ? 'not-allowed' : 'pointer',
+                      padding: '10px 12px', cursor: 'pointer',
                       fontSize: 'var(--fs-caption)', fontWeight: isSelected ? 600 : 400,
-                      opacity: isPain ? 0.5 : 1,
                     }}
                   >
-                    <span>{m.label}</span>
-                    {isPain && <span style={{ fontSize: 12 }}>🚫</span>}
+                    {m.label}
                   </button>
                 )
               })}
@@ -448,44 +423,60 @@ export function FreeWorkoutScreen() {
 
         {/* Liste d'exercices */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
-          {workout.exercises.map((ex, i) => (
-            <div
-              key={i}
-              style={{ background: 'var(--surface)', borderRadius: 'var(--radius-card)', padding: '12px 14px' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>
-                  {ex.emoji}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{ex.name}</div>
-                  <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
-                    {ex.sets} séries × {ex.reps} reps
-                    {' · '}
-                    {ex.restSec >= 60
-                      ? `${Math.round(ex.restSec / 60)} min`
-                      : `${ex.restSec} s`} repos
+          {workout.exercises.map((ex, i) => {
+            const dbEx = exerciseByName.get(ex.name)
+            const hasMedia = !!dbEx?.media
+            return (
+              <div
+                key={i}
+                style={{ background: 'var(--surface)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
+              >
+                {/* GIF de démonstration */}
+                {hasMedia && (
+                  <MediaImage
+                    blobId={dbEx.media!.blobId}
+                    url={dbEx.media!.url}
+                    alt={ex.name}
+                    aspectRatio={dbEx.media!.aspectRatio}
+                    radius={0}
+                  />
+                )}
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>
+                      {ex.emoji}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{ex.name}</div>
+                      <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
+                        {ex.sets} séries × {ex.reps} reps
+                        {' · '}
+                        {ex.restSec >= 60
+                          ? `${Math.round(ex.restSec / 60)} min`
+                          : `${ex.restSec} s`} repos
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setExpandedTip(expandedTip === i ? null : i)}
+                      style={{ background: 'none', border: 'none', color: 'var(--fg-muted)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
+                      aria-label="Conseil"
+                    >
+                      <Icon name={expandedTip === i ? 'chevron-up' : 'chevron-down'} size={14} />
+                    </button>
                   </div>
+                  {expandedTip === i && (
+                    <div className="t-caption" style={{
+                      marginTop: 8, paddingTop: 8,
+                      borderTop: '1px solid var(--border)',
+                      color: 'var(--fg-muted)',
+                    }}>
+                      💡 {ex.tip}
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => setExpandedTip(expandedTip === i ? null : i)}
-                  style={{ background: 'none', border: 'none', color: 'var(--fg-muted)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
-                  aria-label="Conseil"
-                >
-                  <Icon name={expandedTip === i ? 'chevron-up' : 'chevron-down'} size={14} />
-                </button>
               </div>
-              {expandedTip === i && (
-                <div className="t-caption" style={{
-                  marginTop: 8, paddingTop: 8,
-                  borderTop: '1px solid var(--border)',
-                  color: 'var(--fg-muted)',
-                }}>
-                  💡 {ex.tip}
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Enregistrement */}
