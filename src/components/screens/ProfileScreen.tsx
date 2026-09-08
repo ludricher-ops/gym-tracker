@@ -85,21 +85,6 @@ export function ProfileScreen() {
           <StatTile label="Tonnage" value={`${formatVolume(lifetime.tonnage)} kg`} />
         </div>
 
-        {/* ── Entraînement ─────────────────────────────────────────────── */}
-        <p className="t-eyebrow">Entraînement</p>
-        <Row
-          icon="list"
-          label="Programmes"
-          chevron
-          onClick={() => nav.navigate('programsLibrary')}
-        />
-        <Row
-          icon="dumbbell"
-          label="Mes exercices"
-          chevron
-          onClick={() => nav.navigate('myExercises')}
-        />
-
         {/* ── Suivi ────────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Suivi</p>
         <Row
