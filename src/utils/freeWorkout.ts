@@ -106,7 +106,8 @@ function norm(muscle: string): string {
 }
 
 function exZones(ex: Exercise): string[] {
-  return Array.from(new Set([ex.primaryMuscle, ...ex.secondaryMuscles].map(norm)))
+  // Garde contre les exercices IDB anciens dont secondaryMuscles serait undefined
+  return Array.from(new Set([ex.primaryMuscle, ...(ex.secondaryMuscles ?? [])].map(norm)))
 }
 
 // ── Emoji par muscle principal ────────────────────────────────────────────────
