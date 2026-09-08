@@ -656,8 +656,8 @@ export function DashboardScreen() {
         )}
 
         {/* ── Enregistrement rapide ────────────────────────────────────── */}
-        <Card>
-          <p className="t-eyebrow" style={{ marginBottom: 'var(--gap-tile)' }}>Enregistrement rapide</p>
+        <Card variant="accent">
+          <p className="t-eyebrow" style={{ marginBottom: 'var(--gap-tile)', opacity: 0.8 }}>Enregistrement rapide</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
             <Button variant="secondary" onClick={() => nav.navigate('freeWorkout')}>
               🧠 Planifier une séance rapide
