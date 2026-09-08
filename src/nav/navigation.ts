@@ -29,6 +29,7 @@ export type ScreenName =
   | 'rivalsStats'
   | 'admin'
   | 'quickLog'
+  | 'freeWorkout'
 
 export interface ScreenEntry {
   name: ScreenName

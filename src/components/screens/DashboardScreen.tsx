@@ -684,6 +684,9 @@ export function DashboardScreen() {
 
         {/* ── Enregistrement rapide ────────────────────────────────────── */}
         <SectionHeader label="Enregistrement rapide" />
+        <Button variant="ghost" onClick={() => nav.navigate('freeWorkout')}>
+          🧠 Planifier une séance guidée
+        </Button>
         <Button variant="ghost" onClick={() => nav.navigate('quickLog')}>
           🏃 Course, sport, full body…
         </Button>
