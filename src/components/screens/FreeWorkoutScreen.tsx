@@ -102,7 +102,7 @@ export function FreeWorkoutScreen() {
   const [sleepQuality,  setSleepQuality]  = useState<SleepQuality>('good')
   const [availableTime, setAvailableTime] = useState<AvailableTime>(45)
   const [goal,          setGoal]          = useState<WorkoutGoal>('hypertrophie')
-  const [equipment,     setEquipment]     = useState<EquipmentPreset>('full')
+  const [equipment,     setEquipment]     = useState<EquipmentPreset>('bodyweight')
   const [targetZones,   setTargetZones]   = useState<string[]>(['full_body'])
   const [workout,       setWorkout]       = useState<SuggestedWorkout | null>(null)
   const [showFinish,    setShowFinish]    = useState(false)
@@ -218,6 +218,39 @@ export function FreeWorkoutScreen() {
             </div>
           </section>
 
+          {/* Objectif du jour */}
+          <section>
+            <div className="t-eyebrow" style={{ marginBottom: 10 }}>Objectif du jour</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
+              {GOAL_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setGoal(opt.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: goal === opt.value ? 'var(--accent)' : 'var(--surface)',
+                    color: goal === opt.value ? '#fff' : 'var(--fg)',
+                    border: 'none', borderRadius: 'var(--radius-card)',
+                    padding: '12px var(--pad-card)', cursor: 'pointer', textAlign: 'left',
+                    width: '100%',
+                  }}
+                >
+                  <span style={{ fontSize: 24 }}>{opt.emoji}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
+                    <div style={{
+                      fontSize: 'var(--fs-caption)',
+                      color: goal === opt.value ? undefined : 'var(--fg-muted)',
+                      opacity: goal === opt.value ? 0.85 : 1,
+                    }}>
+                      {opt.sub}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <Button variant="primary" onClick={() => setStep('timegoal')}>
             Continuer →
           </Button>
@@ -226,7 +259,7 @@ export function FreeWorkoutScreen() {
     )
   }
 
-  // ── Étape 2 : Temps + Objectif ───────────────────────────────────────────
+  // ── Étape 2 : Temps + Matériel ───────────────────────────────────────────
 
   if (step === 'timegoal') {
     return (
@@ -290,39 +323,6 @@ export function FreeWorkoutScreen() {
                   }}
                 >
                   {opt.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Objectif */}
-          <section>
-            <div className="t-eyebrow" style={{ marginBottom: 10 }}>Objectif du jour</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
-              {GOAL_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setGoal(opt.value)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    background: goal === opt.value ? 'var(--accent)' : 'var(--surface)',
-                    color: goal === opt.value ? '#fff' : 'var(--fg)',
-                    border: 'none', borderRadius: 'var(--radius-card)',
-                    padding: '12px var(--pad-card)', cursor: 'pointer', textAlign: 'left',
-                    width: '100%',
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>{opt.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>{opt.label}</div>
-                    <div style={{
-                      fontSize: 'var(--fs-caption)',
-                      color: goal === opt.value ? undefined : 'var(--fg-muted)',
-                      opacity: goal === opt.value ? 0.85 : 1,
-                    }}>
-                      {opt.sub}
-                    </div>
-                  </div>
                 </button>
               ))}
             </div>
