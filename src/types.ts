@@ -203,6 +203,19 @@ export interface Session extends Syncable {
   totalSets: number
   completedSets: number
   notes?: string
+  /**
+   * Distingue les séances programme des séances enregistrées via le wizard
+   * Quick Log. Absent = séance programme ou ancienne séance libre.
+   */
+  sessionKind?: 'cardio' | 'team_sport' | 'strength_free' | 'other'
+  /** Activité spécifique : 'running' | 'cycling' | 'swimming' | 'rowing' | 'elliptical' | 'other' (cardio) */
+  sport?: string
+  /** Distance parcourue (cardio), en km. */
+  distanceKm?: number
+  /** Intensité ressentie 1-5 (RPE simplifié). */
+  intensityRating?: 1 | 2 | 3 | 4 | 5
+  /** Groupes musculaires travaillés (strength_free). */
+  quickLogMuscleGroups?: string[]
 }
 
 export interface SessionExercise extends Syncable {

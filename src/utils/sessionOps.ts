@@ -15,6 +15,8 @@ import { daysBetween } from './dates'
 import { generateWarmup } from './warmup'
 import { buildPhases, phaseAtLeast } from './programGenerator'
 import type { DraftPhase } from '../components/programBuilder/programDraft'
+import type { ActivityParams } from './quickLog'
+import { sessionNameFromParams } from './quickLog'
 
 const BARBELL_WEIGHT = 20
 /** Reprise proposée si la séance ouverte date de moins de 12 h (cahier 7). */
@@ -188,6 +190,37 @@ export async function startFreestyleSession(store: StoreApi): Promise<Session> {
     id: uuid(),
     name: 'Séance libre',
     startedAt: Date.now(),
+    totalSets: 0,
+    completedSets: 0,
+  })
+}
+
+/**
+ * Enregistre immédiatement une activité terminée (cardio, sport collectif,
+ * musculation libre, autre) sans ouvrir la modale de séance active.
+ */
+export async function logActivitySession(
+  params: ActivityParams,
+  store: StoreApi,
+): Promise<Session> {
+  const now = Date.now()
+  const durationSec = params.durationMin * 60
+
+  return store.session.save({
+    id: uuid(),
+    name: sessionNameFromParams(params),
+    sessionKind: params.kind,
+    sport:
+      params.kind === 'cardio' ? params.sport
+      : params.kind === 'team_sport' ? params.sport
+      : undefined,
+    distanceKm: params.kind === 'cardio' ? params.distanceKm : undefined,
+    intensityRating: params.intensityRating,
+    quickLogMuscleGroups: params.kind === 'strength_free' ? params.muscleGroups : undefined,
+    notes: params.notes,
+    startedAt: now - durationSec * 1000,
+    endedAt: now,
+    durationSec,
     totalSets: 0,
     completedSets: 0,
   })

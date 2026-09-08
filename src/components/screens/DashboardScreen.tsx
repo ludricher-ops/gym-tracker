@@ -682,6 +682,12 @@ export function DashboardScreen() {
           </>
         )}
 
+        {/* ── Enregistrement rapide ────────────────────────────────────── */}
+        <SectionHeader label="Enregistrement rapide" />
+        <Button variant="ghost" onClick={() => nav.navigate('quickLog')}>
+          🏃 Course, sport, full body…
+        </Button>
+
       </div>
     </div>
   )
