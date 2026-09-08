@@ -214,9 +214,8 @@ export function ProgrammeScreen() {
             {/* Filter chips */}
             <div style={{
               display: 'flex',
+              flexWrap: 'wrap',
               gap: 8,
-              overflowX: 'auto',
-              paddingBottom: 4,
               marginBottom: 4,
             }}>
               {WORKOUT_FILTER.map(({ key, label }) => (
