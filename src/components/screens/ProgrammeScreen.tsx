@@ -177,6 +177,40 @@ export function ProgrammeScreen() {
         {/* ── Mes séances ─────────────────────────────────────────────── */}
         {view === 'seances' && (
           <>
+            {/* Générer ma séance */}
+            <Card variant="accent" onClick={() => nav.navigate('freeWorkout')}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 22, lineHeight: 1 }}>🧠</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>
+                    Générer ma séance
+                  </div>
+                  <div style={{ fontSize: 'var(--fs-caption)', opacity: 0.8 }}>
+                    Wizard IA — séance prête en 1 min
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Créer manuellement */}
+            <button
+              onClick={() => nav.navigate('programBuilder')}
+              style={{
+                width: '100%',
+                background: 'var(--surface)',
+                border: '1.5px dashed var(--border)',
+                borderRadius: 'var(--radius-card)',
+                padding: '12px 16px',
+                color: 'var(--fg)',
+                fontSize: 'var(--fs-body)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              + Créer manuellement
+            </button>
+
             {/* Filter chips */}
             <div style={{
               display: 'flex',
