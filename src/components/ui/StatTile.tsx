@@ -16,14 +16,16 @@ interface StatTileProps {
 export function StatTile({ label, value, delta, deltaUnit, style, valueStyle }: StatTileProps) {
   return (
     <div className="gt-stat" style={style}>
-      <div className="gt-stat__value" style={valueStyle}>{value}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+        <div className="gt-stat__value" style={valueStyle}>{value}</div>
+        {delta != null && delta !== 0 && (
+          <div className={`gt-stat__delta gt-stat__delta--${delta > 0 ? 'up' : 'down'}`} style={{ marginTop: 0 }}>
+            {delta > 0 ? '▲' : '▼'}{Math.abs(delta)}
+            {deltaUnit}
+          </div>
+        )}
+      </div>
       <div className="gt-stat__label">{label}</div>
-      {delta != null && delta !== 0 && (
-        <div className={`gt-stat__delta gt-stat__delta--${delta > 0 ? 'up' : 'down'}`}>
-          {delta > 0 ? '▲' : '▼'} {Math.abs(delta)}
-          {deltaUnit}
-        </div>
-      )}
     </div>
   )
 }
