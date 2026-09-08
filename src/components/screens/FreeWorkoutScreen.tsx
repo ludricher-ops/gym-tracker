@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useStore } from '../../hooks/useStore'
+import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { useNavigation } from '../../nav/useNavigation'
 import { logActivitySession } from '../../utils/sessionOps'
 import {
@@ -15,7 +16,6 @@ import {
   type FreeWorkoutInput,
 } from '../../utils/freeWorkout'
 import { Button, Icon } from '../ui'
-import { MediaImage } from '../exercises/MediaImage'
 
 // ── Constantes d'affichage ────────────────────────────────────────────────────
 
@@ -63,6 +63,28 @@ const MUSCLE_OPTIONS: { value: string; label: string }[] = [
 
 const INTENSITY_LABELS: Record<number, string> = {
   1: 'Légère', 2: 'Modérée', 3: 'Moyenne', 4: 'Intense', 5: 'Maximale',
+}
+
+const MUSCLE_LABEL: Record<string, string> = {
+  chest:             'Pectoraux',
+  chest_upper:       'Pectoraux hauts',
+  chest_lower:       'Pectoraux bas',
+  back:              'Dos',
+  back_width:        'Dos (largeur)',
+  back_thickness:    'Dos (épaisseur)',
+  shoulders:         'Épaules',
+  shoulders_front:   'Épaules avant',
+  shoulders_lateral: 'Épaules latérales',
+  shoulders_rear:    'Épaules arrière',
+  biceps:            'Biceps',
+  triceps:           'Triceps',
+  forearms:          'Avant-bras',
+  quads:             'Quadriceps',
+  hamstrings:        'Ischios',
+  glutes:            'Fessiers',
+  calves:            'Mollets',
+  core:              'Abdos',
+  cardio:            'Cardio',
 }
 
 // ── Types internes ────────────────────────────────────────────────────────────
@@ -424,56 +446,92 @@ export function FreeWorkoutScreen() {
         {/* Liste d'exercices */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
           {workout.exercises.map((ex, i) => {
-            const dbEx = exerciseByName.get(ex.name)
+            const dbEx    = exerciseByName.get(ex.name)
             const hasMedia = !!dbEx?.media
+            const muscleLabel = dbEx ? (MUSCLE_LABEL[dbEx.primaryMuscle] ?? dbEx.primaryMuscle) : null
+            const THUMB = 72
             return (
               <div
                 key={i}
-                style={{ background: 'var(--surface)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
+                style={{
+                  background: 'var(--surface)', borderRadius: 'var(--radius-card)',
+                  overflow: 'hidden',
+                }}
               >
-                {/* GIF de démonstration */}
-                {hasMedia && (
-                  <MediaImage
-                    blobId={dbEx.media!.blobId}
-                    url={dbEx.media!.url}
-                    alt={ex.name}
-                    aspectRatio={dbEx.media!.aspectRatio}
-                    radius={0}
+                {/* Ligne principale : miniature + infos */}
+                <div style={{ display: 'flex', alignItems: 'stretch', gap: 0 }}>
+
+                  {/* Miniature carrée */}
+                  <ExThumb
+                    size={THUMB}
+                    emoji={ex.emoji}
+                    blobId={dbEx?.media?.blobId}
+                    url={dbEx?.media?.url}
                   />
-                )}
-                <div style={{ padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>
-                      {ex.emoji}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>{ex.name}</div>
-                      <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 2 }}>
-                        {ex.sets} séries × {ex.reps} reps
-                        {' · '}
-                        {ex.restSec >= 60
-                          ? `${Math.round(ex.restSec / 60)} min`
-                          : `${ex.restSec} s`} repos
-                      </div>
+
+                  {/* Infos à droite */}
+                  <div style={{
+                    flex: 1, minWidth: 0,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    padding: '10px 12px',
+                  }}>
+                    {/* Ligne haute : zone + compteur */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                      {muscleLabel ? (
+                        <span style={{
+                          background: 'var(--accent)', color: '#fff',
+                          borderRadius: 100, padding: '2px 10px',
+                          fontSize: 'var(--fs-eyebrow)', fontWeight: 700,
+                          whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>
+                          {muscleLabel}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      <span className="t-eyebrow" style={{ color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>
+                        EX {i + 1}/{workout.exercises.length}
+                      </span>
                     </div>
-                    <button
-                      onClick={() => setExpandedTip(expandedTip === i ? null : i)}
-                      style={{ background: 'none', border: 'none', color: 'var(--fg-muted)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
-                      aria-label="Conseil"
-                    >
-                      <Icon name={expandedTip === i ? 'chevron-up' : 'chevron-down'} size={14} />
-                    </button>
+
+                    {/* Nom de l'exercice */}
+                    <div style={{ fontWeight: 700, fontSize: 'var(--fs-body)', marginTop: 4, lineHeight: 1.2 }}>
+                      {ex.name}
+                    </div>
+
+                    {/* Séries × reps */}
+                    <div className="t-caption" style={{ color: 'var(--fg-muted)', marginTop: 4 }}>
+                      {ex.sets} × {ex.reps} reps
+                      {' · '}
+                      {ex.restSec >= 60
+                        ? `${Math.round(ex.restSec / 60)} min`
+                        : `${ex.restSec} s`} repos
+                    </div>
                   </div>
-                  {expandedTip === i && (
-                    <div className="t-caption" style={{
-                      marginTop: 8, paddingTop: 8,
-                      borderTop: '1px solid var(--border)',
-                      color: 'var(--fg-muted)',
-                    }}>
-                      💡 {ex.tip}
-                    </div>
-                  )}
+
+                  {/* Bouton conseil */}
+                  <button
+                    onClick={() => setExpandedTip(expandedTip === i ? null : i)}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--fg-muted)',
+                      cursor: 'pointer', padding: '0 12px', flexShrink: 0,
+                      display: 'flex', alignItems: 'center',
+                    }}
+                    aria-label="Conseil"
+                  >
+                    <Icon name={expandedTip === i ? 'chevron-up' : 'chevron-down'} size={14} />
+                  </button>
                 </div>
+
+                {/* Conseil expansible */}
+                {expandedTip === i && (
+                  <div className="t-caption" style={{
+                    padding: '10px 14px', borderTop: '1px solid var(--border)',
+                    color: 'var(--fg-muted)',
+                  }}>
+                    💡 {ex.tip}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -542,6 +600,38 @@ export function FreeWorkoutScreen() {
 }
 
 // ── Sous-composants ───────────────────────────────────────────────────────────
+
+/** Miniature carrée d'exercice — gère blob local (blobId) et URL distante. */
+function ExThumb({ size, emoji, blobId, url }: {
+  size: number
+  emoji: string
+  blobId?: string | null
+  url?: string | null
+}) {
+  const blobSrc = useObjectUrl(blobId ?? null)
+  const src = url || blobSrc
+  const [errored, setErrored] = useState(false)
+
+  return (
+    <div style={{
+      width: size, minWidth: size, height: size,
+      background: 'var(--surface2)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, overflow: 'hidden',
+    }}>
+      {src && !errored ? (
+        <img
+          src={src}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setErrored(true)}
+        />
+      ) : (
+        <span style={{ fontSize: 28 }}>{emoji}</span>
+      )}
+    </div>
+  )
+}
 
 function StepDots({ current, total }: { current: number; total: number }) {
   return (
