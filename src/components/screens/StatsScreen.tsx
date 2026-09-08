@@ -4,7 +4,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import { exercisesWithHistory, buildExerciseStats } from '../../utils/exerciseStats'
 import { formatVolume } from '../../utils/format'
 import { weekRange } from '../../utils/dates'
-import { Card, DateBlock, DeltaPill, EmptyState, Row, SectionHeader, StatTile } from '../ui'
+import { Card, DateBlock, DeltaPill, EmptyState, Icon, Row, SectionHeader, StatTile } from '../ui'
 import type { MuscleGroup, WeekStart } from '../../types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -142,6 +142,9 @@ export function StatsScreen() {
     return (
       <div className="gt-screen">
         <div className="gt-topbar">
+          <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
+            <Icon name="arrow" size={22} strokeWidth={1.8} />
+          </button>
           <h1 className="gt-topbar__title">Progression</h1>
         </div>
         <div className="gt-screen__scroll">
@@ -165,6 +168,9 @@ export function StatsScreen() {
   return (
     <div className="gt-screen">
       <div className="gt-topbar">
+        <button className="gt-iconbtn" onClick={nav.back} aria-label="Retour">
+          <Icon name="arrow" size={22} strokeWidth={1.8} />
+        </button>
         <h1 className="gt-topbar__title">Progression</h1>
       </div>
 
