@@ -127,7 +127,10 @@ export function FreeWorkoutScreen() {
   }
 
   const goToSession = () => {
-    const input: FreeWorkoutInput = { energyLevel, sleepQuality, availableTime, goal, equipment, targetZones }
+    const input: FreeWorkoutInput = {
+      energyLevel, sleepQuality, availableTime, goal, equipment, targetZones,
+      library: store.exercises,
+    }
     const generated = generateFreeWorkout(input)
     setWorkout(generated)
     setFinalDuration(generated.estimatedMin)
