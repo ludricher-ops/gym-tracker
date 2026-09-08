@@ -98,8 +98,8 @@ export function FreeWorkoutScreen() {
   const nav    = useNavigation()
 
   const [step,          setStep]          = useState<Step>('energy')
-  const [energyLevel,   setEnergyLevel]   = useState<EnergyLevel>(3)
-  const [sleepQuality,  setSleepQuality]  = useState<SleepQuality>('medium')
+  const [energyLevel,   setEnergyLevel]   = useState<EnergyLevel>(4)
+  const [sleepQuality,  setSleepQuality]  = useState<SleepQuality>('good')
   const [availableTime, setAvailableTime] = useState<AvailableTime>(45)
   const [goal,          setGoal]          = useState<WorkoutGoal>('hypertrophie')
   const [equipment,     setEquipment]     = useState<EquipmentPreset>('full')
