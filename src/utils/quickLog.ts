@@ -51,6 +51,22 @@ export const CARDIO_SPORTS: { value: CardioParams['sport']; label: string; emoji
   { value: 'other',      label: 'Autre cardio',   emoji: '❤️' },
 ]
 
+/** Labels d'affichage pour chaque sport collectif. */
+export const TEAM_SPORTS: { value: string; label: string; emoji: string }[] = [
+  { value: 'football',   label: 'Football',   emoji: '⚽' },
+  { value: 'basketball', label: 'Basketball', emoji: '🏀' },
+  { value: 'tennis',     label: 'Tennis',     emoji: '🎾' },
+  { value: 'rugby',      label: 'Rugby',      emoji: '🏉' },
+  { value: 'handball',   label: 'Handball',   emoji: '🤾' },
+  { value: 'volleyball', label: 'Volleyball', emoji: '🏐' },
+  { value: 'hockey',     label: 'Hockey',     emoji: '🏒' },
+  { value: 'badminton',  label: 'Badminton',  emoji: '🏸' },
+  { value: 'ping-pong',  label: 'Ping-pong',  emoji: '🏓' },
+  { value: 'boxe',       label: 'Boxe',       emoji: '🥊' },
+  { value: 'ski',        label: 'Ski',        emoji: '🎿' },
+  { value: 'autre',      label: 'Autre sport', emoji: '🏅' },
+]
+
 /** Déduit le nom de la séance à afficher dans l'historique. */
 export function sessionNameFromParams(params: ActivityParams): string {
   switch (params.kind) {
@@ -58,8 +74,10 @@ export function sessionNameFromParams(params: ActivityParams): string {
       const found = CARDIO_SPORTS.find((s) => s.value === params.sport)
       return found ? found.label : 'Cardio'
     }
-    case 'team_sport':
-      return params.sport || 'Sport collectif'
+    case 'team_sport': {
+      const found = TEAM_SPORTS.find((s) => s.value === params.sport)
+      return found ? found.label : params.sport || 'Sport collectif'
+    }
     case 'strength_free':
       return 'Musculation libre'
     case 'other':
@@ -74,7 +92,10 @@ export function emojiFromParams(params: ActivityParams): string {
       const found = CARDIO_SPORTS.find((s) => s.value === params.sport)
       return found?.emoji ?? '🏃'
     }
-    case 'team_sport':    return '⚽'
+    case 'team_sport': {
+      const found = TEAM_SPORTS.find((s) => s.value === params.sport)
+      return found?.emoji ?? '⚽'
+    }
     case 'strength_free': return '🏋️'
     case 'other':         return '🏃'
   }

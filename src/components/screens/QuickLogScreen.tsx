@@ -4,6 +4,7 @@ import { useNavigation } from '../../nav/useNavigation'
 import { logActivitySession } from '../../utils/sessionOps'
 import {
   CARDIO_SPORTS,
+  TEAM_SPORTS,
   type ActivityParams,
   type CardioParams,
   type TeamSportParams,
@@ -63,7 +64,7 @@ export function QuickLogScreen() {
   const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5>(3)
   const [cardioSport, setCardioSport] = useState<CardioParams['sport']>('running')
   const [distanceKm, setDistanceKm] = useState('')
-  const [teamSport, setTeamSport] = useState('Football')
+  const [teamSport, setTeamSport] = useState('football')
   const [selectedMuscles, setSelectedMuscles] = useState<string[]>([])
   const [otherLabel, setOtherLabel] = useState('')
   const [notes, setNotes] = useState('')
@@ -209,12 +210,25 @@ export function QuickLogScreen() {
         {kind === 'team_sport' && (
           <section>
             <div className="t-eyebrow" style={{ marginBottom: 10 }}>Sport</div>
-            <input
-              className="gt-input"
-              value={teamSport}
-              onChange={(e) => setTeamSport(e.target.value)}
-              placeholder="Football, Basketball, Tennis…"
-            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-tile)' }}>
+              {TEAM_SPORTS.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setTeamSport(s.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: teamSport === s.value ? 'var(--accent)' : 'var(--surface)',
+                    color: teamSport === s.value ? '#fff' : 'var(--fg)',
+                    border: 'none', borderRadius: 'var(--radius-card)',
+                    padding: '10px 12px', cursor: 'pointer',
+                    fontSize: 'var(--fs-caption)', fontWeight: teamSport === s.value ? 600 : 400,
+                  }}
+                >
+                  <span>{s.emoji}</span>
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
           </section>
         )}
 

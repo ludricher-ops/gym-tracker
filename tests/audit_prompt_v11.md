@@ -78,34 +78,89 @@ Tu ne décris pas le code — tu évalues le résultat comme un coach recevrait 
 
 ---
 
-## Format de réponse par profil
+## Format de rendu
 
-```
+### Rendu intermédiaire (par groupe)
+
+Chaque agent produit un rendu markdown structuré par groupe :
+
+### Rendu final (rapport complet)
+
+Le rapport consolidé final doit être livré sous forme de **fichier HTML** (`audit_report_v11.html`) produit par l'orchestrateur après réception de tous les groupes. Le fichier HTML doit :
+
+- Avoir un **header** avec titre, date, version du prompt et nombre de profils traités
+- Avoir une **navigation** par ancre entre groupes (A, B, C, D, E)
+- Afficher chaque profil dans une **carte** avec : paramètres, simulation, assertions (badge vert PASS / rouge FAIL), verdict coloré (✅ vert / ⚠️ orange / ❌ rouge)
+- Inclure les **tableaux de synthèse** par groupe avec coloration des lignes par verdict
+- Terminer par la **synthèse finale** : tableau global, liste des ❌, liste des ⚠️, bugs logiciels, recommandations
+- Être **lisible sans JS** (HTML/CSS statique) et avoir un design sobre (fond blanc, typographie claire, couleurs sémantiques uniquement)
+
+---
+
+### Structure markdown par groupe
+
+```markdown
+# Audit [GroupeX] — [Titre groupe]
+**Date :** [date]
+**Fichiers lus :** programGenerator.ts + exercises-seed.json
+**Fixes vérifiés :** [liste des comportements vérifiés dans ce groupe]
+
+---
+
+## Formules de référence (extraites du code)
+[Tables résumant les valeurs clés observées dans le code — toujours extraites du code, jamais supposées :
+adjustedSlotCount par goal/duration, seuils INC-1, logique BUG-BW-PULL, etc.]
+
+---
+
 ### [Code] — [Nom court]
+**Paramètres :** goal=X, level=Y, days=N, duration=D, equipment=[...], splitPreference=Z
 
-**Profil :** goal=X, level=Y, days=N, duration=D, equipment=[...], splitPreference=Z
-**Split produit :** [types de séances, ex. fullbody-quad / fullbody-hip / fullbody-quad]
-**Slots effectifs par séance :** N (après adjustedSlotCount)
+**Simulation étape par étape :**
+1. selectSplit → rawSplit = [...]
+2. available filtré : [N exercices correspondant à l'équipement]
+3. hasCompoundBack = [true/false] car [raison — exercice ou absence]
+4. split final = [liste des workoutTypes produits]
+5. Pour chaque workoutType : slots effectifs (après adjustedSlotCount), exercices sélectionnés ou slots vides
 
-**Évaluation coach :**
-- Split : [observation — adapté / sous-optimal / inadapté]
-- Équilibre musculaire : [push/pull, haut/bas]
-- Volume/durée : [cohérent / serré / excessif]
-- Équipement : [couverture complète / lacunes — préciser]
-- Warnings émis : [liste ou aucun]
-- Variété : [structurelle / exercices seulement / répétition]
+**Assertions :**
+- Assertion 1 : **PASS/FAIL** — [explication courte]
+- Assertion 2 : **PASS/FAIL** — [explication courte]
+- ...
 
-**Verdict :** PASS | RÉSERVE | FAIL
-**Justification :** [1-3 phrases coaching — pourquoi ce verdict]
+**Verdict : ✅ Bon programme / ⚠️ Problème mineur / ❌ Problème sérieux**
+— [1-3 phrases coaching — pourquoi ce verdict]
+
+---
+
+[... autres profils du groupe ...]
+
+---
+
+## Tableau de synthèse [GroupeX]
+
+| Profil | Assertions critiques | Verdict | Réserves coach ⚠️ |
+|--------|---------------------|---------|-------------------|
+| [Code] | [résumé assertions] | ✅/⚠️/❌ | [point d'attention] |
+
+---
+
+## Synthèse des problèmes ouverts
+
+### Bugs / anomalies logicielles (assertions FAIL)
+[Liste des FAIL avec code profil + description, ou "Aucun FAIL détecté"]
+
+### Réserves coach cumulées
+[Thèmes récurrents sur l'ensemble du groupe]
 ```
 
 ### Codes de verdict
 
 | Verdict | Signification |
 |---------|--------------|
-| PASS | Programme de qualité acceptable pour ce profil |
-| RÉSERVE | Programme fonctionnel mais un point mérite l'attention du coach |
-| FAIL | Programme inadapté, déséquilibré ou trompeur pour ce profil |
+| ✅ Bon programme | Programme de qualité acceptable pour ce profil |
+| ⚠️ Problème mineur | Programme fonctionnel mais un point mérite l'attention |
+| ❌ Problème sérieux | Programme inadapté, déséquilibré ou trompeur pour ce profil |
 
 ---
 
@@ -1794,11 +1849,14 @@ equipment=['machine'], splitPreference='fullbody'
 
 ## SYNTHÈSE FINALE ATTENDUE
 
-1. **Tableau de verdicts** (PASS / RÉSERVE / FAIL) par profil avec justification coaching
-2. **Liste des FAIL** — programmes réellement inadaptés pour le profil
-3. **Liste des RÉSERVE** — points d'attention coaching (timing serré, déséquilibre, limitation équipement)
+Après tous les groupes, produire :
+
+1. **Tableau global de verdicts** (✅/⚠️/❌) par profil — tous groupes confondus
+2. **Liste des ❌ Problème sérieux** — programmes inadaptés, déséquilibrés ou trompeurs
+3. **Liste des ⚠️ Problème mineur** — points d'attention coaching (timing serré, déséquilibre, limitation équipement)
 4. **Profils avec warnings attendus** — vérifier que les avertissements informent correctement l'utilisateur
-5. **Recommandations** si de nouveaux problèmes coaching sont détectés
+5. **Bugs / anomalies logicielles** (assertions FAIL globales) — si nouveaux problèmes détectés
+6. **Recommandations** — thèmes récurrents et suggestions d'amélioration
 
 ---
 
