@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import {
-  startFreestyleSession, startSessionFromTemplate, recoverableSession,
+  startSessionFromTemplate, recoverableSession,
 } from '../../utils/sessionOps'
 import { computeStreak } from '../../utils/streak'
 import { statsForWeek, statsForPreviousWeek, weekDeltas } from '../../utils/stats'
@@ -177,7 +177,6 @@ export function DashboardScreen() {
 
 
   const openSession = (id: string) => nav.openModal('session', { sessionId: id })
-  const startFree = async () => openSession((await startFreestyleSession(store)).id)
 
   const startScheduled = async (scheduled: ScheduledSession) => {
     const wt = store.workoutTemplates.find((w) => w.id === scheduled.workoutTemplateId)
@@ -351,11 +350,6 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
-                Ajouter une séance libre
-              </Button>
-            </div>
           </Card>
         )}
 
@@ -402,11 +396,6 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
-                Ajouter une séance libre
-              </Button>
-            </div>
           </Card>
         )}
 
@@ -415,11 +404,6 @@ export function DashboardScreen() {
           <Card variant="accent">
             <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
-                Séance libre
-              </Button>
-            </div>
           </Card>
         )}
         {!resumable && activeProgram && card.type === 'missed' && visibleMissed.length > 0 && (
@@ -439,12 +423,9 @@ export function DashboardScreen() {
           <Card variant="accent">
             <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
-            <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
                 Commencer {card.nextSession!.workoutName} en avance
-              </Button>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
-                Séance libre
               </Button>
             </div>
           </Card>
@@ -459,11 +440,6 @@ export function DashboardScreen() {
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
               {schedule.length > 0 ? 'Toutes les séances sont complètes 🎉' : 'Récupération'}
             </p>
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
-              <Button variant="secondary" icon="plus" onClick={startFree}>
-                Séance libre
-              </Button>
-            </div>
           </Card>
         )}
 
@@ -481,9 +457,6 @@ export function DashboardScreen() {
               </Button>
               <Button variant="secondary" icon="list" onClick={() => nav.navigate('programsLibrary')}>
                 Parcourir la bibliothèque
-              </Button>
-              <Button variant="ghost" icon="plus" onClick={startFree}>
-                Séance libre
               </Button>
             </div>
           </Card>
@@ -683,13 +656,17 @@ export function DashboardScreen() {
         )}
 
         {/* ── Enregistrement rapide ────────────────────────────────────── */}
-        <SectionHeader label="Enregistrement rapide" />
-        <Button variant="ghost" onClick={() => nav.navigate('freeWorkout')}>
-          🧠 Planifier une séance guidée
-        </Button>
-        <Button variant="ghost" onClick={() => nav.navigate('quickLog')}>
-          🏃 Course, sport, full body…
-        </Button>
+        <Card>
+          <p className="t-eyebrow" style={{ marginBottom: 'var(--gap-tile)' }}>Enregistrement rapide</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
+            <Button variant="secondary" onClick={() => nav.navigate('freeWorkout')}>
+              🧠 Planifier une séance rapide
+            </Button>
+            <Button variant="secondary" onClick={() => nav.navigate('quickLog')}>
+              🏃 Courses, sport, full body
+            </Button>
+          </div>
+        </Card>
 
       </div>
     </div>
