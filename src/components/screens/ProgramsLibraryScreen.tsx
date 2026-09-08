@@ -23,7 +23,7 @@ export function ProgramsLibraryScreen() {
   )
 
   const mine = useMemo(
-    () => store.programs.filter((p) => !p.isTemplate && match(p.name, p.goal)),
+    () => store.programs.filter((p) => !p.isTemplate && p.name !== '__libre__' && match(p.name, p.goal)),
     [store.programs, match],
   )
   const templates = useMemo(

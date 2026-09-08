@@ -16,6 +16,28 @@ import {
   type FreeWorkoutInput,
 } from '../../utils/freeWorkout'
 import { Button, Icon } from '../ui'
+import type { ScreenProps } from '../../nav/screenRegistry'
+import type { MuscleGroup, WorkoutType } from '../../types'
+
+/** Déduit le WorkoutType depuis les zones musculaires ciblées. */
+function zonesToWorkoutType(zones: string[]): WorkoutType {
+  if (zones.includes('full_body')) return 'fullbody'
+  const pushMuscles  = ['chest', 'shoulders', 'triceps']
+  const pullMuscles  = ['back', 'biceps']
+  const legMuscles   = ['quads', 'hamstrings', 'glutes', 'calves']
+  const hasPush = zones.some((z) => pushMuscles.includes(z))
+  const hasPull = zones.some((z) => pullMuscles.includes(z))
+  const hasLegs = zones.some((z) => legMuscles.includes(z))
+  if (hasPush && !hasPull && !hasLegs) return 'push'
+  if (hasPull && !hasPush && !hasLegs) return 'pull'
+  if (hasLegs && !hasPush && !hasPull) return 'legs'
+  if ((hasPush || hasPull) && !hasLegs) return 'upper'
+  if (hasLegs && (hasPush || hasPull)) return 'fullbody'
+  return 'custom'
+}
+
+/** Nom du programme-conteneur pour les séances libres sauvegardées comme templates. */
+const LIBRE_PROG_NAME = '__libre__'
 
 // ── Constantes d'affichage ────────────────────────────────────────────────────
 
@@ -93,9 +115,12 @@ type Step = 'energy' | 'timegoal' | 'zones' | 'session'
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function FreeWorkoutScreen() {
+export function FreeWorkoutScreen({ params }: ScreenProps) {
   const store  = useStore()
   const nav    = useNavigation()
+
+  /** true → vient de Programme > Mes séances : on sauvegarde comme WorkoutTemplate */
+  const saveAsTemplate = params?.saveAsTemplate === 'true'
 
   const [step,          setStep]          = useState<Step>('energy')
   const [energyLevel,   setEnergyLevel]   = useState<EnergyLevel>(4)
@@ -137,6 +162,7 @@ export function FreeWorkoutScreen() {
     setStep('session')
   }
 
+  /** Mode historique (Aujourd'hui → Planifier une séance rapide) */
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -149,6 +175,81 @@ export function FreeWorkoutScreen() {
         muscleGroups,
         intensityRating: finalIntensity,
       }, store)
+      nav.back()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /** Mode template (Programme → Mes séances → Générer ma séance) */
+  const handleSaveAsTemplate = async () => {
+    if (!workout) return
+    setSaving(true)
+    try {
+      // 1. Trouver ou créer le programme-conteneur __libre__
+      let hostProg = store.programs.find((p) => p.name === LIBRE_PROG_NAME)
+      if (!hostProg) {
+        hostProg = await store.program.save({
+          id: crypto.randomUUID(),
+          name: LIBRE_PROG_NAME,
+          goal: 'hypertrophy',
+          level: 'intermediate',
+          durationWeeks: 4,
+          sessionsPerWeek: 3,
+          color: '#666666',
+          isTemplate: false,
+          isActive: false,
+          weekTemplate: {},
+          createdAt: Date.now(),
+        })
+      }
+
+      // 2. Déduire le type de séance et les groupes musculaires
+      const type = zonesToWorkoutType(targetZones)
+      const muscleGroups = (
+        targetZones.includes('full_body')
+          ? ['chest', 'back', 'shoulders', 'quads', 'glutes', 'core']
+          : targetZones
+      ) as MuscleGroup[]
+
+      // 3. Créer le WorkoutTemplate
+      const templateName = `${workout.goalLabel} · ${targetZones.includes('full_body') ? 'Full body' : muscleGroups.join(', ')}`
+      const wt = await store.workoutTemplate.save({
+        id: crypto.randomUUID(),
+        programId: hostProg.id,
+        name: templateName,
+        type,
+        muscleGroups,
+      })
+
+      // 4. Créer un WorkoutExerciseTemplate par exercice
+      const exerciseByNameMap = new Map(store.exercises.map((e) => [e.name, e]))
+      for (let i = 0; i < workout.exercises.length; i++) {
+        const ex = workout.exercises[i]!
+        const dbEx = exerciseByNameMap.get(ex.name)
+        if (!dbEx) continue // exercice inconnu → on l'ignore
+
+        // Parser la plage de reps (ex. "8-12" ou "10")
+        const repsParts = ex.reps.split('-').map((s) => parseInt(s.trim(), 10)).filter(Number.isFinite)
+        const targetRepsMin = repsParts[0] ?? ex.sets
+        const targetRepsMax = repsParts.length > 1 ? repsParts[1] : undefined
+        const repsMode = targetRepsMax !== undefined ? 'range' : 'fixed'
+
+        await store.workoutExerciseTemplate.save({
+          id: crypto.randomUUID(),
+          workoutTemplateId: wt.id,
+          exerciseId: dbEx.id,
+          order: i,
+          targetSets: ex.sets,
+          repsMode,
+          targetRepsMin,
+          targetRepsMax,
+          restSec: ex.restSec,
+          autoProgress: false,
+          progressStepKg: 2.5,
+        })
+      }
+
       nav.back()
     } finally {
       setSaving(false)
@@ -541,7 +642,12 @@ export function FreeWorkoutScreen() {
         </div>
 
         {/* Enregistrement */}
-        {!showFinish ? (
+        {saveAsTemplate ? (
+          /* Mode template : un seul bouton, pas de formulaire durée/intensité */
+          <Button variant="primary" disabled={saving} onClick={handleSaveAsTemplate}>
+            {saving ? 'Enregistrement…' : 'Sauvegarder dans Mes séances ✓'}
+          </Button>
+        ) : !showFinish ? (
           <Button variant="primary" onClick={() => setShowFinish(true)}>
             Enregistrer la séance
           </Button>

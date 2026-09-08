@@ -25,7 +25,7 @@ export function ProgrammeScreen() {
   const [seancesTypeFilter, setSeancesTypeFilter] = useState<WorkoutType | 'all'>('all')
 
   const mine = useMemo(
-    () => store.programs.filter((p) => !p.isTemplate),
+    () => store.programs.filter((p) => !p.isTemplate && p.name !== '__libre__'),
     [store.programs],
   )
   const templates = useMemo(
@@ -178,7 +178,7 @@ export function ProgrammeScreen() {
         {view === 'seances' && (
           <>
             {/* Générer ma séance */}
-            <Card variant="accent" onClick={() => nav.navigate('freeWorkout')}>
+            <Card variant="accent" onClick={() => nav.navigate('freeWorkout', { saveAsTemplate: 'true' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 22, lineHeight: 1 }}>🧠</span>
                 <div style={{ textAlign: 'left' }}>
