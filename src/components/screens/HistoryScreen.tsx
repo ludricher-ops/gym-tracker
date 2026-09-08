@@ -5,6 +5,21 @@ import { addWeeks, localDayKey, weekRange } from '../../utils/dates'
 import { statsForWeek } from '../../utils/stats'
 import { formatDuration, formatVolume } from '../../utils/format'
 import { DateBlock, EmptyState, Heatmap, Icon, Row, SectionHeader, type HeatmapCell } from '../ui'
+import { CARDIO_SPORTS } from '../../utils/quickLog'
+import type { Session } from '../../types'
+
+function sessionKindEmoji(s: Session): string | null {
+  if (!s.sessionKind) return null
+  switch (s.sessionKind) {
+    case 'cardio': {
+      const sport = (s.sport ?? 'other') as 'running' | 'cycling' | 'swimming' | 'rowing' | 'elliptical' | 'other'
+      return CARDIO_SPORTS.find((c) => c.value === sport)?.emoji ?? '🏃'
+    }
+    case 'team_sport':    return '⚽'
+    case 'strength_free': return '🏋️'
+    case 'other':         return '🏃'
+  }
+}
 
 const DAY_MS = 86_400_000
 
@@ -186,11 +201,12 @@ export function HistoryScreen() {
               const timeRange = endTs
                 ? `${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} → ${endTs.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
                 : start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+              const emoji = sessionKindEmoji(s)
               return (
                 <Row
                   key={s.id}
                   leading={<DateBlock date={s.startedAt} />}
-                  label={s.name}
+                  label={emoji ? `${emoji} ${s.name}` : s.name}
                   sub={timeRange}
                   value={`${formatVolume(s.totalVolumeKg ?? 0)} kg · ${formatDuration(s.durationSec ?? 0)}`}
                   chevron
