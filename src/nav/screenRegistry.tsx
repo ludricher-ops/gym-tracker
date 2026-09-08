@@ -22,6 +22,7 @@ import { RivalsStatsScreen } from '../components/screens/RivalsStatsScreen'
 import { AdminScreen } from '../components/screens/AdminScreen'
 import { QuickLogScreen } from '../components/screens/QuickLogScreen'
 import { FreeWorkoutScreen } from '../components/screens/FreeWorkoutScreen'
+import { ProgrammeScreen } from '../components/screens/ProgrammeScreen'
 
 /** Props reçues par tout composant d'écran. */
 export interface ScreenProps {
@@ -56,4 +57,5 @@ export const SCREENS: Partial<Record<ScreenName, ScreenComponent>> = {
   admin: AdminScreen,
   quickLog:    QuickLogScreen,
   freeWorkout: FreeWorkoutScreen,
+  programme:   ProgrammeScreen,
 }

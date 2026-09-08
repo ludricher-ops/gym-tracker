@@ -82,25 +82,6 @@ export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect
                 </span>
               ) : (
                 <span
-                  role={active && onValidate ? 'button' : undefined}
-                  aria-label={active && onValidate ? 'Valider la série' : undefined}
-                  tabIndex={active && onValidate ? 0 : undefined}
-                  onClick={
-                    active && onValidate
-                      ? (e) => { e.stopPropagation(); onValidate() }
-                      : undefined
-                  }
-                  onKeyDown={
-                    active && onValidate
-                      ? (e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            onValidate()
-                          }
-                        }
-                      : undefined
-                  }
                   style={{
                     width: 22,
                     height: 22,
@@ -110,7 +91,7 @@ export function SetTable({ sets, activeSetId, trackingType, weightUnit, onSelect
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    cursor: active && onValidate ? 'pointer' : 'default',
+                    cursor: 'default',
                   }}
                 />
               )}

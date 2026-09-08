@@ -11,6 +11,7 @@ export type ScreenName =
   | 'sessionDetail'
   | 'sessionRecap'
   | 'stats'
+  | 'programme'
   | 'exerciseDetail'
   | 'profile'
   | 'account'
@@ -48,7 +49,7 @@ export interface ModalEntry {
 export const TAB_ROOT: Record<Tab, ScreenName> = {
   today: 'dashboard',
   history: 'history',
-  stats: 'stats',
+  stats: 'programme',
   profile: 'profile',
   group: 'group',
 }
@@ -57,7 +58,7 @@ export const TAB_ROOT: Record<Tab, ScreenName> = {
 export const TABS: TabDef<Tab>[] = [
   { key: 'today', label: "Aujourd'hui", icon: 'flame' },
   { key: 'history', label: 'Historique', icon: 'list' },
-  { key: 'stats', label: 'Progression', icon: 'chart' },
+  { key: 'stats', label: 'Programme', icon: 'dumbbell' },
   { key: 'profile', label: 'Moi', icon: 'user' },
 ]
 
@@ -66,7 +67,7 @@ export const TABS_COMPETITION: TabDef<Tab>[] = [
   { key: 'group', label: 'Rivals', icon: 'trophy' },
   { key: 'today', label: "Aujourd'hui", icon: 'flame' },
   { key: 'history', label: 'Historique', icon: 'list' },
-  { key: 'stats', label: 'Progression', icon: 'chart' },
+  { key: 'stats', label: 'Programme', icon: 'dumbbell' },
   { key: 'profile', label: 'Moi', icon: 'user' },
 ]
 

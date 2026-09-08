@@ -103,6 +103,12 @@ export function ProfileScreen() {
         {/* ── Suivi ────────────────────────────────────────────────────── */}
         <p className="t-eyebrow">Suivi</p>
         <Row
+          icon="chart"
+          label="Progression"
+          chevron
+          onClick={() => nav.navigate('stats')}
+        />
+        <Row
           icon="target"
           label="Objectifs"
           chevron

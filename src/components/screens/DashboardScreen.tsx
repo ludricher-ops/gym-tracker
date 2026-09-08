@@ -28,8 +28,6 @@ const PHASE_EMOJI: Record<DraftPhase['focus'], string> = {
   deload:          '🔄',
 }
 
-const WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
-
 /** Abréviation du volume : ≥ 1000 kg → "4,8k", sinon chiffre entier. */
 function abbrevVol(kg: number): string {
   if (kg >= 1000) {
@@ -184,30 +182,37 @@ export function DashboardScreen() {
     openSession((await startSessionFromTemplate(wt, store, scheduled.label)).id)
   }
 
-  // Séances uniques du programme actif
-  const programWorkouts = useMemo(() => {
-    if (!activeProgram) return []
-    const seen = new Set<string>()
-    return WEEK_ORDER
-      .map((day) => activeProgram.weekTemplate[day])
-      .filter((id): id is string => !!id && !seen.has(id) && (seen.add(id), true))
-      .map((id) => store.workoutTemplates.find((w) => w.id === id && !w.deleted))
-      .filter((w): w is NonNullable<typeof w> => w != null)
-  }, [activeProgram, store.workoutTemplates])
-
   const visibleMissed = useMemo(
     () => card.missedSessions.filter((s) => s.date.getTime() >= ignoredBefore),
     [card.missedSessions, ignoredBefore],
   )
 
-  const [showWorkoutPicker, setShowWorkoutPicker] = useState(false)
+  const [showSeancesPicker, setShowSeancesPicker] = useState(false)
 
   const startFromWorkout = async (wtId: string) => {
     const wt = store.workoutTemplates.find((w) => w.id === wtId)
     if (!wt) return
-    setShowWorkoutPicker(false)
+    setShowSeancesPicker(false)
     openSession((await startSessionFromTemplate(wt, store)).id)
   }
+
+  const startNamedFreestyle = async (name: string) => {
+    setShowSeancesPicker(false)
+    const session = await store.session.save({
+      id: crypto.randomUUID(),
+      name,
+      startedAt: Date.now(),
+      totalSets: 0,
+      completedSets: 0,
+    })
+    openSession(session.id)
+  }
+
+  /** Toutes les séances (templates workout) non supprimées. */
+  const allWorkouts = useMemo(
+    () => store.workoutTemplates.filter((w) => !w.deleted),
+    [store.workoutTemplates],
+  )
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
 
@@ -295,13 +300,20 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
+            <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
               <Button
                 icon="bolt"
                 variant="secondary"
                 onClick={() => startScheduled(card.todaySession!)}
               >
                 Commencer la séance
+              </Button>
+              <Button
+                icon="dumbbell"
+                variant="secondary"
+                onClick={() => setShowSeancesPicker(true)}
+              >
+                Mes séances
               </Button>
             </div>
           </Card>
@@ -350,6 +362,11 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              <Button icon="dumbbell" variant="secondary" onClick={() => setShowSeancesPicker(true)}>
+                Mes séances
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -396,6 +413,11 @@ export function DashboardScreen() {
                 </div>
               </div>
             )}
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              <Button icon="dumbbell" variant="secondary" onClick={() => setShowSeancesPicker(true)}>
+                Mes séances
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -404,6 +426,11 @@ export function DashboardScreen() {
           <Card variant="accent">
             <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              <Button icon="dumbbell" variant="secondary" onClick={() => setShowSeancesPicker(true)}>
+                Mes séances
+              </Button>
+            </div>
           </Card>
         )}
         {!resumable && activeProgram && card.type === 'missed' && visibleMissed.length > 0 && (
@@ -423,9 +450,12 @@ export function DashboardScreen() {
           <Card variant="accent">
             <p className="t-eyebrow" style={{ opacity: 0.8 }}>Jour de repos</p>
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>Récupération</p>
-            <div style={{ marginTop: 'var(--gap-tile)' }}>
+            <div style={{ marginTop: 'var(--gap-tile)', display: 'flex', flexDirection: 'column', gap: 'var(--gap-tile)' }}>
               <Button variant="secondary" icon="bolt" onClick={() => startScheduled(card.nextSession!)}>
                 Commencer {card.nextSession!.workoutName} en avance
+              </Button>
+              <Button icon="dumbbell" variant="secondary" onClick={() => setShowSeancesPicker(true)}>
+                Mes séances
               </Button>
             </div>
           </Card>
@@ -440,6 +470,11 @@ export function DashboardScreen() {
             <p style={{ fontWeight: 700, fontSize: 'var(--fs-display)', lineHeight: 1.15, marginTop: 4 }}>
               {schedule.length > 0 ? 'Toutes les séances sont complètes 🎉' : 'Récupération'}
             </p>
+            <div style={{ marginTop: 'var(--gap-tile)' }}>
+              <Button icon="dumbbell" variant="secondary" onClick={() => setShowSeancesPicker(true)}>
+                Mes séances
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -476,37 +511,6 @@ export function DashboardScreen() {
           />
           <StatTile label="Temps" value={formatDuration(current.timeSec).replace(/:\d{2}$/, '')} />
         </div>
-
-        {/* ── Séances du programme (picker dépliable) ──────────────────── */}
-        {activeProgram && programWorkouts.length > 0 && (
-          <>
-            <div
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-              onClick={() => setShowWorkoutPicker((v) => !v)}
-            >
-              <p className="t-eyebrow">Séances du programme</p>
-              <span style={{ color: 'var(--muted)' }}>
-                <Icon name={showWorkoutPicker ? 'chevron-up' : 'chevron-down'} size={14} />
-              </span>
-            </div>
-            {showWorkoutPicker && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {programWorkouts.map((wt) => (
-                  <Row
-                    key={wt.id}
-                    leading={wt.icon
-                      ? <SessionEmoji emoji={wt.icon} />
-                      : undefined}
-                    icon={wt.icon ? undefined : 'dumbbell'}
-                    label={wt.name}
-                    chevron
-                    onClick={() => startFromWorkout(wt.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
 
         {/* ── Avancement du programme — groupé par semaine ─────────────── */}
         {activeProgram && schedule.length > 0 && (
@@ -669,6 +673,99 @@ export function DashboardScreen() {
         </Card>
 
       </div>
+
+      {/* ── Bottom sheet : Mes séances ──────────────────────────────────── */}
+      {showSeancesPicker && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowSeancesPicker(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'var(--overlay-dim, rgba(0,0,0,0.45))',
+              zIndex: 100,
+            }}
+          />
+          {/* Panel */}
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 101,
+              background: 'var(--bg)',
+              borderRadius: '16px 16px 0 0',
+              maxHeight: '75vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px 12px',
+              borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontWeight: 700, fontSize: 'var(--fs-body)' }}>Mes séances</span>
+              <button
+                type="button"
+                onClick={() => setShowSeancesPicker(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 22, padding: '0 4px', lineHeight: 1 }}
+                aria-label="Fermer"
+              >×</button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '0 0 20px' }}>
+
+              {/* Séances existantes */}
+              {allWorkouts.length > 0 && (
+                <>
+                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>SÉANCES EXISTANTES</p>
+                  {allWorkouts.map((wt) => (
+                    <Row
+                      key={wt.id}
+                      leading={
+                        wt.icon
+                          ? <SessionEmoji emoji={wt.icon} />
+                          : undefined
+                      }
+                      icon={wt.icon ? undefined : 'dumbbell'}
+                      label={wt.name}
+                      chevron
+                      onClick={() => startFromWorkout(wt.id)}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Nouvelle séance */}
+              <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>NOUVELLE SÉANCE</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '4px 20px' }}>
+                {['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Full body', 'Custom'].map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className="gt-chip"
+                    onClick={() => startNamedFreestyle(name)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
+
     </div>
   )
 }
