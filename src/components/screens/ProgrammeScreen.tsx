@@ -406,28 +406,41 @@ export function ProgrammeScreen() {
             </div>
 
             {/* ── Menu principal ───────────────────────────────────────── */}
-            {sheetMode === 'menu' && (
-              <>
-                <button
-                  onClick={() => setSheetMode('rename')}
-                  style={sheetBtnStyle}
-                >
-                  <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>✏️</span>
-                  Renommer
-                </button>
-                <button
-                  onClick={() => setSheetMode('confirm-delete')}
-                  style={{ ...sheetBtnStyle, color: 'var(--danger, #e53e3e)' }}
-                >
-                  <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>🗑</span>
-                  Supprimer
-                </button>
-                <button onClick={closeSheet} style={{ ...sheetBtnStyle, color: 'var(--fg-muted)' }}>
-                  <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>✕</span>
-                  Annuler
-                </button>
-              </>
-            )}
+            {sheetMode === 'menu' && (() => {
+              const isTemplateSrc = !!store.programs.find(
+                (p) => p.id === selectedWt.programId
+              )?.isTemplate
+              const canDelete = !isTemplateSrc || store.isAdmin
+              return (
+                <>
+                  <button
+                    onClick={() => setSheetMode('rename')}
+                    style={sheetBtnStyle}
+                  >
+                    <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>✏️</span>
+                    Renommer
+                  </button>
+                  {canDelete ? (
+                    <button
+                      onClick={() => setSheetMode('confirm-delete')}
+                      style={{ ...sheetBtnStyle, color: 'var(--danger, #e53e3e)' }}
+                    >
+                      <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>🗑</span>
+                      Supprimer
+                    </button>
+                  ) : (
+                    <div style={{ ...sheetBtnStyle, color: 'var(--fg-muted)', cursor: 'default', opacity: 0.45 }}>
+                      <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>🔒</span>
+                      Suppression réservée à l'admin
+                    </div>
+                  )}
+                  <button onClick={closeSheet} style={{ ...sheetBtnStyle, color: 'var(--fg-muted)' }}>
+                    <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>✕</span>
+                    Annuler
+                  </button>
+                </>
+              )
+            })()}
 
             {/* ── Renommer ────────────────────────────────────────────── */}
             {sheetMode === 'rename' && (
