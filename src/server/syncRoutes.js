@@ -258,6 +258,35 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       [JSON.stringify({ media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/low-glute-bridge-on-floor.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
     )
 
+    // Patch images incorrectes (BUG-IMG-4) : ajout des GIFs fitnessprogramer.com pour les exercices
+    // dont le media avait été supprimé (BUG-IMG-3) faute de GIF correct dans JahelCuadrado.
+    const FP_IMG_PATCHES = [
+      { id: 'seed-cat-cow',            url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/cat-cow.gif',                     mime: 'image/gif' },
+      { id: 'seed-bird-dog',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Bird-Dog.gif',                    mime: 'image/gif' },
+      { id: 'seed-shoulder-circles',   url: 'https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif',       mime: 'image/gif' },
+      { id: 'seed-scissors',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/12/Leg-Scissors.gif',                mime: 'image/gif' },
+      { id: 'seed-fire-hydrant',       url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Fire-Hydrant.gif',                mime: 'image/gif' },
+      { id: 'seed-clamshell',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/05/Side-Lying-Clam.gif',             mime: 'image/gif' },
+      { id: 'bw-hollow-body',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HollowHold.png',                  mime: 'image/png' },
+      { id: 'seed-leg-swings',         url: 'https://fitnessprogramer.com/wp-content/uploads/2025/07/Leg-Swings-Front-to-Back.gif',    mime: 'image/gif' },
+      { id: 'seed-rowing-erg',         url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Rowing-Machine.gif',              mime: 'image/gif' },
+      { id: 'seed-superman',           url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Superman-exercise.gif',           mime: 'image/gif' },
+      { id: 'bw-wall-sit',             url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png',                    mime: 'image/png' },
+      { id: 'band-face-pull',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif',                   mime: 'image/gif' },
+      { id: 'seed-hip-thrust-machine', url: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Hip-Thrust-Machine.gif',          mime: 'image/gif' },
+    ]
+    for (const p of FP_IMG_PATCHES) {
+      const isGif = p.mime === 'image/gif'
+      await pool.query(
+        `UPDATE sync_records
+            SET data = data || $1::jsonb,
+                updated_at = $2
+          WHERE store = 'exercises' AND id = $3
+            AND data->>'media' IS NULL`,
+        [JSON.stringify({ media: { url: p.url, mime: p.mime, type: isGif ? 'gif' : 'photo', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now, p.id],
+      )
+    }
+
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
     await pool.query(
