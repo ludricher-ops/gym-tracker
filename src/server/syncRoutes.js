@@ -188,6 +188,37 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
           AND data->'media'->>'url' LIKE '%barbell%'`,
       [now],
     )
+    // Patch images incorrectes (BUG-IMG-2) :
+    // seed-vertical-leg-crunch : lever machine → jackknife-sit-up (bodyweight le plus proche)
+    // band-good-morning : barbell → GIF élastique fitnessprogramer
+    // dumbbell-rdl : barbell → dumbbell-stiff-leg-deadlift
+    const IMG_PATCHES = [
+      {
+        id: 'seed-vertical-leg-crunch',
+        media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/jackknife-sit-up.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+        cond: '%lever%',
+      },
+      {
+        id: 'band-good-morning',
+        media: { url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+        cond: '%barbell%',
+      },
+      {
+        id: 'dumbbell-rdl',
+        media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/dumbbell-stiff-leg-deadlift.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+        cond: '%barbell%',
+      },
+    ]
+    for (const p of IMG_PATCHES) {
+      await pool.query(
+        `UPDATE sync_records
+            SET data = data || $1::jsonb,
+                updated_at = $2
+          WHERE store = 'exercises' AND id = $3
+            AND (data->'media'->>'url' LIKE $4 OR data->>'media' IS NULL)`,
+        [JSON.stringify({ media: p.media }), now, p.id, p.cond],
+      )
+    }
 
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
