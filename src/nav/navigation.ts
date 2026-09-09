@@ -31,6 +31,7 @@ export type ScreenName =
   | 'admin'
   | 'quickLog'
   | 'freeWorkout'
+  | 'seanceBuilder'
 
 export interface ScreenEntry {
   name: ScreenName

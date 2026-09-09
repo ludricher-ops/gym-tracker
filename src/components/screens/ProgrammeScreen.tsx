@@ -298,7 +298,7 @@ export function ProgrammeScreen() {
 
             {/* Créer manuellement */}
             <button
-              onClick={() => nav.navigate('programBuilder')}
+              onClick={() => nav.navigate('seanceBuilder')}
               style={{
                 width: '100%',
                 background: 'var(--surface)',
