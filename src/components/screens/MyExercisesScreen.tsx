@@ -1,10 +1,23 @@
 ﻿import { useMemo, useState } from 'react'
-import type { MuscleGroup } from '../../types'
+import type { Equipment, MuscleGroup } from '../../types'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import { EQUIPMENT_LABEL, MUSCLE_LABEL, MUSCLE_REGIONS } from '../../utils/labels'
 import { Card, EmptyState, Icon, Row, Segmented, StatTile } from '../ui'
 import { MediaImage } from '../exercises/MediaImage'
+
+const EQUIPMENT_CHIPS: { key: Equipment | 'all'; label: string }[] = [
+  { key: 'all',           label: 'Tous'            },
+  { key: 'barbell',       label: 'Barre'           },
+  { key: 'dumbbell',      label: 'Haltères'        },
+  { key: 'cable',         label: 'Poulie'          },
+  { key: 'machine',       label: 'Machine'         },
+  { key: 'bodyweight',    label: 'Poids du corps'  },
+  { key: 'kettlebell',    label: 'Kettlebell'      },
+  { key: 'band',          label: 'Élastique'       },
+  { key: 'pullup_bar',    label: 'Traction'        },
+  { key: 'cardio_machine',label: 'Cardio'          },
+]
 
 export function MyExercisesScreen() {
   const store = useStore()
@@ -12,6 +25,7 @@ export function MyExercisesScreen() {
   const [query, setQuery] = useState('')
   const [scope, setScope] = useState<'all' | 'custom'>('all')
   const [region, setRegion] = useState<string>('all')
+  const [equipment, setEquipment] = useState<Equipment | 'all'>('all')
 
   const customCount = useMemo(
     () => store.exercises.filter((e) => e.isCustom).length,
@@ -29,10 +43,11 @@ export function MyExercisesScreen() {
         if (q && !normalize(e.name).includes(q)) return false
         if (scope === 'custom' && !e.isCustom) return false
         if (regionSet && !regionSet.has(e.primaryMuscle)) return false
+        if (equipment !== 'all' && e.equipment !== equipment) return false
         return true
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-  }, [store.exercises, query, scope, region])
+  }, [store.exercises, query, scope, region, equipment])
 
   // Filtre par groupe musculaire — rangée dédiée (même style que Programmes).
   const regionChips: { key: string; label: string }[] = [
@@ -79,6 +94,18 @@ export function MyExercisesScreen() {
               type="button"
               className={`gt-chip ${region === c.key ? 'gt-chip--active' : ''}`}
               onClick={() => setRegion(c.key)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <div className="gt-chips" role="group" aria-label="Filtrer par équipement">
+          {EQUIPMENT_CHIPS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={`gt-chip ${equipment === c.key ? 'gt-chip--active' : ''}`}
+              onClick={() => setEquipment(c.key)}
             >
               {c.label}
             </button>
