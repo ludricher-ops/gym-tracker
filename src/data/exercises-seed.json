@@ -1146,15 +1146,7 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/barbell-good-morning.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-hack-squat",
@@ -2874,7 +2866,7 @@
     "isWarmupExercise": false,
     "popularity": 3,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/barbell-full-squat.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/frankenstein-squat.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,

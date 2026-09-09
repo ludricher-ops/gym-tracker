@@ -168,6 +168,27 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       [JSON.stringify({ primaryMuscle: 'hamstrings', category: 'isolation', popularity: 2 }), now, ADMIN_USER_ID],
     )
 
+    // Patch images incorrectes : exercices bodyweight avec GIF barre (BUG-IMG-BW).
+    // bw-squat : barbell-full-squat.gif → frankenstein-squat.gif (squat poids du corps)
+    // seed-good-morning-bw : barbell-good-morning.gif → suppression (aucun GIF BW disponible)
+    const BW_IMG_FIX_URL = 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/frankenstein-squat.gif'
+    await pool.query(
+      `UPDATE sync_records
+          SET data = data || $1::jsonb,
+              updated_at = $2
+        WHERE store = 'exercises' AND id = 'bw-squat'
+          AND data->'media'->>'url' LIKE '%barbell%'`,
+      [JSON.stringify({ media: { url: BW_IMG_FIX_URL, mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
+    )
+    await pool.query(
+      `UPDATE sync_records
+          SET data = data - 'media',
+              updated_at = $1
+        WHERE store = 'exercises' AND id = 'seed-good-morning-bw'
+          AND data->'media'->>'url' LIKE '%barbell%'`,
+      [now],
+    )
+
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
     await pool.query(
