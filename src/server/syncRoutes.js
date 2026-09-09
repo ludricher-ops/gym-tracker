@@ -220,6 +220,44 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       )
     }
 
+    // Patch images incorrectes (BUG-IMG-3) : GIFs d'exercices totalement différents de l'exercice.
+    // Solution : supprimer le champ media (mieux que montrer un GIF faux).
+    // seed-hip-thrust-bw : glute-bridge-march → low-glute-bridge-on-floor (le plus proche dispo)
+    const IMG_REMOVE_PATCHES = [
+      { id: 'seed-cat-cow',            cond: '%upper-back-stretch%' },
+      { id: 'seed-bird-dog',           cond: '%dead-bug%' },
+      { id: 'seed-shoulder-circles',   cond: '%rear-deltoid-stretch%' },
+      { id: 'seed-scissors',           cond: '%twisted-leg-raise%' },
+      { id: 'seed-fire-hydrant',       cond: '%band-lying-hip-internal-rotation%' },
+      { id: 'seed-clamshell',          cond: '%band-lying-hip-internal-rotation%' },
+      { id: 'bw-hollow-body',          cond: '%hanging-pike%' },
+      { id: 'seed-leg-swings',         cond: '%monster-walk%' },
+      { id: 'seed-rowing-erg',         cond: '%run-equipment%' },
+      { id: 'seed-superman',           cond: '%reverse-hyper-on-flat-bench%' },
+      { id: 'bw-wall-sit',             cond: '%squat-to-overhead-reach%' },
+      { id: 'band-face-pull',          cond: '%band-reverse-fly%' },
+      { id: 'seed-hip-thrust-machine', cond: '%lever-horizontal-one-leg-press%' },
+    ]
+    for (const p of IMG_REMOVE_PATCHES) {
+      await pool.query(
+        `UPDATE sync_records
+            SET data = data - 'media',
+                updated_at = $1
+          WHERE store = 'exercises' AND id = $2
+            AND data->'media'->>'url' LIKE $3`,
+        [now, p.id, p.cond],
+      )
+    }
+    // seed-hip-thrust-bw : glute-bridge-march (faux) → low-glute-bridge-on-floor (le plus proche)
+    await pool.query(
+      `UPDATE sync_records
+          SET data = data || $1::jsonb,
+              updated_at = $2
+        WHERE store = 'exercises' AND id = 'seed-hip-thrust-bw'
+          AND data->'media'->>'url' LIKE '%glute-bridge-march%'`,
+      [JSON.stringify({ media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/low-glute-bridge-on-floor.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
+    )
+
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
     await pool.query(

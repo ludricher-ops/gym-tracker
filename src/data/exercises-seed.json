@@ -51,15 +51,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/dead-bug.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "bw-burpees",
@@ -95,15 +87,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/upper-back/upper-back-stretch.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788082176352,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "seed-shoulder-circles",
@@ -114,15 +98,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/delts/rear-deltoid-stretch.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-scissors",
@@ -133,15 +109,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/twisted-leg-raise.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788082176352,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-clamshell",
@@ -152,15 +120,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/band-lying-hip-internal-rotation.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788095000000,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-jump-rope",
@@ -1020,15 +980,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/band-lying-hip-internal-rotation.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788082176352,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "seed-football",
@@ -1266,11 +1218,11 @@
     "isWarmupExercise": false,
     "popularity": 3,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/glute-bridge-march.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/low-glute-bridge-on-floor.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
-      "importedAt": 1788082176352,
+      "importedAt": 1788980719182,
       "aspectRatio": 1
     }
   },
@@ -1283,15 +1235,7 @@
     "category": "isolation",
     "trackingType": "time",
     "isWarmupExercise": false,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/hanging-pike.gif",
-      "mime": "image/png",
-      "type": "photo",
-      "sizeBytes": 0,
-      "importedAt": 1784106270149,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-inchworm",
@@ -1442,15 +1386,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/monster-walk.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-hip-abduction",
@@ -1704,15 +1640,7 @@
     "category": "compound",
     "trackingType": "time",
     "isWarmupExercise": false,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/cardio/run-equipment.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788082176352,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "seed-leg-raise",
@@ -2153,15 +2081,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": true,
-    "popularity": 1,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/reverse-hyper-on-flat-bench.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 1
   },
   {
     "id": "seed-row-cable",
@@ -2277,15 +2197,7 @@
     "category": "isolation",
     "trackingType": "time",
     "isWarmupExercise": true,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/quads/squat-to-overhead-reach.gif",
-      "mime": "image/png",
-      "type": "photo",
-      "sizeBytes": 0,
-      "importedAt": 1784106270149,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "bw-sissy-squat",
@@ -3193,15 +3105,7 @@
     "category": "isolation",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 2,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/delts/band-reverse-fly.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788679414727,
-      "aspectRatio": 1
-    }
+    "popularity": 2
   },
   {
     "id": "seed-hip-thrust-machine",
@@ -3214,15 +3118,7 @@
     "category": "compound",
     "trackingType": "weight_reps",
     "isWarmupExercise": false,
-    "popularity": 3,
-    "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/lever-horizontal-one-leg-press.gif",
-      "mime": "image/gif",
-      "type": "gif",
-      "sizeBytes": 0,
-      "importedAt": 1788080039623,
-      "aspectRatio": 1
-    }
+    "popularity": 3
   },
   {
     "id": "seed-cable-front-raise",
