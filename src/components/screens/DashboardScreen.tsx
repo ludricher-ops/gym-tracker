@@ -12,8 +12,8 @@ import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
 import { buildPhases } from '../../utils/programGenerator'
 import type { DraftPhase } from '../programBuilder/programDraft'
-import { Button, Card, Icon, Row, SectionHeader, StatTile } from '../ui'
-import type { WorkoutType } from '../../types'
+import { Button, Card, Icon, Pill, Row, SectionHeader, StatTile } from '../ui'
+import type { WorkoutTemplate, WorkoutType } from '../../types'
 
 const WORKOUT_FILTER: { key: WorkoutType | 'all'; label: string }[] = [
   { key: 'all',      label: 'Tous'      },
@@ -220,24 +220,56 @@ export function DashboardScreen() {
     openSession(session.id)
   }
 
-  /** Toutes les séances (workout templates) non supprimées, filtrées par type. */
+  /** Toutes les séances (workout templates) non supprimées. */
   const allWorkouts = useMemo(
     () => store.workoutTemplates.filter((w) => !w.deleted),
     [store.workoutTemplates],
   )
 
-  const { filteredPersoWorkouts, filteredTemplateWorkouts } = useMemo(() => {
+  type SeanceGroup = {
+    programId: string
+    label: string
+    isTemplate: boolean
+    isActive: boolean
+    isLibre: boolean
+    workouts: WorkoutTemplate[]
+  }
+
+  const seanceGroups = useMemo((): SeanceGroup[] => {
     const visible = seancesTypeFilter === 'all'
       ? allWorkouts
       : allWorkouts.filter((w) => w.type === seancesTypeFilter)
-    const perso: typeof visible = []
-    const tmpl: typeof visible = []
+
+    const byProg = new Map<string, WorkoutTemplate[]>()
     for (const wt of visible) {
-      const prog = store.programs.find((p) => p.id === wt.programId)
-      if (prog?.isTemplate) tmpl.push(wt)
-      else perso.push(wt)
+      const arr = byProg.get(wt.programId) ?? []
+      arr.push(wt)
+      byProg.set(wt.programId, arr)
     }
-    return { filteredPersoWorkouts: perso, filteredTemplateWorkouts: tmpl }
+
+    const groups: SeanceGroup[] = []
+    for (const [progId, workouts] of byProg) {
+      const prog = store.programs.find((p) => p.id === progId)
+      if (!prog) continue
+      const isLibre = prog.name === '__libre__'
+      groups.push({
+        programId: progId,
+        label: isLibre ? 'Mes séances' : prog.name,
+        isTemplate: prog.isTemplate,
+        isActive: prog.isActive,
+        isLibre,
+        workouts,
+      })
+    }
+
+    groups.sort((a, b) => {
+      if (a.isLibre !== b.isLibre) return a.isLibre ? -1 : 1
+      if (a.isTemplate !== b.isTemplate) return a.isTemplate ? 1 : -1
+      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
+      return a.label.localeCompare(b.label, 'fr')
+    })
+
+    return groups
   }, [allWorkouts, seancesTypeFilter, store.programs])
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
@@ -770,45 +802,52 @@ export function DashboardScreen() {
             {/* Scrollable content */}
             <div style={{ overflowY: 'auto', flex: 1, padding: '0 0 20px' }}>
 
-              {/* Mes séances (perso) */}
-              {filteredPersoWorkouts.length > 0 && (
-                <>
-                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>MES SÉANCES</p>
-                  {filteredPersoWorkouts.map((wt) => (
-                    <Row
-                      key={wt.id}
-                      leading={wt.icon ? <SessionEmoji emoji={wt.icon} /> : undefined}
-                      icon={wt.icon ? undefined : 'dumbbell'}
-                      label={wt.name}
-                      chevron
-                      onClick={() => startFromWorkout(wt.id)}
-                    />
-                  ))}
-                </>
-              )}
-
-              {/* Séances templates */}
-              {filteredTemplateWorkouts.length > 0 && (
-                <>
-                  <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>SÉANCES TEMPLATES</p>
-                  {filteredTemplateWorkouts.map((wt) => (
-                    <Row
-                      key={wt.id}
-                      leading={wt.icon ? <SessionEmoji emoji={wt.icon} /> : undefined}
-                      icon={wt.icon ? undefined : 'dumbbell'}
-                      label={wt.name}
-                      chevron
-                      onClick={() => startFromWorkout(wt.id)}
-                    />
-                  ))}
-                </>
-              )}
-
-              {filteredPersoWorkouts.length === 0 && filteredTemplateWorkouts.length === 0 && allWorkouts.length > 0 && (
-                <p className="t-caption" style={{ padding: '16px 20px', color: 'var(--muted)', textAlign: 'center' }}>
+              {/* Séances groupées par programme */}
+              {seanceGroups.length === 0 && allWorkouts.length > 0 && (
+                <p className="t-caption" style={{ padding: '16px 20px', color: 'var(--fg-muted)', textAlign: 'center' }}>
                   Aucune séance dans cette catégorie
                 </p>
               )}
+              {seanceGroups.map((group) => (
+                <div key={group.programId}>
+                  {/* Header groupe */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '14px 20px 6px',
+                  }}>
+                    <div style={{ width: 10, height: 1, background: 'var(--border)', flexShrink: 0 }} />
+                    <span style={{
+                      fontSize: 'var(--fs-caption)', fontWeight: 700,
+                      color: 'var(--fg-muted)', textTransform: 'uppercase',
+                      letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0,
+                    }}>
+                      {group.label}
+                    </span>
+                    {group.isActive && <Pill variant="accent">ACTIF</Pill>}
+                    {group.isTemplate && !group.isLibre && (
+                      <span style={{ fontSize: 10, color: 'var(--fg-muted)', opacity: 0.65, fontWeight: 500, flexShrink: 0 }}>
+                        template
+                      </span>
+                    )}
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--fg-muted)', opacity: 0.65, flexShrink: 0 }}>
+                      {group.workouts.length}
+                    </span>
+                  </div>
+                  {/* Lignes séances */}
+                  {group.workouts.map((wt) => (
+                    <Row
+                      key={wt.id}
+                      leading={wt.icon ? <SessionEmoji emoji={wt.icon} /> : undefined}
+                      icon={wt.icon ? undefined : 'dumbbell'}
+                      label={wt.name}
+                      sub={wt.type !== 'custom' ? wt.type.charAt(0).toUpperCase() + wt.type.slice(1) : undefined}
+                      chevron
+                      onClick={() => startFromWorkout(wt.id)}
+                    />
+                  ))}
+                </div>
+              ))}
 
               {/* Nouvelle séance */}
               <p className="t-eyebrow" style={{ padding: '12px 20px 4px' }}>NOUVELLE SÉANCE</p>
