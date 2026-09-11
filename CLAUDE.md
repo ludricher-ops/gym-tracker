@@ -68,6 +68,8 @@ Pas de routeur : navigation maison typée dans `src/nav/`.
 - Rotation superset : `nextSupersetIndex` (`src/utils/superset.ts`) — fonction pure testée.
 - Repos 0 s : le timer ne démarre pas si `restSec === 0`.
 
+**Pré-remplissage des séries** (`src/utils/sessionOps.ts` → `prefill()`) : les reps affichées au démarrage d'une série viennent de `template.targetRepsMin` (cible du template), **pas** de la dernière série — celle-ci sert uniquement au calcul du poids (progression auto). La valeur est bridée à 60 max pour se protéger des valeurs corrompues.
+
 ## Planning de programme
 
 `src/utils/programSchedule.ts` — logique pure testée dans `tests/programSchedule.test.ts` :
@@ -86,6 +88,27 @@ Tokens typographiques : `--fs-display` (30px), `--fs-title` (23px), `--fs-body` 
 Tokens de couleur spéciaux : `--overlay-dim`, `--overlay-dark`, `--toggle-thumb`, `--danger-ink`.
 
 Classes de texte : `.t-display`, `.t-title`, `.t-body`, `.t-caption`, `.t-eyebrow`, `.t-num` (mono).
+
+## Types de données et écriture
+
+`src/types.ts` — tous les types partagent `Syncable` (`updatedAt`, `deleted`, `dirty`).
+
+**`NewRecord<T>`** = `Omit<T, 'updatedAt' | 'deleted' | 'dirty'>` — ne jamais passer ces 3 champs à `repo.save()` ; le repo les stampe automatiquement. `save()` accepte `NewRecord<T>` (création) ou `T` complet (mise à jour).
+
+**`DraftWE`** (`src/components/programBuilder/programDraft.ts`) — représentation in-memory d'un `WorkoutExerciseTemplate` dans SeanceBuilder / ProgramBuilder. Toujours utiliser `defaultWE(exerciseId, trackingType, isAb, isWarmup)` pour créer un exercice par défaut.
+
+## Sentinel `__libre__`
+
+Les séances créées sans programme sont rattachées à un programme-conteneur fictif `name === '__libre__'`. Ce programme n'est jamais affiché dans les listes de programmes (`p.name !== '__libre__'`). Son label UI est "Mes séances". Le créer si absent avant de sauvegarder un template séance.
+
+## Admin et propagation des exercices
+
+`ADMIN_USER_ID = 1` dans `src/server/syncRoutes.js`. L'utilisateur admin est identifié via `store.isAdmin` (côté client, depuis `localStorage`).
+
+- Les exercices seed (`src/data/exercises-seed.json`) sont insérés côté serveur au démarrage pour le compte admin, puis propagés à tous les autres users via un `INSERT … ON CONFLICT DO UPDATE`.
+- `src/data/program-templates.ts` contient les séances et programmes templates admin.
+- **Patcher des données admin existantes** : ajouter un bloc nommé `BUG-IMG-N` dans le bloc startup de `syncRoutes.js`, **avant** la propagation finale. Utiliser `data || $1::jsonb` pour un merge, `data - 'field'` pour supprimer un champ. La propagation du bloc final pousse automatiquement les corrections à tous les users.
+- Ne jamais modifier `exercises-seed.json` seul : mettre à jour aussi `syncRoutes.js` pour les utilisateurs existants.
 
 ## TypeScript — règles actives
 
