@@ -45,17 +45,24 @@ function prefill(
     return { weightKg: 0, reps: last?.reps ?? template.targetDurationSec ?? 30 }
   }
 
+  // Limiter targetRepsMin à 60 max pour les exercices poids/reps — protection contre les
+  // valeurs aberrantes (données corrompues, ancienne synchro sans limite de Stepper).
+  // Au-delà de 60 reps, on retombe sur la série précédente ou 12 par défaut.
+  const safeReps = template.targetRepsMin <= 60
+    ? template.targetRepsMin
+    : (last?.reps ?? 12)
+
   if (last) {
     return {
       weightKg: nextTargetWeight(last.weightKg, last.reps, template),
-      reps: template.targetRepsMin,
+      reps: safeReps,
     }
   }
   const levelWeights: Record<string, number> = { beginner: 10, intermediate: 15, advanced: 20 }
   const activeProgram = store.programs.find((p) => p.isActive)
   const levelWeight = levelWeights[activeProgram?.level ?? 'intermediate'] ?? 15
   const useBar = store.settings.preferences.autoBarbellWeight && exercise?.equipment === 'barbell'
-  return { weightKg: useBar ? BARBELL_WEIGHT : levelWeight, reps: template.targetRepsMin }
+  return { weightKg: useBar ? BARBELL_WEIGHT : levelWeight, reps: safeReps }
 }
 
 /** Semaine en cours du programme actif (1-indexée, bornée par la durée). */
