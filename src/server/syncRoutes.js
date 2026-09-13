@@ -8,20 +8,20 @@
 // La propagation a lieu à chaque push admin et au démarrage du serveur.
 
 /** Stores autorisés (doit refléter SyncStoreName côté client). */
-const ALLOWED_STORES = new Set([
+export const ALLOWED_STORES = new Set([
   'settings', 'exercises', 'programs', 'workoutTemplates',
   'workoutExerciseTemplates', 'sessions', 'sessionExercises',
   'sets', 'personalRecords', 'goals', 'bodyMeasurements', 'blobs',
 ])
 
-const PULL_LIMIT = 1000
-const MAX_PUSH_BATCH = 500
+export const PULL_LIMIT = 1000
+export const MAX_PUSH_BATCH = 500
 
 /**
  * Champs non-nullables requis par store (au-delà de id + updatedAt déjà vérifiés).
  * Validation légère — détecte les corruptions les plus fréquentes sans zod/joi.
  */
-const STORE_REQUIRED_FIELDS = {
+export const STORE_REQUIRED_FIELDS = {
   exercises:                ['name', 'primaryMuscle', 'equipment'],
   programs:                 ['name', 'goal', 'level'],
   workoutTemplates:         ['name', 'programId'],
@@ -40,12 +40,59 @@ const STORE_REQUIRED_FIELDS = {
  * Valide les champs obligatoires d'un record selon son store.
  * Lève une Error si un champ est absent ou vide — interrompra la transaction.
  */
-function validateStoreRecord(storeName, record) {
+export function validateStoreRecord(storeName, record) {
   const required = STORE_REQUIRED_FIELDS[storeName] ?? []
   for (const field of required) {
     if (record[field] == null || record[field] === '')
       throw new Error(`${storeName}: champ requis absent: ${field}`)
   }
+}
+
+/**
+ * Valide un batch de changes push, lève une Error à la première anomalie.
+ * Logique extraite du handler POST /api/sync/push — testable sans base de données.
+ *
+ * @param {Array<{store: string, record: unknown}>} changes
+ */
+export function validatePushBatch(changes) {
+  if (!Array.isArray(changes)) throw new Error('changes[] requis')
+  if (changes.length > MAX_PUSH_BATCH)
+    throw new Error(`Trop d'entrées (max ${MAX_PUSH_BATCH})`)
+  for (const change of changes) {
+    const { store, record } = change ?? {}
+    if (!ALLOWED_STORES.has(store)) throw new Error(`store invalide: ${store}`)
+    if (!record || typeof record.id !== 'string' || record.id.length === 0)
+      throw new Error('record.id manquant ou vide')
+    if (typeof record.updatedAt !== 'number' || record.updatedAt <= 0)
+      throw new Error('record.updatedAt invalide')
+    validateStoreRecord(store, record)
+  }
+}
+
+/**
+ * Fusionne (LWW) des listes de records serveur en dédupliquant par (store, id).
+ * Les records avec le updatedAt le plus élevé gagnent.
+ * Ordre de priorité : templateRows, sharedBlobRows, puis ownRows (ownRows domine à égalité).
+ *
+ * @param {Array<{store:string,id:string,data:object,updated_at:number|string,server_seq:number|string}>} templateRows
+ * @param {Array<{store:string,id:string,data:object,updated_at:number|string,server_seq:number|string}>} sharedBlobRows
+ * @param {Array<{store:string,id:string,data:object,updated_at:number|string,server_seq:number|string}>} ownRows
+ * @returns {Array<{store:string,record:object,serverSeq:number}>}
+ */
+export function mergePullRows(templateRows, sharedBlobRows, ownRows) {
+  const seen = new Map()
+  for (const r of templateRows)   seen.set(`${r.store}:${r.id}`, r)
+  for (const r of sharedBlobRows) seen.set(`${r.store}:${r.id}`, r)
+  for (const r of ownRows) {
+    const key = `${r.store}:${r.id}`
+    const prev = seen.get(key)
+    if (!prev || Number(r.updated_at) >= Number(prev.updated_at)) seen.set(key, r)
+  }
+  return [...seen.values()].map((r) => ({
+    store: r.store,
+    record: r.data,
+    serverSeq: Number(r.server_seq),
+  }))
 }
 
 /** user_id de l'administrateur — seul à pouvoir créer/modifier exercices et templates. */
@@ -112,11 +159,36 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     return
   }
 
-  // Migration exercices : insère dans le compte admin les exercices KB, band et
-  // bodyweight manquants (IDs introduits en sept. 2026). Idempotente — ON CONFLICT
-  // DO NOTHING garantit qu'elle ne touche pas aux exercices déjà personnalisés.
-  // Doit s'exécuter AVANT la propagation pour que les nouveaux IDs soient inclus.
+  // Startup : migrations one-shot + propagation admin.
+  // La table schema_migrations évite de rejouer les patches à chaque redémarrage.
+  // Les blocs NEW_EXERCISES et la propagation finale restent toujours actifs
+  // (idempotents par nature : ON CONFLICT DO NOTHING / LWW).
   ;(async () => {
+    // ── Table de suivi des migrations ────────────────────────────────────────
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id         TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `)
+
+    /**
+     * Exécute fn() une seule fois pour l'identifiant donné.
+     * Les appels suivants sont silencieusement ignorés (ON CONFLICT DO NOTHING).
+     */
+    async function runMigration(id, fn) {
+      const { rowCount } = await pool.query(
+        `INSERT INTO schema_migrations (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+        [id],
+      )
+      if (rowCount === 0) return   // déjà appliquée
+      console.log(`[migration] ${id}…`)
+      await fn()
+      console.log(`[migration] ${id} ✓`)
+    }
+
+    // ── Insertion des exercices manquants (sept. 2026) ───────────────────────
+    // Toujours actif — ON CONFLICT DO NOTHING = idempotent nativement.
     // gif: URL externe fitnessprogramer.com — absent = pas d'image (placeholder dans l'app)
     const NEW_EXERCISES = [
       { id: 'kb-swing',              name: 'Kettlebell swing',                    primaryMuscle: 'glutes',        secondaryMuscles: ['hamstrings','back_thickness'], equipment: 'kettlebell', category: 'compound',  trackingType: 'weight_reps', popularity: 3, gif: 'https://fitnessprogramer.com/wp-content/uploads/2021/09/Kettlebell-Swings.gif' },
@@ -170,160 +242,174 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     if (inserted > 0)
       console.log(`[startup] ${inserted} nouvel(aux) exercice(s) ajouté(s) au compte admin`)
 
-    // Patch popularités & données correctives (analyse coach oct. 2026).
-    // DO UPDATE ciblé uniquement si les données sont encore dans leur état d'origine.
-    const POPULARITY_PATCHES = [
-      { id: 'seed-bench-barbell',        data: { popularity: 8 } },
-      { id: 'seed-squat-barbell',        data: { popularity: 8 } },
-      { id: 'seed-row-barbell',          data: { popularity: 7 } },
-      { id: 'seed-hip-thrust',           data: { popularity: 4 } },
-      { id: 'seed-incline-bench-barbell',data: { popularity: 4 } },
-      { id: 'bw-wall-sit',               data: { popularity: 0 } },
-      { id: 'seed-elliptical',           data: { isWarmupExercise: false } },
-      { id: 'seed-bodyweight-squat',     data: { name: 'Squat mobilité' } },
-      // P34 fix : seed-pullover reclassifié compound → isolation pour exclure du slot compound pull[0]
-      { id: 'seed-pullover',             data: { category: 'isolation' } },
-    ]
-    for (const p of POPULARITY_PATCHES) {
+    // ── Patches one-shot (via runMigration) ──────────────────────────────────
+
+    await runMigration('popularity-patches-oct-2026', async () => {
+      // Popularités & données correctives (analyse coach oct. 2026).
+      const POPULARITY_PATCHES = [
+        { id: 'seed-bench-barbell',        data: { popularity: 8 } },
+        { id: 'seed-squat-barbell',        data: { popularity: 8 } },
+        { id: 'seed-row-barbell',          data: { popularity: 7 } },
+        { id: 'seed-hip-thrust',           data: { popularity: 4 } },
+        { id: 'seed-incline-bench-barbell',data: { popularity: 4 } },
+        { id: 'bw-wall-sit',               data: { popularity: 0 } },
+        { id: 'seed-elliptical',           data: { isWarmupExercise: false } },
+        { id: 'seed-bodyweight-squat',     data: { name: 'Squat mobilité' } },
+        // P34 fix : seed-pullover reclassifié compound → isolation pour exclure du slot compound pull[0]
+        { id: 'seed-pullover',             data: { category: 'isolation' } },
+      ]
+      for (const p of POPULARITY_PATCHES) {
+        await pool.query(
+          `UPDATE sync_records
+              SET data = data || $1::jsonb,
+                  updated_at = $2
+            WHERE user_id = $3 AND store = 'exercises' AND id = $4`,
+          [JSON.stringify(p.data), now, ADMIN_USER_ID, p.id],
+        )
+      }
+    })
+
+    await runMigration('bug-c5-hip-adduction-machine', async () => {
+      // Patch seed-hip-adduction-machine : primaryMuscle corrigé de 'glutes' → 'hamstrings'
+      // (BUG-C5 fix : la machine adducteurs cible les adducteurs / inner thigh, pas les fessiers).
+      // Le patch s'applique aussi aux users existants dont la donnée est déjà en base.
       await pool.query(
         `UPDATE sync_records
             SET data = data || $1::jsonb,
                 updated_at = $2
-          WHERE user_id = $3 AND store = 'exercises' AND id = $4`,
-        [JSON.stringify(p.data), now, ADMIN_USER_ID, p.id],
+          WHERE store = 'exercises' AND id = 'seed-hip-adduction-machine'
+            AND (data->>'primaryMuscle' IS NULL OR data->>'primaryMuscle' = 'glutes' OR data->>'category' IS NULL)`,
+        [JSON.stringify({ primaryMuscle: 'hamstrings', category: 'isolation', popularity: 2 }), now],
       )
-    }
+    })
 
-    // Patch seed-hip-adduction-machine : primaryMuscle corrigé de 'glutes' → 'hamstrings'
-    // (BUG-C5 fix : la machine adducteurs cible les adducteurs / inner thigh, pas les fessiers).
-    // Le patch s'applique aussi aux users existants dont la donnée est déjà en base.
-    await pool.query(
-      `UPDATE sync_records
-          SET data = data || $1::jsonb,
-              updated_at = $2
-        WHERE user_id = $3 AND store = 'exercises' AND id = 'seed-hip-adduction-machine'
-          AND (data->>'primaryMuscle' IS NULL OR data->>'primaryMuscle' = 'glutes' OR data->>'category' IS NULL)`,
-      [JSON.stringify({ primaryMuscle: 'hamstrings', category: 'isolation', popularity: 2 }), now, ADMIN_USER_ID],
-    )
-
-    // Patch images incorrectes : exercices bodyweight avec GIF barre (BUG-IMG-BW).
-    // bw-squat : barbell-full-squat.gif → frankenstein-squat.gif (squat poids du corps)
-    // seed-good-morning-bw : barbell-good-morning.gif → suppression (aucun GIF BW disponible)
-    const BW_IMG_FIX_URL = 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/frankenstein-squat.gif'
-    await pool.query(
-      `UPDATE sync_records
-          SET data = data || $1::jsonb,
-              updated_at = $2
-        WHERE store = 'exercises' AND id = 'bw-squat'
-          AND data->'media'->>'url' LIKE '%barbell%'`,
-      [JSON.stringify({ media: { url: BW_IMG_FIX_URL, mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
-    )
-    await pool.query(
-      `UPDATE sync_records
-          SET data = data - 'media',
-              updated_at = $1
-        WHERE store = 'exercises' AND id = 'seed-good-morning-bw'
-          AND data->'media'->>'url' LIKE '%barbell%'`,
-      [now],
-    )
-    // Patch images incorrectes (BUG-IMG-2) :
-    // seed-vertical-leg-crunch : lever machine → jackknife-sit-up (bodyweight le plus proche)
-    // band-good-morning : barbell → GIF élastique fitnessprogramer
-    // dumbbell-rdl : barbell → dumbbell-stiff-leg-deadlift
-    const IMG_PATCHES = [
-      {
-        id: 'seed-vertical-leg-crunch',
-        media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/jackknife-sit-up.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
-        cond: '%lever%',
-      },
-      {
-        id: 'band-good-morning',
-        media: { url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
-        cond: '%barbell%',
-      },
-      {
-        id: 'dumbbell-rdl',
-        media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/dumbbell-stiff-leg-deadlift.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
-        cond: '%barbell%',
-      },
-    ]
-    for (const p of IMG_PATCHES) {
+    await runMigration('bug-img-bw', async () => {
+      // Patch images incorrectes : exercices bodyweight avec GIF barre (BUG-IMG-BW).
+      // bw-squat : barbell-full-squat.gif → frankenstein-squat.gif (squat poids du corps)
+      // seed-good-morning-bw : barbell-good-morning.gif → suppression (aucun GIF BW disponible)
+      const BW_IMG_FIX_URL = 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/frankenstein-squat.gif'
       await pool.query(
         `UPDATE sync_records
             SET data = data || $1::jsonb,
                 updated_at = $2
-          WHERE store = 'exercises' AND id = $3
-            AND (data->'media'->>'url' LIKE $4 OR data->>'media' IS NULL)`,
-        [JSON.stringify({ media: p.media }), now, p.id, p.cond],
+          WHERE store = 'exercises' AND id = 'bw-squat'
+            AND data->'media'->>'url' LIKE '%barbell%'`,
+        [JSON.stringify({ media: { url: BW_IMG_FIX_URL, mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
       )
-    }
-
-    // Patch images incorrectes (BUG-IMG-3) : GIFs d'exercices totalement différents de l'exercice.
-    // Solution : supprimer le champ media (mieux que montrer un GIF faux).
-    // seed-hip-thrust-bw : glute-bridge-march → low-glute-bridge-on-floor (le plus proche dispo)
-    const IMG_REMOVE_PATCHES = [
-      { id: 'seed-cat-cow',            cond: '%upper-back-stretch%' },
-      { id: 'seed-bird-dog',           cond: '%dead-bug%' },
-      { id: 'seed-shoulder-circles',   cond: '%rear-deltoid-stretch%' },
-      { id: 'seed-scissors',           cond: '%twisted-leg-raise%' },
-      { id: 'seed-fire-hydrant',       cond: '%band-lying-hip-internal-rotation%' },
-      { id: 'seed-clamshell',          cond: '%band-lying-hip-internal-rotation%' },
-      { id: 'bw-hollow-body',          cond: '%hanging-pike%' },
-      { id: 'seed-leg-swings',         cond: '%monster-walk%' },
-      { id: 'seed-rowing-erg',         cond: '%run-equipment%' },
-      { id: 'seed-superman',           cond: '%reverse-hyper-on-flat-bench%' },
-      { id: 'bw-wall-sit',             cond: '%squat-to-overhead-reach%' },
-      { id: 'band-face-pull',          cond: '%band-reverse-fly%' },
-      { id: 'seed-hip-thrust-machine', cond: '%lever-horizontal-one-leg-press%' },
-    ]
-    for (const p of IMG_REMOVE_PATCHES) {
       await pool.query(
         `UPDATE sync_records
             SET data = data - 'media',
                 updated_at = $1
-          WHERE store = 'exercises' AND id = $2
-            AND data->'media'->>'url' LIKE $3`,
-        [now, p.id, p.cond],
+          WHERE store = 'exercises' AND id = 'seed-good-morning-bw'
+            AND data->'media'->>'url' LIKE '%barbell%'`,
+        [now],
       )
-    }
-    // seed-hip-thrust-bw : glute-bridge-march (faux) → low-glute-bridge-on-floor (le plus proche)
-    await pool.query(
-      `UPDATE sync_records
-          SET data = data || $1::jsonb,
-              updated_at = $2
-        WHERE store = 'exercises' AND id = 'seed-hip-thrust-bw'
-          AND data->'media'->>'url' LIKE '%glute-bridge-march%'`,
-      [JSON.stringify({ media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/low-glute-bridge-on-floor.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
-    )
+    })
 
-    // Patch images incorrectes (BUG-IMG-4) : ajout des GIFs fitnessprogramer.com pour les exercices
-    // dont le media avait été supprimé (BUG-IMG-3) faute de GIF correct dans JahelCuadrado.
-    const FP_IMG_PATCHES = [
-      { id: 'seed-cat-cow',            url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/cat-cow.gif',                     mime: 'image/gif' },
-      { id: 'seed-bird-dog',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Bird-Dog.gif',                    mime: 'image/gif' },
-      { id: 'seed-shoulder-circles',   url: 'https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif',       mime: 'image/gif' },
-      { id: 'seed-scissors',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/12/Leg-Scissors.gif',                mime: 'image/gif' },
-      { id: 'seed-fire-hydrant',       url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Fire-Hydrant.gif',                mime: 'image/gif' },
-      { id: 'seed-clamshell',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/05/Side-Lying-Clam.gif',             mime: 'image/gif' },
-      { id: 'bw-hollow-body',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HollowHold.png',                  mime: 'image/png' },
-      { id: 'seed-leg-swings',         url: 'https://fitnessprogramer.com/wp-content/uploads/2025/07/Leg-Swings-Front-to-Back.gif',    mime: 'image/gif' },
-      { id: 'seed-rowing-erg',         url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Rowing-Machine.gif',              mime: 'image/gif' },
-      { id: 'seed-superman',           url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Superman-exercise.gif',           mime: 'image/gif' },
-      { id: 'bw-wall-sit',             url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png',                    mime: 'image/png' },
-      { id: 'band-face-pull',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif',                   mime: 'image/gif' },
-      { id: 'seed-hip-thrust-machine', url: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Hip-Thrust-Machine.gif',          mime: 'image/gif' },
-    ]
-    for (const p of FP_IMG_PATCHES) {
-      const isGif = p.mime === 'image/gif'
+    await runMigration('bug-img-2', async () => {
+      // Patch images incorrectes (BUG-IMG-2) :
+      // seed-vertical-leg-crunch : lever machine → jackknife-sit-up (bodyweight le plus proche)
+      // band-good-morning : barbell → GIF élastique fitnessprogramer
+      // dumbbell-rdl : barbell → dumbbell-stiff-leg-deadlift
+      const IMG_PATCHES = [
+        {
+          id: 'seed-vertical-leg-crunch',
+          media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abs/jackknife-sit-up.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+          cond: '%lever%',
+        },
+        {
+          id: 'band-good-morning',
+          media: { url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+          cond: '%barbell%',
+        },
+        {
+          id: 'dumbbell-rdl',
+          media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/dumbbell-stiff-leg-deadlift.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 },
+          cond: '%barbell%',
+        },
+      ]
+      for (const p of IMG_PATCHES) {
+        await pool.query(
+          `UPDATE sync_records
+              SET data = data || $1::jsonb,
+                  updated_at = $2
+            WHERE store = 'exercises' AND id = $3
+              AND (data->'media'->>'url' LIKE $4 OR data->>'media' IS NULL)`,
+          [JSON.stringify({ media: p.media }), now, p.id, p.cond],
+        )
+      }
+    })
+
+    await runMigration('bug-img-3', async () => {
+      // Patch images incorrectes (BUG-IMG-3) : GIFs d'exercices totalement différents de l'exercice.
+      // Solution : supprimer le champ media (mieux que montrer un GIF faux).
+      // seed-hip-thrust-bw : glute-bridge-march → low-glute-bridge-on-floor (le plus proche dispo)
+      const IMG_REMOVE_PATCHES = [
+        { id: 'seed-cat-cow',            cond: '%upper-back-stretch%' },
+        { id: 'seed-bird-dog',           cond: '%dead-bug%' },
+        { id: 'seed-shoulder-circles',   cond: '%rear-deltoid-stretch%' },
+        { id: 'seed-scissors',           cond: '%twisted-leg-raise%' },
+        { id: 'seed-fire-hydrant',       cond: '%band-lying-hip-internal-rotation%' },
+        { id: 'seed-clamshell',          cond: '%band-lying-hip-internal-rotation%' },
+        { id: 'bw-hollow-body',          cond: '%hanging-pike%' },
+        { id: 'seed-leg-swings',         cond: '%monster-walk%' },
+        { id: 'seed-rowing-erg',         cond: '%run-equipment%' },
+        { id: 'seed-superman',           cond: '%reverse-hyper-on-flat-bench%' },
+        { id: 'bw-wall-sit',             cond: '%squat-to-overhead-reach%' },
+        { id: 'band-face-pull',          cond: '%band-reverse-fly%' },
+        { id: 'seed-hip-thrust-machine', cond: '%lever-horizontal-one-leg-press%' },
+      ]
+      for (const p of IMG_REMOVE_PATCHES) {
+        await pool.query(
+          `UPDATE sync_records
+              SET data = data - 'media',
+                  updated_at = $1
+            WHERE store = 'exercises' AND id = $2
+              AND data->'media'->>'url' LIKE $3`,
+          [now, p.id, p.cond],
+        )
+      }
+      // seed-hip-thrust-bw : glute-bridge-march (faux) → low-glute-bridge-on-floor (le plus proche)
       await pool.query(
         `UPDATE sync_records
             SET data = data || $1::jsonb,
                 updated_at = $2
-          WHERE store = 'exercises' AND id = $3
-            AND data->>'media' IS NULL`,
-        [JSON.stringify({ media: { url: p.url, mime: p.mime, type: isGif ? 'gif' : 'photo', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now, p.id],
+          WHERE store = 'exercises' AND id = 'seed-hip-thrust-bw'
+            AND data->'media'->>'url' LIKE '%glute-bridge-march%'`,
+        [JSON.stringify({ media: { url: 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/low-glute-bridge-on-floor.gif', mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now],
       )
-    }
+    })
+
+    await runMigration('bug-img-4', async () => {
+      // Patch images incorrectes (BUG-IMG-4) : ajout des GIFs fitnessprogramer.com pour les exercices
+      // dont le media avait été supprimé (BUG-IMG-3) faute de GIF correct dans JahelCuadrado.
+      const FP_IMG_PATCHES = [
+        { id: 'seed-cat-cow',            url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/cat-cow.gif',                     mime: 'image/gif' },
+        { id: 'seed-bird-dog',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Bird-Dog.gif',                    mime: 'image/gif' },
+        { id: 'seed-shoulder-circles',   url: 'https://fitnessprogramer.com/wp-content/uploads/2021/07/Arm-Circles_Shoulders.gif',       mime: 'image/gif' },
+        { id: 'seed-scissors',           url: 'https://fitnessprogramer.com/wp-content/uploads/2022/12/Leg-Scissors.gif',                mime: 'image/gif' },
+        { id: 'seed-fire-hydrant',       url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Fire-Hydrant.gif',                mime: 'image/gif' },
+        { id: 'seed-clamshell',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/05/Side-Lying-Clam.gif',             mime: 'image/gif' },
+        { id: 'bw-hollow-body',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HollowHold.png',                  mime: 'image/png' },
+        { id: 'seed-leg-swings',         url: 'https://fitnessprogramer.com/wp-content/uploads/2025/07/Leg-Swings-Front-to-Back.gif',    mime: 'image/gif' },
+        { id: 'seed-rowing-erg',         url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Rowing-Machine.gif',              mime: 'image/gif' },
+        { id: 'seed-superman',           url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Superman-exercise.gif',           mime: 'image/gif' },
+        { id: 'bw-wall-sit',             url: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Sit.png',                    mime: 'image/png' },
+        { id: 'band-face-pull',          url: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif',                   mime: 'image/gif' },
+        { id: 'seed-hip-thrust-machine', url: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Hip-Thrust-Machine.gif',          mime: 'image/gif' },
+      ]
+      for (const p of FP_IMG_PATCHES) {
+        const isGif = p.mime === 'image/gif'
+        await pool.query(
+          `UPDATE sync_records
+              SET data = data || $1::jsonb,
+                  updated_at = $2
+            WHERE store = 'exercises' AND id = $3
+              AND data->>'media' IS NULL`,
+          [JSON.stringify({ media: { url: p.url, mime: p.mime, type: isGif ? 'gif' : 'photo', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now, p.id],
+        )
+      }
+    })
 
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
