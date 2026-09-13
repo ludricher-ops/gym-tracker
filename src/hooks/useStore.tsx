@@ -78,6 +78,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [ready, setReady] = useState(false)
   const [isAdmin, setIsAdmin] = useState(() => getIsAdmin())
+  const [initError, setInitError] = useState<string | null>(null)
 
   const loadAll = useCallback(async () => {
     const [
@@ -103,9 +104,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      await ensureSeed()
-      await loadAll()
-      if (!cancelled) setReady(true)
+      try {
+        await ensureSeed()
+        await loadAll()
+        if (!cancelled) setReady(true)
+      } catch (err) {
+        if (!cancelled)
+          setInitError(err instanceof Error ? err.message : 'Erreur initialisation IndexedDB')
+      }
     })()
     return () => {
       cancelled = true
@@ -168,6 +174,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ...actions,
     }
   }, [ready, isAdmin, settings, saveSettings, loadAll, cols, actions])
+
+  if (initError) {
+    return (
+      <div className="gt-screen">
+        <div className="gt-screen__scroll" style={{ padding: '24px 16px' }}>
+          <p className="t-title" style={{ marginBottom: 8 }}>Erreur de démarrage</p>
+          <p className="t-body" style={{ color: 'var(--fg-muted)', marginBottom: 16 }}>
+            Impossible d'accéder à la base de données locale (IndexedDB).
+          </p>
+          <p className="t-caption" style={{ color: 'var(--danger-ink)' }}>{initError}</p>
+          <button
+            className="gt-btn gt-btn--primary"
+            style={{ marginTop: 24 }}
+            onClick={() => window.location.reload()}
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (!api) {
     return (

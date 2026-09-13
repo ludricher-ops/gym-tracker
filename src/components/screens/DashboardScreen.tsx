@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from 'react'
 import { useStore } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import {
-  startSessionFromTemplate, recoverableSession,
+  startSessionFromTemplate, recoverableSession, programWeekNumber,
 } from '../../utils/sessionOps'
 import { computeStreak } from '../../utils/streak'
 import { statsForWeek, statsForPreviousWeek, weekDeltas } from '../../utils/stats'
@@ -106,7 +106,7 @@ export function DashboardScreen() {
   /** Numéro de semaine actuel dans le programme (1-based). null si pas de startedAt. */
   const currentWeekNumber = useMemo(() => {
     if (!activeProgram?.startedAt) return null
-    return Math.max(1, Math.ceil((Date.now() - activeProgram.startedAt) / (7 * 24 * 60 * 60 * 1000)))
+    return programWeekNumber(activeProgram.startedAt, activeProgram.durationWeeks)
   }, [activeProgram?.startedAt])
 
   const currentPhase = useMemo((): DraftPhase | null => {

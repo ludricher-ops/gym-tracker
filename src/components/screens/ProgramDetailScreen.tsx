@@ -11,6 +11,7 @@ import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 import type { DraftPhase } from '../programBuilder/programDraft'
 import type { WorkoutTemplate } from '../../types'
 import { buildPhases, phaseAtLeast } from '../../utils/programGenerator'
+import { programWeekNumber } from '../../utils/sessionOps'
 import type { PhaseKey } from '../../utils/programGenerator'
 
 const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
@@ -69,7 +70,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
   // Semaine courante (null si le programme n'a pas encore démarré)
   const currentWeekNumber = useMemo(() => {
     if (!program?.startedAt) return null
-    return Math.max(1, Math.ceil((Date.now() - program.startedAt) / (7 * 24 * 60 * 60 * 1000)))
+    return programWeekNumber(program.startedAt, program.durationWeeks)
   }, [program?.startedAt])
 
   // Phase en cours selon la semaine courante

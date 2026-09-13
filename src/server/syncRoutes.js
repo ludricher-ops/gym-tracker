@@ -40,24 +40,31 @@ async function propagateAdminChanges(pool, changes) {
   if (otherUsers.length === 0) return
   const otherIds = otherUsers.map((r) => r.user_id)
 
-  for (const { record } of toPropagate) {
-    // On conserve le vrai updatedAt pour que le LWW côté client (updatedAt > 1)
-    // puisse écraser le seed local (updatedAt = 1).
-    const propagated = { ...record, dirty: true }
-    const propagatedJson = JSON.stringify(propagated)
-    for (const uid of otherIds) {
-      await pool.query(
-        `INSERT INTO sync_records (user_id, store, id, data, updated_at)
-         VALUES ($1, 'exercises', $2, $3::jsonb, $4)
-         ON CONFLICT (user_id, store, id) DO UPDATE
-           SET data       = EXCLUDED.data,
-               updated_at = EXCLUDED.updated_at,
-               server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
-         WHERE sync_records.updated_at < EXCLUDED.updated_at`,
-        [uid, record.id, propagatedJson, record.updatedAt],
-      )
+  // Batch INSERT avec UNNEST : une seule requête pour N exercices × M users
+  // au lieu de N×M requêtes séquentielles.
+  const userIds = []
+  const exIds = []
+  const dataJsons = []
+  const updatedAts = []
+  for (const uid of otherIds) {
+    for (const { record } of toPropagate) {
+      userIds.push(uid)
+      exIds.push(record.id)
+      dataJsons.push(JSON.stringify({ ...record, dirty: true }))
+      updatedAts.push(record.updatedAt)
     }
   }
+
+  await pool.query(
+    `INSERT INTO sync_records (user_id, store, id, data, updated_at)
+     SELECT unnest($1::int[]), 'exercises', unnest($2::text[]), unnest($3::jsonb[]), unnest($4::bigint[])
+     ON CONFLICT (user_id, store, id) DO UPDATE
+       SET data       = EXCLUDED.data,
+           updated_at = EXCLUDED.updated_at,
+           server_seq = nextval(pg_get_serial_sequence('sync_records', 'server_seq'))
+     WHERE sync_records.updated_at < EXCLUDED.updated_at`,
+    [userIds, exIds, dataJsons, updatedAts],
+  )
 
   console.log(
     `[admin-propagation] ${toPropagate.length} exercice(s) → ${otherIds.length} user(s)`,
@@ -329,8 +336,10 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       for (const change of changes) {
         const { store, record } = change ?? {}
         if (!ALLOWED_STORES.has(store)) throw new Error(`store invalide: ${store}`)
-        if (!record || typeof record.id !== 'string') throw new Error('record.id manquant')
-        if (typeof record.updatedAt !== 'number') throw new Error('record.updatedAt manquant')
+        if (!record || typeof record.id !== 'string' || record.id.length === 0)
+          throw new Error('record.id manquant ou vide')
+        if (typeof record.updatedAt !== 'number' || record.updatedAt <= 0)
+          throw new Error('record.updatedAt invalide')
         await client.query(
           `INSERT INTO sync_records (user_id, store, id, data, updated_at)
            VALUES ($1, $2, $3, $4, $5)

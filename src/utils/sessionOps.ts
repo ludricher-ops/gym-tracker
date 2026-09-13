@@ -65,12 +65,28 @@ function prefill(
   return { weightKg: useBar ? BARBELL_WEIGHT : levelWeight, reps: safeReps }
 }
 
+/**
+ * Numéro de semaine dans un programme (1-indexé, borné par durationWeeks).
+ * Utilise Math.floor pour que la semaine 2 commence exactement 7 jours après le début
+ * (Math.ceil donnerait semaine 1 à J+7 exactement).
+ */
+export function programWeekNumber(
+  startedAt: number,
+  durationWeeks: number,
+  now = Date.now(),
+): number {
+  const week = Math.floor(daysBetween(startedAt, now) / 7) + 1
+  return Math.min(Math.max(1, week), durationWeeks)
+}
+
 /** Semaine en cours du programme actif (1-indexée, bornée par la durée). */
 function currentProgramWeek(store: StoreApi): { programId?: string; week?: number } {
   const program = store.programs.find((p) => p.isActive)
   if (!program?.startedAt) return {}
-  const week = Math.floor(daysBetween(program.startedAt, Date.now()) / 7) + 1
-  return { programId: program.id, week: Math.min(Math.max(1, week), program.durationWeeks) }
+  return {
+    programId: program.id,
+    week: programWeekNumber(program.startedAt, program.durationWeeks),
+  }
 }
 
 /**
@@ -83,8 +99,7 @@ export function activePhase(store: StoreApi): DraftPhase | undefined {
   if (!program?.startedAt) return undefined
   const phases = buildPhases(program.durationWeeks, program.goal)
   if (!phases) return undefined
-  const week = Math.floor(daysBetween(program.startedAt, Date.now()) / 7) + 1
-  const currentWeek = Math.min(Math.max(1, week), program.durationWeeks)
+  const currentWeek = programWeekNumber(program.startedAt, program.durationWeeks)
   return phases.find((p) => currentWeek >= p.weekStart && currentWeek <= p.weekEnd)
 }
 
