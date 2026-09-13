@@ -411,6 +411,32 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
       }
     })
 
+    await runMigration('bug-img-5', async () => {
+      // Corrections d'images incorrectes (audit 2026-09-13) :
+      // — seed-reverse-curl-barbell : wrist-curl.gif → reverse-curl.gif (biceps, pas avant-bras)
+      // — seed-cable-hip-abduction  : hip-extension.gif → straight-leg-outer-hip-abductor.gif (abduction ≠ extension)
+      // — bw-nordic-curl            : cable-machine.gif → bench-support.gif (poids du corps, pas de machine)
+      // — seed-cable-hamstring-curl : nordic-style.gif → standing-single-leg-curl.gif (leg curl debout, plus proche)
+      // — seed-good-morning-bw      : pas de média → barbell-good-morning.gif (même mouvement)
+      const BASE = 'https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main'
+      const IMG5_PATCHES = [
+        { id: 'seed-reverse-curl-barbell', url: `${BASE}/biceps/barbell-reverse-curl.gif` },
+        { id: 'seed-cable-hip-abduction',  url: `${BASE}/abductors/straight-leg-outer-hip-abductor.gif` },
+        { id: 'bw-nordic-curl',            url: `${BASE}/hamstrings/inverse-leg-curl-bench-support.gif` },
+        { id: 'seed-cable-hamstring-curl', url: `${BASE}/hamstrings/standing-single-leg-curl.gif` },
+        { id: 'seed-good-morning-bw',      url: `${BASE}/hamstrings/barbell-good-morning.gif` },
+      ]
+      for (const p of IMG5_PATCHES) {
+        await pool.query(
+          `UPDATE sync_records
+              SET data = data || $1::jsonb,
+                  updated_at = $2
+            WHERE store = 'exercises' AND id = $3`,
+          [JSON.stringify({ media: { url: p.url, mime: 'image/gif', type: 'gif', sizeBytes: 0, importedAt: now, aspectRatio: 1 } }), now, p.id],
+        )
+      }
+    })
+
     // Propagation immédiatement après la migration (même bloc, séquentiel).
     // Ainsi les nouveaux IDs sont inclus dès le premier redémarrage.
     await pool.query(

@@ -1146,7 +1146,15 @@
     "category": "compound",
     "trackingType": "reps_only",
     "isWarmupExercise": false,
-    "popularity": 1
+    "popularity": 1,
+    "media": {
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/barbell-good-morning.gif",
+      "mime": "image/gif",
+      "type": "gif",
+      "sizeBytes": 0,
+      "importedAt": 1789295562348,
+      "aspectRatio": 1
+    }
   },
   {
     "id": "seed-hack-squat",
@@ -2826,7 +2834,7 @@
     "isWarmupExercise": false,
     "popularity": 1,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/inverse-leg-curl-on-pull-up-cable-machine.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/inverse-leg-curl-bench-support.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3428,7 +3436,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/forearms/barbell-reverse-wrist-curl.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/biceps/barbell-reverse-curl.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3531,7 +3539,7 @@
     "isWarmupExercise": false,
     "popularity": 3,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/cable-assisted-inverse-leg-curl.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/hamstrings/standing-single-leg-curl.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
@@ -3595,7 +3603,7 @@
     "isWarmupExercise": false,
     "popularity": 2,
     "media": {
-      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/glutes/cable-standing-hip-extension.gif",
+      "url": "https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/abductors/straight-leg-outer-hip-abductor.gif",
       "mime": "image/gif",
       "type": "gif",
       "sizeBytes": 0,
