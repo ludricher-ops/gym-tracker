@@ -17,6 +17,37 @@ const ALLOWED_STORES = new Set([
 const PULL_LIMIT = 1000
 const MAX_PUSH_BATCH = 500
 
+/**
+ * Champs non-nullables requis par store (au-delà de id + updatedAt déjà vérifiés).
+ * Validation légère — détecte les corruptions les plus fréquentes sans zod/joi.
+ */
+const STORE_REQUIRED_FIELDS = {
+  exercises:                ['name', 'primaryMuscle', 'equipment'],
+  programs:                 ['name', 'goal', 'level'],
+  workoutTemplates:         ['name', 'programId'],
+  workoutExerciseTemplates: ['workoutTemplateId', 'exerciseId'],
+  sessions:                 ['startedAt'],
+  sessionExercises:         ['sessionId', 'exerciseId'],
+  sets:                     ['sessionExerciseId'],
+  personalRecords:          ['exerciseId', 'type'],
+  goals:                    [],
+  bodyMeasurements:         [],
+  settings:                 [],
+  blobs:                    [],
+}
+
+/**
+ * Valide les champs obligatoires d'un record selon son store.
+ * Lève une Error si un champ est absent ou vide — interrompra la transaction.
+ */
+function validateStoreRecord(storeName, record) {
+  const required = STORE_REQUIRED_FIELDS[storeName] ?? []
+  for (const field of required) {
+    if (record[field] == null || record[field] === '')
+      throw new Error(`${storeName}: champ requis absent: ${field}`)
+  }
+}
+
 /** user_id de l'administrateur — seul à pouvoir créer/modifier exercices et templates. */
 const ADMIN_USER_ID = 1
 
@@ -340,6 +371,7 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
           throw new Error('record.id manquant ou vide')
         if (typeof record.updatedAt !== 'number' || record.updatedAt <= 0)
           throw new Error('record.updatedAt invalide')
+        validateStoreRecord(store, record)
         await client.query(
           `INSERT INTO sync_records (user_id, store, id, data, updated_at)
            VALUES ($1, $2, $3, $4, $5)
@@ -356,7 +388,10 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
     } catch (err) {
       await client.query('ROLLBACK')
       console.error('sync/push:', err.message)
-      const isValidation = err.message.startsWith('store invalide') || err.message.includes('manquant')
+      const isValidation = err.message.startsWith('store invalide')
+        || err.message.includes('manquant')
+        || err.message.includes('invalide')
+        || err.message.includes('champ requis')
       res.status(400).json({ error: isValidation ? err.message : 'Erreur de synchronisation' })
     } finally {
       client.release()

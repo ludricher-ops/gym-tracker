@@ -22,11 +22,41 @@ const BARBELL_WEIGHT = 20
 /** Reprise proposée si la séance ouverte date de moins de 12 h (cahier 7). */
 export const RESUME_WINDOW_MS = 12 * 3600 * 1000
 
-/** Dernière série de travail validée pour un exercice (toutes séances). */
-export function lastWorkingSet(exerciseId: string, store: StoreApi): SetRecord | null {
-  const seIds = new Set(
+// ── Constantes métier (nommées pour testabilité) ──────────────────────────────
+
+/** Seuil au-delà duquel targetRepsMin est considéré corrompu (données aberrantes). */
+const MAX_REPS_PREFILL = 60
+/** Reps affichées par défaut quand aucun historique et valeur template invalide. */
+const DEFAULT_REPS = 12
+/** Poids initial par niveau d'expérience (sans barre olympique). */
+const LEVEL_START_WEIGHTS: Record<string, number> = {
+  beginner: 10, intermediate: 15, advanced: 20,
+}
+
+// ── Helpers internes ─────────────────────────────────────────────────────────
+
+/**
+ * Ids des SessionExercise liés à un exercice donné (toutes séances).
+ * Évite de copier-coller le pattern Set/filter dans chaque fonction.
+ */
+function seIdsForExercise(store: StoreApi, exerciseId: string): Set<string> {
+  return new Set(
     store.sessionExercises.filter((se) => se.exerciseId === exerciseId).map((se) => se.id),
   )
+}
+
+/**
+ * Ids des SessionExercise appartenant à une séance donnée.
+ */
+function seIdsForSession(store: StoreApi, sessionId: string): Set<string> {
+  return new Set(
+    store.sessionExercises.filter((se) => se.sessionId === sessionId).map((se) => se.id),
+  )
+}
+
+/** Dernière série de travail validée pour un exercice (toutes séances). */
+export function lastWorkingSet(exerciseId: string, store: StoreApi): SetRecord | null {
+  const seIds = seIdsForExercise(store, exerciseId)
   const sets = store.sets
     .filter((s) => seIds.has(s.sessionExerciseId) && s.completedAt != null && !s.isWarmup)
     .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))
@@ -45,12 +75,11 @@ function prefill(
     return { weightKg: 0, reps: last?.reps ?? template.targetDurationSec ?? 30 }
   }
 
-  // Limiter targetRepsMin à 60 max pour les exercices poids/reps — protection contre les
-  // valeurs aberrantes (données corrompues, ancienne synchro sans limite de Stepper).
-  // Au-delà de 60 reps, on retombe sur la série précédente ou 12 par défaut.
-  const safeReps = template.targetRepsMin <= 60
+  // Limiter targetRepsMin à MAX_REPS_PREFILL — protection contre les valeurs aberrantes
+  // (données corrompues, ancienne synchro sans limite de Stepper).
+  const safeReps = template.targetRepsMin <= MAX_REPS_PREFILL
     ? template.targetRepsMin
-    : (last?.reps ?? 12)
+    : (last?.reps ?? DEFAULT_REPS)
 
   if (last) {
     return {
@@ -58,9 +87,8 @@ function prefill(
       reps: safeReps,
     }
   }
-  const levelWeights: Record<string, number> = { beginner: 10, intermediate: 15, advanced: 20 }
   const activeProgram = store.programs.find((p) => p.isActive)
-  const levelWeight = levelWeights[activeProgram?.level ?? 'intermediate'] ?? 15
+  const levelWeight = LEVEL_START_WEIGHTS[activeProgram?.level ?? 'intermediate'] ?? 15
   const useBar = store.settings.preferences.autoBarbellWeight && exercise?.equipment === 'barbell'
   return { weightKg: useBar ? BARBELL_WEIGHT : levelWeight, reps: safeReps }
 }
@@ -261,9 +289,7 @@ export async function validateSet(
   const formula = store.settings.preferences.oneRMFormula
 
   // Historique : séries de travail validées du même exercice, hors celle-ci.
-  const seIds = new Set(
-    store.sessionExercises.filter((se) => se.exerciseId === exerciseId).map((se) => se.id),
-  )
+  const seIds = seIdsForExercise(store, exerciseId)
   const history = store.sets
     .filter(
       (s) =>
@@ -314,9 +340,7 @@ export async function validateSet(
  */
 export async function finalizeSession(session: Session, store: StoreApi): Promise<Session> {
   const now = Date.now()
-  const seIds = new Set(
-    store.sessionExercises.filter((se) => se.sessionId === session.id).map((se) => se.id),
-  )
+  const seIds = seIdsForSession(store, session.id)
   const sets = store.sets.filter((s) => seIds.has(s.sessionExerciseId))
 
   for (const s of sets) {
@@ -343,9 +367,7 @@ export async function finalizeSession(session: Session, store: StoreApi): Promis
  * séries, et records personnels établis sur ces séries.
  */
 export async function deleteSession(session: Session, store: StoreApi): Promise<void> {
-  const seIds = new Set(
-    store.sessionExercises.filter((se) => se.sessionId === session.id).map((se) => se.id),
-  )
+  const seIds = seIdsForSession(store, session.id)
   const sessionSets = store.sets.filter((s) => seIds.has(s.sessionExerciseId))
   const setIds = new Set(sessionSets.map((s) => s.id))
 

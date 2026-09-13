@@ -10,10 +10,16 @@ import { localDayKey, startOfLocalDay } from '../../utils/dates'
 import { formatDuration } from '../../utils/format'
 import { generateSchedule, scheduleCard } from '../../utils/programSchedule'
 import type { ScheduledSession } from '../../utils/programSchedule'
+import {
+  computeProgressCells, groupProgressByWeek, computeSeanceGroups,
+  EST_MIN_PER_SET,
+} from '../../utils/dashboardCompute'
+import type { ProgressCell, SeanceGroup } from '../../utils/dashboardCompute'
 import { buildPhases } from '../../utils/programGenerator'
 import type { DraftPhase } from '../programBuilder/programDraft'
 import { Button, Card, Icon, Pill, Row, SectionHeader, StatTile } from '../ui'
-import type { WorkoutTemplate, WorkoutType } from '../../types'
+import type { WorkoutType } from '../../types'
+import { uuid } from '../../utils/uuid'
 
 const WORKOUT_FILTER: { key: WorkoutType | 'all'; label: string }[] = [
   { key: 'all',      label: 'Tous'      },
@@ -122,19 +128,10 @@ export function DashboardScreen() {
   const startOfToday = startOfLocalDay(now).getTime()
   const todayKey = localDayKey(now)
 
-  const progressCells = useMemo(() => {
-    return schedule.map((s) => {
-      const done =
-        programSessions.some((cs) => cs.programSessionLabel === s.label) ||
-        programSessions.some(
-          (cs) =>
-            cs.workoutTemplateId === s.workoutTemplateId &&
-            localDayKey(cs.startedAt) === localDayKey(s.date),
-        )
-      const ignored = !done && s.date.getTime() < startOfToday && ignoredBefore > 0 && s.date.getTime() < ignoredBefore
-      return { label: s.label, workoutName: s.workoutName, date: s.date, workoutTemplateId: s.workoutTemplateId, done, ignored }
-    })
-  }, [schedule, programSessions, ignoredBefore, startOfToday])
+  const progressCells = useMemo(
+    () => computeProgressCells(schedule, programSessions, startOfToday, ignoredBefore),
+    [schedule, programSessions, startOfToday, ignoredBefore],
+  )
 
   const progressDoneCount = useMemo(
     () => progressCells.filter((c) => c.done).length,
@@ -142,25 +139,18 @@ export function DashboardScreen() {
   )
 
   // Grouper les cellules par semaine (S1, S2…) — label format "S1.01".
-  const progressByWeek = useMemo(() => {
-    const map = new Map<string, typeof progressCells>()
-    for (const cell of progressCells) {
-      const week = cell.label.split('.')[0] ?? cell.label
-      const arr = map.get(week) ?? []
-      arr.push(cell)
-      map.set(week, arr)
-    }
-    return [...map.entries()]
-  }, [progressCells])
+  const progressByWeek = useMemo(
+    () => groupProgressByWeek(progressCells),
+    [progressCells],
+  )
 
-  const [selectedCell, setSelectedCell] = useState<typeof progressCells[0] | null>(null)
+  const [selectedCell, setSelectedCell] = useState<ProgressCell | null>(null)
 
-  const handleCellClick = useCallback((cell: typeof progressCells[0]) => {
+  const handleCellClick = useCallback((cell: ProgressCell) => {
     setSelectedCell((prev) => (prev?.label === cell.label ? null : cell))
   }, [])
 
-
-  const handleRestoreCell = useCallback(async (cell: typeof progressCells[0]) => {
+  const handleRestoreCell = useCallback(async (cell: ProgressCell) => {
     if (!activeProgram) return
     await store.program.save({ ...activeProgram, catchupIgnoredBefore: cell.date.getTime() })
     setSelectedCell(null)
@@ -182,7 +172,7 @@ export function DashboardScreen() {
   }, [card.todaySession, store.workoutExerciseTemplates])
   const scheduledExos = scheduledWets.length
   const scheduledSeries = scheduledWets.reduce((sum, wet) => sum + wet.targetSets, 0)
-  const scheduledDurMin = Math.ceil(scheduledSeries * 3.5)
+  const scheduledDurMin = Math.ceil(scheduledSeries * EST_MIN_PER_SET)
 
 
   const openSession = (id: string) => nav.openModal('session', { sessionId: id })
@@ -211,7 +201,7 @@ export function DashboardScreen() {
   const startNamedFreestyle = async (name: string) => {
     setShowSeancesPicker(false)
     const session = await store.session.save({
-      id: crypto.randomUUID(),
+      id: uuid(),
       name,
       startedAt: Date.now(),
       totalSets: 0,
@@ -226,51 +216,10 @@ export function DashboardScreen() {
     [store.workoutTemplates],
   )
 
-  type SeanceGroup = {
-    programId: string
-    label: string
-    isTemplate: boolean
-    isActive: boolean
-    isLibre: boolean
-    workouts: WorkoutTemplate[]
-  }
-
-  const seanceGroups = useMemo((): SeanceGroup[] => {
-    const visible = seancesTypeFilter === 'all'
-      ? allWorkouts
-      : allWorkouts.filter((w) => w.type === seancesTypeFilter)
-
-    const byProg = new Map<string, WorkoutTemplate[]>()
-    for (const wt of visible) {
-      const arr = byProg.get(wt.programId) ?? []
-      arr.push(wt)
-      byProg.set(wt.programId, arr)
-    }
-
-    const groups: SeanceGroup[] = []
-    for (const [progId, workouts] of byProg) {
-      const prog = store.programs.find((p) => p.id === progId)
-      if (!prog) continue
-      const isLibre = prog.name === '__libre__'
-      groups.push({
-        programId: progId,
-        label: isLibre ? 'Mes séances' : prog.name,
-        isTemplate: prog.isTemplate,
-        isActive: prog.isActive,
-        isLibre,
-        workouts,
-      })
-    }
-
-    groups.sort((a, b) => {
-      if (a.isLibre !== b.isLibre) return a.isLibre ? -1 : 1
-      if (a.isTemplate !== b.isTemplate) return a.isTemplate ? 1 : -1
-      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
-      return a.label.localeCompare(b.label, 'fr')
-    })
-
-    return groups
-  }, [allWorkouts, seancesTypeFilter, store.programs])
+  const seanceGroups = useMemo(
+    (): SeanceGroup[] => computeSeanceGroups(allWorkouts, store.programs, seancesTypeFilter),
+    [allWorkouts, seancesTypeFilter, store.programs],
+  )
 
   const greeting = store.settings.firstName ? `Salut ${store.settings.firstName}` : 'Salut'
 
