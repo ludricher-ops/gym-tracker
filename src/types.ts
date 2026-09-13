@@ -273,7 +273,7 @@ export interface BodyMeasurement extends Syncable {
   bodyFatPct?: number
 }
 
-export type PRType = '1rm' | 'reps_at_weight' | 'volume_set' | 'volume_session'
+export type PRType = '1rm' | 'reps_at_weight' | 'volume_set'
 
 export interface PersonalRecord extends Syncable {
   exerciseId: string

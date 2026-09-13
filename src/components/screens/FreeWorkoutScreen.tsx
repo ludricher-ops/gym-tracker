@@ -3,6 +3,7 @@ import { useStore } from '../../hooks/useStore'
 import { useObjectUrl } from '../../hooks/useObjectUrl'
 import { useNavigation } from '../../nav/useNavigation'
 import { logActivitySession } from '../../utils/sessionOps'
+import { uuid } from '../../utils/uuid'
 import {
   generateFreeWorkout,
   GOAL_PROFILES,
@@ -190,7 +191,7 @@ export function FreeWorkoutScreen({ params }: ScreenProps) {
       let hostProg = store.programs.find((p) => p.name === LIBRE_PROG_NAME)
       if (!hostProg) {
         hostProg = await store.program.save({
-          id: crypto.randomUUID(),
+          id: uuid(),
           name: LIBRE_PROG_NAME,
           goal: 'hypertrophy',
           level: 'intermediate',
@@ -215,7 +216,7 @@ export function FreeWorkoutScreen({ params }: ScreenProps) {
       // 3. Créer le WorkoutTemplate
       const templateName = `${workout.goalLabel} · ${targetZones.includes('full_body') ? 'Full body' : muscleGroups.join(', ')}`
       const wt = await store.workoutTemplate.save({
-        id: crypto.randomUUID(),
+        id: uuid(),
         programId: hostProg.id,
         name: templateName,
         type,
@@ -236,7 +237,7 @@ export function FreeWorkoutScreen({ params }: ScreenProps) {
         const repsMode = targetRepsMax !== undefined ? 'range' : 'fixed'
 
         await store.workoutExerciseTemplate.save({
-          id: crypto.randomUUID(),
+          id: uuid(),
           workoutTemplateId: wt.id,
           exerciseId: dbEx.id,
           order: i,
