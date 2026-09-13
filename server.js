@@ -141,6 +141,9 @@ if (process.env.DATABASE_URL) {
 // ── App Express ──────────────────────────────────────────────────────────────
 
 const app = express()
+// Railway tourne derrière un reverse proxy — nécessaire pour express-rate-limit
+// et pour que req.ip reflète l'IP réelle du client (via X-Forwarded-For).
+app.set('trust proxy', 1)
 app.use(cookieParser())
 app.use(express.json({ limit: '1mb' }))
 app.use('/api/sync/push', express.json({ limit: '20mb' }))
