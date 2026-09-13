@@ -472,7 +472,10 @@ export function registerSyncRoutes(app, pool, extractUser, requireUser) {
         records,
         cursor,
         sharedCursor: newSharedCursor,
-        hasMore: ownRows.length === PULL_LIMIT,
+        // hasMore = true si l'une des sources paginées a atteint sa limite.
+        // ownRows et sharedBlobRows sont tous deux limités à PULL_LIMIT — si
+        // sharedBlobRows est saturé, le client doit rappuller même si ownRows est vide.
+        hasMore: ownRows.length === PULL_LIMIT || sharedBlobRows.length === PULL_LIMIT,
         isAdmin: userId === ADMIN_USER_ID,
       })
     } catch (err) {

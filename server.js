@@ -5,6 +5,7 @@ import pg from 'pg'
 import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
+import { rateLimit } from 'express-rate-limit'
 import { registerSyncRoutes } from './src/server/syncRoutes.js'
 import { registerGroupRoutes } from './src/server/groupRoutes.js'
 import { registerAdminRoutes } from './src/server/adminRoutes.js'
@@ -13,7 +14,26 @@ const { Pool } = pg
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const IS_PROD = process.env.NODE_ENV === 'production'
 
+// ── Sécurité ─────────────────────────────────────────────────────────────────
+
+// En production, JWT_SECRET doit être défini — un fallback hardcodé permettrait
+// à n'importe qui de forger des tokens valides si la variable est oubliée.
+if (IS_PROD && !process.env.JWT_SECRET) {
+  console.error('[FATAL] JWT_SECRET environment variable is required in production')
+  process.exit(1)
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-gymtracker-change-in-prod'
+
+// Rate limiting sur les routes d'authentification — protection brute-force.
+// 10 tentatives par IP par 15 min ; réinitialisation à chaque succès non souhaitée
+// (on veut limiter même les connexions valides pour éviter l'énumération).
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de tentatives, réessayez dans 15 minutes.' },
+})
 const COOKIE_NAME = 'gt_session'
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -182,7 +202,7 @@ app.get('/auth/me', extractUser, (req, res) => {
     })
 })
 
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', authLimiter, async (req, res) => {
   if (!pool) return res.status(503).json({ error: 'Base de données indisponible' })
   const { email, password } = req.body ?? {}
   if (typeof email !== 'string' || typeof password !== 'string')
@@ -207,7 +227,7 @@ app.post('/auth/login', async (req, res) => {
   }
 })
 
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', authLimiter, async (req, res) => {
   if (!pool) return res.status(503).json({ error: 'Base de données indisponible' })
   const { email, password } = req.body ?? {}
   if (typeof email !== 'string' || typeof password !== 'string')
