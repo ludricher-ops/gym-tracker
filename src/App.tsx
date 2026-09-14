@@ -24,8 +24,10 @@ export function App() {
 function AuthGate() {
   const { user, loading } = useAuth()
 
-  if (loading) {
-    // Écran de chargement minimal pendant la vérification du cookie
+  // Spinner uniquement si aucune donnée en cache (premier lancement ou après
+  // logout). Quand un utilisateur est en cache, l'AppShell monte directement
+  // et /auth/me vérifie en arrière-plan.
+  if (loading && !user) {
     return (
       <div style={{
         display: 'flex',
