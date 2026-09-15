@@ -268,6 +268,99 @@ const bwJ3Wet: WorkoutExerciseTemplate[] = [
 void [iuProgram, iuWorkoutTemplates, iuJ1Wet, iuJ2Wet, iuJ3Wet,
       bwProgram, bwWorkoutTemplates, bwJ1Wet, bwJ2Wet, bwJ3Wet]
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 3. MELISSA — BAS DU CORPS — haltères + machines simples, 3j/sem, 12 sem, débutante
+// ══════════════════════════════════════════════════════════════════════════════
+
+const MEL = 'tpl-mel'
+
+const melProgram = prog(`${MEL}-prog`, {
+  name: 'Melissa — Bas du corps',
+  goal: 'hypertrophy',
+  level: 'beginner',
+  durationWeeks: 12,
+  sessionsPerWeek: 3,
+  color: '#a855f7',
+  isTemplate: true,
+  isActive: false,
+  weekTemplate: {
+    monday: `${MEL}-j1`,
+    wednesday: `${MEL}-j2`,
+    friday: `${MEL}-j3`,
+  },
+  createdAt: S,
+})
+
+const melWorkoutTemplates: WorkoutTemplate[] = [
+  wt(`${MEL}-j1`, {
+    programId: `${MEL}-prog`,
+    name: 'J1 · Fessiers & Adducteurs',
+    type: 'lower',
+    muscleGroups: ['glutes', 'hamstrings', 'quads'],
+  }),
+  wt(`${MEL}-j2`, {
+    programId: `${MEL}-prog`,
+    name: 'J2 · Ischio-jambiers & Dos',
+    type: 'lower',
+    muscleGroups: ['hamstrings', 'quads', 'back_thickness'],
+  }),
+  wt(`${MEL}-j3`, {
+    programId: `${MEL}-prog`,
+    name: 'J3 · Fessiers & Dos',
+    type: 'lower',
+    muscleGroups: ['glutes', 'hamstrings', 'back_thickness', 'core'],
+  }),
+]
+
+// ── MEL J1 : Fessiers & Adducteurs ───────────────────────────────────────────
+
+const melJ1Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement
+  wet(`${MEL}-j1-01`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-glute-bridge',      order: 1, repsMode: 'fixed', targetRepsMin: 15, isWarmup: true }),
+  wet(`${MEL}-j1-02`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-bodyweight-squat',  order: 2, repsMode: 'fixed', targetRepsMin: 12, isWarmup: true }),
+  wet(`${MEL}-j1-03`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-walking-lunges',   order: 3, repsMode: 'fixed', targetRepsMin: 12, isWarmup: true }),
+  wet(`${MEL}-j1-04`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-hip-9090',         order: 4, repsMode: 'fixed', targetRepsMin: 10, restSec: 30, isWarmup: true }),
+  // Travail principal
+  wet(`${MEL}-j1-05`, { ...BW_DEF,  workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-hip-thrust-bw',          order: 5,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 60 }),
+  wet(`${MEL}-j1-06`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-squat-barbell',          order: 6,  targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 90 }),
+  wet(`${MEL}-j1-07`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-leg-curl-lying',         order: 7,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 60 }),
+  wet(`${MEL}-j1-08`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-hip-adduction-machine',  order: 8,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 60 }),
+  wet(`${MEL}-j1-09`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-bulgarian-split-squat', order: 9,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 75 }),
+  wet(`${MEL}-j1-10`, { ...AB_DEF,  workoutTemplateId: `${MEL}-j1`, exerciseId: 'seed-plank',                 order: 10, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 45 }),
+]
+
+// ── MEL J2 : Ischio-jambiers & Dos ───────────────────────────────────────────
+
+const melJ2Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement
+  wet(`${MEL}-j2-01`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-glute-bridge',     order: 1, repsMode: 'fixed', targetRepsMin: 15, isWarmup: true }),
+  wet(`${MEL}-j2-02`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-bodyweight-squat', order: 2, repsMode: 'fixed', targetRepsMin: 12, isWarmup: true }),
+  wet(`${MEL}-j2-03`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-walking-lunges',   order: 3, repsMode: 'fixed', targetRepsMin: 12, restSec: 30, isWarmup: true }),
+  // Travail principal
+  wet(`${MEL}-j2-04`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-romanian-deadlift', order: 4, targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 90 }),
+  wet(`${MEL}-j2-05`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-leg-press',         order: 5, targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 90 }),
+  wet(`${MEL}-j2-06`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-row-dumbbell',      order: 6, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75 }),
+  wet(`${MEL}-j2-07`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-leg-extension',     order: 7, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 60 }),
+  wet(`${MEL}-j2-08`, { ...AB_DEF,  workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-crunch',            order: 8, repsMode: 'fixed', targetRepsMin: 15 }),
+  wet(`${MEL}-j2-09`, { ...AB_DEF,  workoutTemplateId: `${MEL}-j2`, exerciseId: 'seed-dead-bug',          order: 9, repsMode: 'fixed', targetRepsMin: 8 }),
+]
+
+// ── MEL J3 : Fessiers & Dos ───────────────────────────────────────────────────
+
+const melJ3Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement
+  wet(`${MEL}-j3-01`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-glute-bridge',   order: 1, repsMode: 'fixed', targetRepsMin: 15, isWarmup: true }),
+  wet(`${MEL}-j3-02`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-hip-9090',       order: 2, repsMode: 'fixed', targetRepsMin: 10, isWarmup: true }),
+  wet(`${MEL}-j3-03`, { ...WARMUP_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-walking-lunges', order: 3, repsMode: 'fixed', targetRepsMin: 12, restSec: 30, isWarmup: true }),
+  // Travail principal
+  wet(`${MEL}-j3-04`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-hip-thrust',          order: 4, targetSets: 3, repsMode: 'range', targetRepsMin: 8,  targetRepsMax: 10, restSec: 90 }),
+  wet(`${MEL}-j3-05`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-deadlift',            order: 5, targetSets: 3, repsMode: 'range', targetRepsMin: 6,  targetRepsMax: 8,  restSec: 120 }),
+  wet(`${MEL}-j3-06`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-bulgarian-split-squat', order: 6, targetSets: 3, repsMode: 'fixed', targetRepsMin: 8, restSec: 90 }),
+  wet(`${MEL}-j3-07`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-row-dumbbell',        order: 7, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75 }),
+  wet(`${MEL}-j3-08`, { ...WGT_DEF, workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-leg-curl-seated',    order: 8, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 60 }),
+  wet(`${MEL}-j3-09`, { ...AB_DEF,  workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-side-plank',         order: 9, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 25 }),
+]
+
 export const PROGRAM_TEMPLATES: Program[] = []
 
 interface TemplateRecords {
@@ -278,8 +371,8 @@ interface TemplateRecords {
 
 export function buildTemplateRecords(_now: number): TemplateRecords {
   return {
-    programs: [],
-    workoutTemplates: [],
-    workoutExerciseTemplates: [],
+    programs: [melProgram],
+    workoutTemplates: melWorkoutTemplates,
+    workoutExerciseTemplates: [...melJ1Wet, ...melJ2Wet, ...melJ3Wet],
   }
 }
