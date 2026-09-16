@@ -361,6 +361,102 @@ const melJ3Wet: WorkoutExerciseTemplate[] = [
   wet(`${MEL}-j3-09`, { ...AB_DEF,  workoutTemplateId: `${MEL}-j3`, exerciseId: 'seed-side-plank',         order: 9, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 25 }),
 ]
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 4. UPPER COMPLET — haltères + machines, 3j/sem, 13 sem, intermédiaire
+//    3 séances plein corps : 2 supersets haut + 2 supersets bas, ~42-45 min
+//    Conçu pour football le samedi : J3 vendredi = volume réduit
+// ══════════════════════════════════════════════════════════════════════════════
+
+const UP = 'tpl-up'
+
+const upProgram = prog(`${UP}-prog`, {
+  name: 'Upper Complet',
+  goal: 'hypertrophy',
+  level: 'intermediate',
+  durationWeeks: 13,
+  sessionsPerWeek: 3,
+  color: '#3b82f6',
+  isTemplate: true,
+  isActive: false,
+  weekTemplate: { monday: `${UP}-j1`, wednesday: `${UP}-j2`, friday: `${UP}-j3` },
+  createdAt: S,
+})
+
+const upWorkoutTemplates: WorkoutTemplate[] = [
+  wt(`${UP}-j1`, { programId: `${UP}-prog`, name: 'J1 · Push-Pull & Legs A',       type: 'fullbody', muscleGroups: ['chest', 'back_thickness', 'shoulders', 'triceps', 'quads', 'hamstrings'] }),
+  wt(`${UP}-j2`, { programId: `${UP}-prog`, name: 'J2 · Pull & Legs B',            type: 'fullbody', muscleGroups: ['back_width', 'back_thickness', 'biceps', 'hamstrings', 'quads'] }),
+  wt(`${UP}-j3`, { programId: `${UP}-prog`, name: 'J3 · Upper Pump & Legs léger',  type: 'fullbody', muscleGroups: ['chest_upper', 'back_width', 'shoulders_lateral', 'biceps', 'glutes', 'hamstrings'] }),
+]
+
+const upJ1Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement
+  wet(`${UP}-j1-01`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-shoulder-circles',  order: 1,  repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j1-02`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-jumping-jacks',     order: 2,  repsMode: 'fixed', targetRepsMin: 30, isWarmup: true }),
+  wet(`${UP}-j1-03`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-mountain-climbers', order: 3,  repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j1-04`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-superman',          order: 4,  repsMode: 'fixed', targetRepsMin: 12, isWarmup: true }),
+  wet(`${UP}-j1-05`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-bodyweight-squat',  order: 5,  repsMode: 'fixed', targetRepsMin: 15, restSec: 30, isWarmup: true }),
+  // SS A — Poitrine / Dos (agoniste-antagoniste)
+  wet(`${UP}-j1-06`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-bench-dumbbell',           order: 6,  targetSets: 4, repsMode: 'range', targetRepsMin: 8,  targetRepsMax: 10, restSec: 0,  supersetGroup: 'A' }),
+  wet(`${UP}-j1-07`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-row-dumbbell',             order: 7,  targetSets: 4, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 90, supersetGroup: 'A' }),
+  // SS B — Épaules / Triceps
+  wet(`${UP}-j1-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-shoulder-press-dumbbell',  order: 8,  targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 0,  supersetGroup: 'B' }),
+  wet(`${UP}-j1-09`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-triceps-overhead',         order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75, supersetGroup: 'B' }),
+  // SS C — Squat bulgare / Leg curl allongé
+  wet(`${UP}-j1-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-bulgarian-split-squat',    order: 10, targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 0,  supersetGroup: 'C' }),
+  wet(`${UP}-j1-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-leg-curl-lying',           order: 11, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75, supersetGroup: 'C' }),
+  // SS D — Leg extension / Hip thrust PdC
+  wet(`${UP}-j1-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-leg-extension',            order: 12, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 0,  supersetGroup: 'D' }),
+  wet(`${UP}-j1-13`, { ...BW_DEF,  workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-hip-thrust-bw',            order: 13, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 60, supersetGroup: 'D' }),
+  // Abdos
+  wet(`${UP}-j1-14`, { ...AB_DEF,  workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-plank',     order: 14, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 45 }),
+]
+
+const upJ2Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement
+  wet(`${UP}-j2-01`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-shoulder-circles',  order: 1,  repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j2-02`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-jumping-jacks',     order: 2,  repsMode: 'fixed', targetRepsMin: 30, isWarmup: true }),
+  wet(`${UP}-j2-03`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-mountain-climbers', order: 3,  repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j2-04`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-glute-bridge',      order: 4,  repsMode: 'fixed', targetRepsMin: 15, isWarmup: true }),
+  wet(`${UP}-j2-05`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-hip-9090',          order: 5,  repsMode: 'fixed', targetRepsMin: 10, restSec: 30, isWarmup: true }),
+  // SS A — Dos largeur + épaisseur
+  wet(`${UP}-j2-06`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-pullover',             order: 6,  targetSets: 4, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 0,  supersetGroup: 'A' }),
+  wet(`${UP}-j2-07`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-row-dumbbell',         order: 7,  targetSets: 4, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 90, supersetGroup: 'A' }),
+  // SS B — Rear delt / Biceps
+  wet(`${UP}-j2-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-rear-delt-fly',        order: 8,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 0,  supersetGroup: 'B' }),
+  wet(`${UP}-j2-09`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-curl-dumbbell',        order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 75, supersetGroup: 'B' }),
+  // SS C — RDL / Leg extension (ischio / quad antagoniste)
+  wet(`${UP}-j2-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-romanian-deadlift',    order: 10, targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 0,  supersetGroup: 'C' }),
+  wet(`${UP}-j2-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-extension',        order: 11, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 75, supersetGroup: 'C' }),
+  // SS D — Leg curl assis / Squat bulgare
+  wet(`${UP}-j2-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-curl-seated',      order: 12, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 0,  supersetGroup: 'D' }),
+  wet(`${UP}-j2-13`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-bulgarian-split-squat', order: 13, targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 75, supersetGroup: 'D' }),
+  // Abdos
+  wet(`${UP}-j2-14`, { ...AB_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-side-plank',     order: 14, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 30 }),
+  wet(`${UP}-j2-15`, { ...AB_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-bicycle-crunch', order: 15, repsMode: 'fixed', targetRepsMin: 20 }),
+]
+
+const upJ3Wet: WorkoutExerciseTemplate[] = [
+  // Échauffement court (veille de football)
+  wet(`${UP}-j3-01`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-shoulder-circles',  order: 1, repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j3-02`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-jumping-jacks',     order: 2, repsMode: 'fixed', targetRepsMin: 30, isWarmup: true }),
+  wet(`${UP}-j3-03`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-mountain-climbers', order: 3, repsMode: 'fixed', targetRepsMin: 20, isWarmup: true }),
+  wet(`${UP}-j3-04`, { ...WARMUP_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-inchworm',          order: 4, repsMode: 'fixed', targetRepsMin: 8,  restSec: 30, isWarmup: true }),
+  // SS A — Pec haut / Pullover (pump)
+  wet(`${UP}-j3-05`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-incline-bench-dumbbell', order: 5,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 0,  supersetGroup: 'A' }),
+  wet(`${UP}-j3-06`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-pullover',               order: 6,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 75, supersetGroup: 'A' }),
+  // SS B — Latérales / Curl marteau
+  wet(`${UP}-j3-07`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-lateral-raise',          order: 7,  targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'B' }),
+  wet(`${UP}-j3-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-curl-hammer',            order: 8,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 60, supersetGroup: 'B' }),
+  // SS C — Hip thrust PdC / Leg curl allongé (léger)
+  wet(`${UP}-j3-09`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-hip-thrust-bw',          order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'C' }),
+  wet(`${UP}-j3-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-curl-lying',         order: 10, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 60, supersetGroup: 'C' }),
+  // SS D — Leg extension / Fente marchée PdC (léger)
+  wet(`${UP}-j3-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-extension',          order: 11, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'D' }),
+  wet(`${UP}-j3-12`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-walking-lunges',         order: 12, targetSets: 3, repsMode: 'fixed', targetRepsMin: 12, restSec: 60, supersetGroup: 'D' }),
+  // Abdos
+  wet(`${UP}-j3-13`, { ...AB_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-dead-bug', order: 13, repsMode: 'fixed', targetRepsMin: 8 }),
+]
+
 export const PROGRAM_TEMPLATES: Program[] = []
 
 interface TemplateRecords {
@@ -371,8 +467,8 @@ interface TemplateRecords {
 
 export function buildTemplateRecords(_now: number): TemplateRecords {
   return {
-    programs: [melProgram],
-    workoutTemplates: melWorkoutTemplates,
-    workoutExerciseTemplates: [...melJ1Wet, ...melJ2Wet, ...melJ3Wet],
+    programs: [melProgram, upProgram],
+    workoutTemplates: [...melWorkoutTemplates, ...upWorkoutTemplates],
+    workoutExerciseTemplates: [...melJ1Wet, ...melJ2Wet, ...melJ3Wet, ...upJ1Wet, ...upJ2Wet, ...upJ3Wet],
   }
 }
