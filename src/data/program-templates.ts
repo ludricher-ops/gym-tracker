@@ -401,12 +401,12 @@ const upJ1Wet: WorkoutExerciseTemplate[] = [
   // SS B — Épaules / Triceps
   wet(`${UP}-j1-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-shoulder-press-dumbbell',  order: 8,  targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 0,  supersetGroup: 'B' }),
   wet(`${UP}-j1-09`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-triceps-overhead',         order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75, supersetGroup: 'B' }),
-  // SS C — Squat bulgare / Leg curl allongé
+  // SS C — Squat bulgare / Hip thrust PdC
   wet(`${UP}-j1-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-bulgarian-split-squat',    order: 10, targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 0,  supersetGroup: 'C' }),
-  wet(`${UP}-j1-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-leg-curl-lying',           order: 11, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 75, supersetGroup: 'C' }),
-  // SS D — Leg extension / Hip thrust PdC
+  wet(`${UP}-j1-11`, { ...BW_DEF,  workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-hip-thrust-bw',            order: 11, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 75, supersetGroup: 'C' }),
+  // SS D — Leg extension / Leg curl (machines côte à côte)
   wet(`${UP}-j1-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-leg-extension',            order: 12, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 0,  supersetGroup: 'D' }),
-  wet(`${UP}-j1-13`, { ...BW_DEF,  workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-hip-thrust-bw',            order: 13, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 60, supersetGroup: 'D' }),
+  wet(`${UP}-j1-13`, { ...WGT_DEF, workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-leg-curl-lying',           order: 13, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 60, supersetGroup: 'D' }),
   // Abdos
   wet(`${UP}-j1-14`, { ...AB_DEF,  workoutTemplateId: `${UP}-j1`, exerciseId: 'seed-plank',     order: 14, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 45 }),
 ]
@@ -424,12 +424,12 @@ const upJ2Wet: WorkoutExerciseTemplate[] = [
   // SS B — Rear delt / Biceps
   wet(`${UP}-j2-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-rear-delt-fly',        order: 8,  targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 0,  supersetGroup: 'B' }),
   wet(`${UP}-j2-09`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-curl-dumbbell',        order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 75, supersetGroup: 'B' }),
-  // SS C — RDL / Leg extension (ischio / quad antagoniste)
-  wet(`${UP}-j2-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-romanian-deadlift',    order: 10, targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 0,  supersetGroup: 'C' }),
-  wet(`${UP}-j2-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-extension',        order: 11, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 75, supersetGroup: 'C' }),
-  // SS D — Leg curl assis / Squat bulgare
-  wet(`${UP}-j2-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-curl-seated',      order: 12, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 0,  supersetGroup: 'D' }),
-  wet(`${UP}-j2-13`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-bulgarian-split-squat', order: 13, targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 75, supersetGroup: 'D' }),
+  // SS C — RDL / Squat bulgare (composés postérieurs + quad)
+  wet(`${UP}-j2-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-romanian-deadlift',     order: 10, targetSets: 3, repsMode: 'range', targetRepsMin: 10, targetRepsMax: 12, restSec: 0,  supersetGroup: 'C' }),
+  wet(`${UP}-j2-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-bulgarian-split-squat', order: 11, targetSets: 3, repsMode: 'fixed', targetRepsMin: 10, restSec: 75, supersetGroup: 'C' }),
+  // SS D — Leg curl assis / Leg extension (machines côte à côte)
+  wet(`${UP}-j2-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-curl-seated',       order: 12, targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 0,  supersetGroup: 'D' }),
+  wet(`${UP}-j2-13`, { ...WGT_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-leg-extension',         order: 13, targetSets: 3, repsMode: 'fixed', targetRepsMin: 15, restSec: 75, supersetGroup: 'D' }),
   // Abdos
   wet(`${UP}-j2-14`, { ...AB_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-side-plank',     order: 14, repsMode: 'fixed', targetRepsMin: 1, targetDurationSec: 30 }),
   wet(`${UP}-j2-15`, { ...AB_DEF, workoutTemplateId: `${UP}-j2`, exerciseId: 'seed-bicycle-crunch', order: 15, repsMode: 'fixed', targetRepsMin: 20 }),
@@ -447,12 +447,12 @@ const upJ3Wet: WorkoutExerciseTemplate[] = [
   // SS B — Latérales / Curl marteau
   wet(`${UP}-j3-07`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-lateral-raise',          order: 7,  targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'B' }),
   wet(`${UP}-j3-08`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-curl-hammer',            order: 8,  targetSets: 3, repsMode: 'range', targetRepsMin: 12, targetRepsMax: 15, restSec: 60, supersetGroup: 'B' }),
-  // SS C — Hip thrust PdC / Leg curl allongé (léger)
-  wet(`${UP}-j3-09`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-hip-thrust-bw',          order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'C' }),
-  wet(`${UP}-j3-10`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-curl-lying',         order: 10, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 60, supersetGroup: 'C' }),
-  // SS D — Leg extension / Fente marchée PdC (léger)
-  wet(`${UP}-j3-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-extension',          order: 11, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'D' }),
-  wet(`${UP}-j3-12`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-walking-lunges',         order: 12, targetSets: 3, repsMode: 'fixed', targetRepsMin: 12, restSec: 60, supersetGroup: 'D' }),
+  // SS C — Hip thrust PdC / Fente marchée (fessiers + mobilité)
+  wet(`${UP}-j3-09`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-hip-thrust-bw',   order: 9,  targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'C' }),
+  wet(`${UP}-j3-10`, { ...BW_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-walking-lunges',  order: 10, targetSets: 3, repsMode: 'fixed', targetRepsMin: 12, restSec: 60, supersetGroup: 'C' }),
+  // SS D — Leg extension / Leg curl (machines côte à côte)
+  wet(`${UP}-j3-11`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-extension',   order: 11, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 0,  supersetGroup: 'D' }),
+  wet(`${UP}-j3-12`, { ...WGT_DEF, workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-leg-curl-lying',  order: 12, targetSets: 3, repsMode: 'range', targetRepsMin: 15, targetRepsMax: 20, restSec: 60, supersetGroup: 'D' }),
   // Abdos
   wet(`${UP}-j3-13`, { ...AB_DEF,  workoutTemplateId: `${UP}-j3`, exerciseId: 'seed-dead-bug', order: 13, repsMode: 'fixed', targetRepsMin: 8 }),
 ]
