@@ -55,6 +55,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
   const notifAsked = useRef(false)
   // Verrou anti double-tap : empêche deux validations concurrentes.
   const isValidating = useRef(false)
+  // Ref vers validate() mis à jour chaque render — utilisé dans onComplete du restTimer
+  // pour contourner l'ordre de définition (restTimer < validate dans le corps du composant).
+  const restAutoValidate = useRef<(() => void) | null>(null)
 
   const { session, currentSE, currentExercise, currentSets, doneCount, totalCount } = act
   const elapsed = useSessionTimer(session?.startedAt ?? Date.now())
@@ -77,6 +80,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
       if (prefs.restSoundEnabled) playBeep()
       if (prefs.hapticsEnabled) vibrate()
       if (prefs.notificationsEnabled) notify('Repos terminé', 'Place à la prochaine série.')
+      restAutoValidate.current?.()
     },
     prefs.restSoundEnabled ? () => playCountdownTick() : undefined,
   )
@@ -237,6 +241,9 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     }
   }
   const validate = () => void validateImpl()
+  // Mise à jour chaque render : quand onComplete du restTimer se déclenche, il trouve
+  // la dernière version de validate avec les valeurs (inputW, inputR…) du moment.
+  restAutoValidate.current = canValidate ? validate : null
 
   const onSelectSet = (id: string) => {
     const set = currentSets.find((s) => s.id === id)
@@ -490,10 +497,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
             onValidate={() => void validateImpl(exerciseTimer.targetSec)}
           />
         ) : restTimer.active ? (
-          <RestTimerBar
-            timer={restTimer}
-            onValidate={canValidate ? validate : undefined}
-          />
+          <RestTimerBar timer={restTimer} />
         ) : (
           currentSE && (
             <Card variant="flat">
