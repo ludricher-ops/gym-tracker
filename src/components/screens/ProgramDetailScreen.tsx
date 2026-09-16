@@ -398,6 +398,11 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
           )
         })}
 
+        {program.isActive && (
+          <Button variant="ghost" icon="edit" onClick={() => setSettingsSheet(true)}>
+            Ajuster le programme
+          </Button>
+        )}
         {store.isAdmin && (
           <Button
             variant="ghost"
@@ -416,7 +421,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
 
       <PrimaryBar>
         <div style={{ display: 'flex', gap: 8 }}>
-          {canEdit && !program.isActive && (
+          {canEdit && (
             <div style={{ flex: 1 }}>
               <Button
                 variant="secondary"
@@ -431,13 +436,6 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             <div style={{ flex: 1 }}>
               <Button icon="check" onClick={() => setSheet(true)}>
                 Utiliser
-              </Button>
-            </div>
-          )}
-          {program.isActive && (
-            <div style={{ flex: 1 }}>
-              <Button variant="secondary" icon="edit" onClick={() => setSettingsSheet(true)}>
-                Ajuster
               </Button>
             </div>
           )}
