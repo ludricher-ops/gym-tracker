@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react'
 import { useStore } from '../../hooks/useStore'
+import type { StoreApi } from '../../hooks/useStore'
 import { useNavigation } from '../../nav/useNavigation'
 import type { ScreenProps } from '../../nav/screenRegistry'
 import { GOAL_LABEL, LEVEL_LABEL, WORKOUT_TYPE_LABEL } from '../../utils/labels'
@@ -9,10 +10,17 @@ import { deleteProgram, deactivateProgram } from '../../utils/programOps'
 import { ActivationSheet } from '../programBuilder/ActivationSheet'
 import { WEEKDAYS, WEEKDAY_LABEL } from '../programBuilder/programDraft'
 import type { DraftPhase } from '../programBuilder/programDraft'
-import type { WorkoutTemplate } from '../../types'
+import type { Program, WorkoutTemplate } from '../../types'
 import { buildPhases, phaseAtLeast } from '../../utils/programGenerator'
 import { programWeekNumber } from '../../utils/sessionOps'
 import type { PhaseKey } from '../../utils/programGenerator'
+import { localDayKey } from '../../utils/dates'
+
+function parseDateLocal(s: string): number {
+  const [y, m, d] = s.split('-').map(Number)
+  if (!y || !m || !d) return Date.now()
+  return new Date(y, m - 1, d).getTime()
+}
 
 const PHASE_COLORS: Record<DraftPhase['focus'], string> = {
   adaptation: 'var(--accent)',
@@ -43,6 +51,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
     [store.programs, id],
   )
   const [sheet, setSheet] = useState(false)
+  const [settingsSheet, setSettingsSheet] = useState(false)
   const [previewWorkout, setPreviewWorkout] = useState<WorkoutTemplate | null>(null)
   const [editingIconFor, setEditingIconFor] = useState<string | null>(null)
 
@@ -407,7 +416,7 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
 
       <PrimaryBar>
         <div style={{ display: 'flex', gap: 8 }}>
-          {canEdit && (
+          {canEdit && !program.isActive && (
             <div style={{ flex: 1 }}>
               <Button
                 variant="secondary"
@@ -422,6 +431,13 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             <div style={{ flex: 1 }}>
               <Button icon="check" onClick={() => setSheet(true)}>
                 Utiliser
+              </Button>
+            </div>
+          )}
+          {program.isActive && (
+            <div style={{ flex: 1 }}>
+              <Button variant="secondary" icon="edit" onClick={() => setSettingsSheet(true)}>
+                Ajuster
               </Button>
             </div>
           )}
@@ -445,6 +461,15 @@ export function ProgramDetailScreen({ params }: ScreenProps) {
             setSheet(false)
             nav.switchTab('today')
           }}
+        />
+      )}
+
+      {/* Sheet ajustement programme actif */}
+      {settingsSheet && (
+        <ProgramSettingsSheet
+          program={program}
+          store={store}
+          onClose={() => setSettingsSheet(false)}
         />
       )}
 
@@ -661,6 +686,78 @@ function EmojiPicker({
         </button>
       )}
     </div>
+  )
+}
+
+// ─── Sheet ajustement programme actif ────────────────────────────────────────
+
+function ProgramSettingsSheet({
+  program,
+  store,
+  onClose,
+}: {
+  program: Program
+  store: StoreApi
+  onClose: () => void
+}) {
+  const initDate = program.startedAt ? localDayKey(program.startedAt) : localDayKey(Date.now())
+  const [date, setDate] = useState(initDate)
+  const [weeks, setWeeks] = useState(String(program.durationWeeks))
+  const [busy, setBusy] = useState(false)
+
+  const weeksNum = parseInt(weeks, 10)
+  const valid = date.length === 10 && weeksNum >= 1 && weeksNum <= 52
+
+  const save = async () => {
+    if (!valid) return
+    setBusy(true)
+    try {
+      await store.program.save({
+        ...program,
+        startedAt: parseDateLocal(date),
+        durationWeeks: weeksNum,
+      })
+      onClose()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Sheet title="Ajuster le programme" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '4px 0 8px' }}>
+        <div className="gt-field">
+          <span className="gt-field__label">Date de démarrage</span>
+          <input
+            type="date"
+            className="gt-input"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </div>
+        <div className="gt-field">
+          <span className="gt-field__label">Durée totale</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input
+              type="number"
+              className="gt-input"
+              style={{ width: 90 }}
+              min={1}
+              max={52}
+              value={weeks}
+              onChange={(e) => setWeeks(e.target.value)}
+            />
+            <span className="t-caption" style={{ color: 'var(--dim)' }}>semaines</span>
+          </div>
+        </div>
+        <Button onClick={save} disabled={busy || !valid} icon="check">
+          {busy ? 'Enregistrement…' : 'Enregistrer'}
+        </Button>
+        <Button variant="ghost" onClick={onClose}>
+          Annuler
+        </Button>
+      </div>
+    </Sheet>
   )
 }
 
