@@ -508,7 +508,7 @@ export function SessionModal({ sessionId }: SessionModalProps) {
               ) : (
                 <>
                   {/* Steppers côte à côte, séparés par un filet vertical */}
-                  <div style={{ display: 'flex' }}>
+                  <div className="gt-stepper-compact" style={{ display: 'flex' }}>
                     {showWeight && (
                       <>
                         <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
@@ -577,11 +577,10 @@ export function SessionModal({ sessionId }: SessionModalProps) {
                   <Button
                     icon="play"
                     onClick={() => {
-                      setInputR(targetDurationSec)
-                      exerciseTimer.start(targetDurationSec)
+                      exerciseTimer.start(inputR)
                     }}
                   >
-                    Démarrer · {formatClock(targetDurationSec)}
+                    Démarrer · {formatClock(inputR)}
                   </Button>
                 ) : (
                   <Button onClick={validate} disabled={!canValidate} icon="check">

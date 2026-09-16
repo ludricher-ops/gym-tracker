@@ -200,6 +200,12 @@ button.gt-row:active {
   margin: 0;
 }
 
+/* Variante compacte pour steppers côte-à-côte (SessionModal weight/reps) */
+.gt-stepper-compact .gt-stepper { gap: 6px; }
+.gt-stepper-compact .gt-stepper__btn { width: 36px; height: 36px; }
+.gt-stepper-compact .gt-stepper__value { min-width: 48px; }
+.gt-stepper-compact .gt-stepper__input { width: 56px; }
+
 /* ── ProgressBar ──────────────────────────────────────────────────── */
 .gt-progress {
   height: 5px;
