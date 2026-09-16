@@ -12,7 +12,7 @@ import { formatClock, formatDuration } from '../../../utils/format'
 import { formatWeight } from '../../../utils/units'
 import { MUSCLE_LABEL } from '../../../utils/labels'
 import {
-  playBeep, vibrate, notify, requestNotificationPermission,
+  playBeep, playCountdownTick, vibrate, notify, requestNotificationPermission,
 } from '../../../utils/feedback'
 import {
   Button, Card, Icon, MiniBars, Modal, Pill, Sheet, Stepper,
@@ -72,11 +72,14 @@ export function SessionModal({ sessionId }: SessionModalProps) {
     adaptation: '🌱', progression: '📈', intensification: '🔥', deload: '🔄',
   } as const
 
-  const restTimer = useRestTimer(() => {
-    if (prefs.restSoundEnabled) playBeep()
-    if (prefs.hapticsEnabled) vibrate()
-    if (prefs.notificationsEnabled) notify('Repos terminé', 'Place à la prochaine série.')
-  })
+  const restTimer = useRestTimer(
+    () => {
+      if (prefs.restSoundEnabled) playBeep()
+      if (prefs.hapticsEnabled) vibrate()
+      if (prefs.notificationsEnabled) notify('Repos terminé', 'Place à la prochaine série.')
+    },
+    prefs.restSoundEnabled ? () => playCountdownTick() : undefined,
+  )
 
   const exerciseTimer = useRestTimer(() => {
     if (prefs.restSoundEnabled) playBeep()
@@ -487,7 +490,10 @@ export function SessionModal({ sessionId }: SessionModalProps) {
             onValidate={() => void validateImpl(exerciseTimer.targetSec)}
           />
         ) : restTimer.active ? (
-          <RestTimerBar timer={restTimer} />
+          <RestTimerBar
+            timer={restTimer}
+            onValidate={canValidate ? validate : undefined}
+          />
         ) : (
           currentSE && (
             <Card variant="flat">

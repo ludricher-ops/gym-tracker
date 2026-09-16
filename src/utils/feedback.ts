@@ -1,6 +1,30 @@
 // Retours sensoriels : bip sonore + vibration. Échoue silencieusement si
 // l'API n'est pas disponible ou bloquée par le navigateur.
 
+/** Tick court pour le décompte 5→1 s avant la fin du repos. */
+export function playCountdownTick(): void {
+  try {
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const ctx = new Ctx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = 1100
+    gain.gain.setValueAtTime(0.12, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.1)
+    osc.onended = () => ctx.close()
+    setTimeout(() => { if (ctx.state !== 'closed') void ctx.close() }, 300)
+  } catch {
+    /* audio indisponible — ignoré */
+  }
+}
+
 export function playBeep(): void {
   try {
     const Ctx =

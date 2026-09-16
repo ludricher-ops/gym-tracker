@@ -14,17 +14,23 @@ export interface RestTimer {
 /**
  * Timer de repos basé sur un timestamp de fin (`endsAt`) — le décompte reste
  * exact même si l'app passe en arrière-plan. `onComplete` est appelé une fois
- * quand le repos atteint zéro.
+ * quand le repos atteint zéro. `onCountdown` est appelé à chaque seconde
+ * du décompte final (5→1 s) pour les bips de compte à rebours.
  */
-export function useRestTimer(onComplete?: () => void): RestTimer {
+export function useRestTimer(
+  onComplete?: () => void,
+  onCountdown?: (remainingSec: number) => void,
+): RestTimer {
   const [endsAt, setEndsAt] = useState<number | null>(null)
   const [targetSec, setTargetSec] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const fired = useRef(false)
-  // Ref stable pour éviter que onComplete inline soit une dépendance d'effet
-  // et déclenche plusieurs fois la complétion si le parent re-rend.
+  const tickedSecs = useRef(new Set<number>())
+  // Refs stables pour éviter les dépendances d'effet instables.
   const onCompleteRef = useRef(onComplete)
+  const onCountdownRef = useRef(onCountdown)
   useLayoutEffect(() => { onCompleteRef.current = onComplete })
+  useLayoutEffect(() => { onCountdownRef.current = onCountdown })
 
   useEffect(() => {
     if (endsAt == null) return
@@ -41,8 +47,22 @@ export function useRestTimer(onComplete?: () => void): RestTimer {
     }
   }, [endsAt, remainingSec])
 
+  // Décompte sonore 5→1 s
+  useEffect(() => {
+    if (
+      endsAt != null &&
+      remainingSec > 0 &&
+      remainingSec <= 5 &&
+      !tickedSecs.current.has(remainingSec)
+    ) {
+      tickedSecs.current.add(remainingSec)
+      onCountdownRef.current?.(remainingSec)
+    }
+  }, [endsAt, remainingSec])
+
   const start = useCallback((durationSec: number) => {
     fired.current = false
+    tickedSecs.current.clear()
     setTargetSec(durationSec)
     setNow(Date.now())
     setEndsAt(Date.now() + durationSec * 1000)
@@ -60,6 +80,7 @@ export function useRestTimer(onComplete?: () => void): RestTimer {
   const skip = useCallback(() => {
     setEndsAt(null)
     fired.current = false
+    tickedSecs.current.clear()
   }, [])
 
   return { active: endsAt != null, remainingSec, targetSec, start, addTime, skip }

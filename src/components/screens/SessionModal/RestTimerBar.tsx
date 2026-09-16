@@ -4,10 +4,12 @@ import { Button, Card, ProgressBar } from '../../ui'
 
 interface RestTimerBarProps {
   timer: RestTimer
+  /** Appelé quand l'utilisateur valide la série directement depuis l'écran de repos. */
+  onValidate?: () => void
 }
 
-/** Bandeau de repos : décompte mm:ss centré (56 px) + barre + actions Passer / +15 s. */
-export function RestTimerBar({ timer }: RestTimerBarProps) {
+/** Bandeau de repos : décompte mm:ss centré (56 px) + barre + actions. */
+export function RestTimerBar({ timer, onValidate }: RestTimerBarProps) {
   if (!timer.active) return null
   const done = timer.remainingSec === 0
   const progress = timer.targetSec > 0 ? timer.remainingSec / timer.targetSec : 0
@@ -29,18 +31,42 @@ export function RestTimerBar({ timer }: RestTimerBarProps) {
       <div style={{ margin: '10px 0' }}>
         <ProgressBar value={progress} />
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1 }}>
-          <Button variant="secondary" onClick={() => timer.addTime(15)}>
-            +15 s
+      {done && onValidate ? (
+        /* Repos terminé : valider directement ou revenir à la saisie */
+        <>
+          <Button
+            icon="check"
+            onClick={() => { timer.skip(); onValidate() }}
+          >
+            Valider la série →
           </Button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ flex: 1 }}>
+              <Button variant="secondary" onClick={() => timer.addTime(15)}>
+                +15 s
+              </Button>
+            </div>
+            <div style={{ flex: 1 }}>
+              <Button variant="ghost" onClick={timer.skip}>
+                Ajuster
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <Button variant="secondary" onClick={() => timer.addTime(15)}>
+              +15 s
+            </Button>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Button variant={done ? 'primary' : 'ghost'} onClick={timer.skip}>
+              {done ? 'Continuer' : 'Passer'}
+            </Button>
+          </div>
         </div>
-        <div style={{ flex: 1 }}>
-          <Button variant={done ? 'primary' : 'ghost'} onClick={timer.skip}>
-            {done ? 'Continuer' : 'Passer'}
-          </Button>
-        </div>
-      </div>
+      )}
     </Card>
   )
 }
